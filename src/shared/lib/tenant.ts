@@ -97,6 +97,11 @@ export function persistLocalTenant(slug: string | null) {
   }
 }
 
+function getBaseDomainFromHostname(hostname: string): string {
+  const parts = hostname.split(".");
+  return parts.length > 2 ? parts.slice(1).join(".") : hostname;
+}
+
 function findMatchingConfiguredDomain(hostname: string): string | null {
   const domains = getConfiguredAppDomains();
   let bestMatch: string | null = null;
@@ -137,12 +142,18 @@ export function getTenantSlugFromHostname(hostnameArg?: string): string | null {
   const appDomain = findMatchingConfiguredDomain(hostname);
 
   if (!appDomain) {
-    // Preview deployments (or explicitly enabled fallback) can use ?tenant=slug.
-    if ((isPreviewHost(hostname) || shouldAllowQueryFallbackOnAnyHost()) && tenantFromQuery) {
+    const parts = hostname.split(".");
+    if (parts.length > 2) {
+      const subdomain = parts[0];
+      if (!isReservedSubdomain(subdomain)) {
+        return normalizeSlug(subdomain);
+      }
+    }
+    if (tenantFromQuery) {
       persistLocalTenant(tenantFromQuery);
       return tenantFromQuery;
     }
-    return null;
+    return getPersistedLocalTenant();
   }
 
   const parts = hostname.split(".");
@@ -196,10 +207,8 @@ export function buildTenantUrl(tenantSlug: string, path = "/"): string {
       return url.toString();
     }
 
-    const activeDomain = findMatchingConfiguredDomain(hostname);
-    if (activeDomain) {
-      return `${protocol}//${normalizedSlug}.${activeDomain}${normalizedPath}`;
-    }
+    const activeDomain = findMatchingConfiguredDomain(hostname) ?? getBaseDomainFromHostname(hostname);
+    return `${protocol}//${normalizedSlug}.${activeDomain}${normalizedPath}`;
   }
 
   return `https://${normalizedSlug}.${getConfiguredAppDomain()}${normalizedPath}`;

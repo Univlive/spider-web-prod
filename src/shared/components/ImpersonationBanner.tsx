@@ -9,7 +9,7 @@ export default function ImpersonationBanner() {
     // Signal AuthProvider to switch back to primary auth before we navigate/close
     window.dispatchEvent(new Event("imp_session_changed"));
     if (window.opener && !window.opener.closed) {
-      try { window.opener.focus(); } catch {}
+      try { window.opener.focus(); } catch { /* noop */ }
     }
     // window.close() is blocked by Chrome after post-open navigation; fall back to redirect
     window.close();

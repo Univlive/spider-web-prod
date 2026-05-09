@@ -44,43 +44,20 @@ import type { FacultyItem, TestimonialItem, TestSeries } from "@/themes/coaching
 export default function TenantHomeTheme2() {
   const { tenant, loading } = useTenant();
   const [mobileOpen, setMobileOpen] = useState(false);
-
   const [featured, setFeatured] = useState<TestSeries[]>([]);
   const [loadingFeatured, setLoadingFeatured] = useState(true);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-neutral-400">
-        <Loader2 className="h-5 w-5 animate-spin mr-2 text-orange-500" />
-        Loading...
-      </div>
-    );
-  }
-
-  if (!tenant) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-white">
-        <div className="text-center px-6">
-          <h2 className="text-2xl font-bold">Coaching not found</h2>
-          <p className="text-neutral-400 mt-2">
-            This coaching website does not exist. Check the URL or contact support.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const config = tenant.websiteConfig || {};
-
-  const coachingName = config.coachingName || tenant.coachingName || "Your Institute";
-  const tagline = config.tagline || tenant.tagline || "Learn smarter. Score higher.";
+  const config = tenant?.websiteConfig || {};
+  const coachingName = config.coachingName || (tenant as any)?.coachingName || "Your Institute";
+  const tagline = config.tagline || (tenant as any)?.tagline || "Learn smarter. Score higher.";
   const logoUrl: string | undefined = config.logoUrl;
-
-  // Set dynamic favicon + page title for this educator's subdomain
-  useFavicon(logoUrl, coachingName);
-
   const faculty: FacultyItem[] = Array.isArray(config.faculty) ? config.faculty : [];
   const testimonials: TestimonialItem[] = Array.isArray(config.testimonials) ? config.testimonials : [];
+  const educatorId = tenant?.educatorId;
+  const featuredIds: string[] = Array.isArray(config.featuredTestIds) ? config.featuredTestIds : [];
+  const featuredKey = featuredIds.join(",");
+
+  useFavicon(logoUrl, coachingName);
 
   const socials: Record<string, string> = useMemo(() => {
     const s = (config.socials || {}) as Record<string, string>;
@@ -90,10 +67,6 @@ export default function TenantHomeTheme2() {
     });
     return cleaned;
   }, [config.socials]);
-
-  const educatorId = tenant.educatorId;
-  const featuredIds: string[] = Array.isArray(config.featuredTestIds) ? config.featuredTestIds : [];
-  const featuredKey = featuredIds.join(",");
 
   useEffect(() => {
     if (!educatorId) return;
@@ -133,6 +106,28 @@ export default function TenantHomeTheme2() {
 
     loadFeatured();
   }, [educatorId, featuredKey]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-neutral-400">
+        <Loader2 className="h-5 w-5 animate-spin mr-2 text-orange-500" />
+        Loading...
+      </div>
+    );
+  }
+
+  if (!tenant) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-white">
+        <div className="text-center px-6">
+          <h2 className="text-2xl font-bold">Coaching not found</h2>
+          <p className="text-neutral-400 mt-2">
+            This coaching website does not exist. Check the URL or contact support.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // UPDATED NAVIGATION
   const navLinks = [

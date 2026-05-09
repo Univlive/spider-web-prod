@@ -146,7 +146,7 @@ export default function EducatorLayout() {
   const toggleExpanded = (href: string) => {
     setExpandedItems((prev) => {
       const next = new Set(prev);
-      next.has(href) ? next.delete(href) : next.add(href);
+      if (next.has(href)) next.delete(href); else next.add(href);
       return next;
     });
   };

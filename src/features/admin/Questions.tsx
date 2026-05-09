@@ -569,7 +569,7 @@ export default function Questions() {
     const s = new Set<string>();
     qbRows.forEach((q) => {
       if (qbSubject !== "all" && q.subject !== qbSubject) return;
-      q.topic && s.add(q.topic);
+      if (q.topic) s.add(q.topic);
     });
     return ["all", ...Array.from(s).sort((a, b) => a.localeCompare(b))];
   }, [qbRows, qbSubject]);

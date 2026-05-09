@@ -664,8 +664,7 @@ export default function StudentCBTAttempt() {
         if (!mounted) return;
         setLoadError(e?.message || "Failed to load test");
       } finally {
-        if (!mounted) return;
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
 
@@ -1531,7 +1530,7 @@ export default function StudentCBTAttempt() {
                   <button
                     disabled={!instructionsChecked}
                     onClick={async () => {
-                      try { await handleStart(); setInstructionsOpen(false); } catch {}
+                      try { await handleStart(); setInstructionsOpen(false); } catch { /* noop */ }
                     }}
                     style={{
                       padding: "9px 32px",

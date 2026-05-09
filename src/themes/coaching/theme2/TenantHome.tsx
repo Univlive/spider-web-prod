@@ -75,6 +75,28 @@ export default function TenantHomeTheme2() {
     return cleaned;
   }, [config.socials]);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] text-zinc-500">
+        <Loader2 className="h-6 w-6 animate-spin mr-3" />
+        <span className="font-medium">Loading your experience...</span>
+      </div>
+    );
+  }
+
+  if (!tenant) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB]">
+        <div className="text-center px-6">
+          <h2 className="text-3xl font-bold text-zinc-900 tracking-tight">Coaching not found</h2>
+          <p className="text-zinc-500 mt-3 text-lg">
+            This coaching website does not exist. Check the URL or contact support.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Updated Navigation
   const navLinks = [
     { label: "Home", href: "#top" },

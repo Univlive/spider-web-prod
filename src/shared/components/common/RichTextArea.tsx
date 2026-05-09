@@ -88,7 +88,7 @@ export function RichTextarea({
           type="file"
           accept="image/*"
           className="hidden"
-          onChange={(e) => uploadAndInsert(e.target.files?.[0]!, e.target.files?.[0]?.name)}
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAndInsert(f, f.name); }}
         />
 
         <Button

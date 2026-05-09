@@ -440,8 +440,7 @@ export default function StudentResults() {
         if (!mounted) return;
         setError(e?.message || "Failed to load results.");
       } finally {
-        if (!mounted) return;
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
 

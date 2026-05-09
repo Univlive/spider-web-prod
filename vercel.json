@@ -1,10 +1,4 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/activate-tests",
-      "schedule": "*/15 * * * *"
-    }
-  ],
   "rewrites": [
     {
       "source": "/api/orders/accept",

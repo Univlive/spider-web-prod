@@ -225,8 +225,7 @@ export default function StudentAttemptDetails() {
         if (!mounted) return;
         setError(e?.message || "Failed to load attempt details.");
       } finally {
-        if (!mounted) return;
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
 

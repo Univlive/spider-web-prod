@@ -67,12 +67,16 @@ export default function AiQuestionImportOverlay({
   onSelectOnlyRejected,
   onSaveSelected,
 }: Props) {
-  if (!open) return null;
-
   const [editingItems, setEditingItems] = useState<number[]>([]);
   const [activeStatuses, setActiveStatuses] = useState<Array<AiImportPreviewItem["status"]>>(
     () => deriveActiveStatusesFromIncluded(items)
   );
+
+  useEffect(() => {
+    setActiveStatuses(deriveActiveStatusesFromIncluded(items));
+  }, [items]);
+
+  if (!open) return null;
 
   const selectedCount = items.filter((item) => item.include).length;
   const readyCount = summary?.ready ?? items.filter((item) => item.status === "ready").length;
@@ -80,10 +84,6 @@ export default function AiQuestionImportOverlay({
   const rejectedCount = summary?.rejected ?? items.filter((item) => item.status === "rejected").length;
   const acceptedCount = readyCount + partialCount;
   const allActive = activeStatuses.length === FILTERABLE_STATUSES.length;
-
-  useEffect(() => {
-    setActiveStatuses(deriveActiveStatusesFromIncluded(items));
-  }, [items]);
 
   function toggleItemEdit(sourceIndex: number) {
     setEditingItems((prev) =>
