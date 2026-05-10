@@ -6,12 +6,12 @@ import { useEffect } from "react";
  * subdomain website.
  *
  * - If the educator has uploaded a logo, use it as the favicon.
- * - Otherwise, fall back to the default /favicon.png.
+ * - Otherwise, fall back to the default /logo.png.
  */
 export function useFavicon(logoUrl?: string | null, coachingName?: string | null) {
   useEffect(() => {
     // --- Favicon ---
-    const faviconUrl = logoUrl?.trim() || "/favicon.png";
+    const faviconUrl = logoUrl?.trim() || "/logo.png";
 
     // Find or create the <link rel="icon"> tag
     let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
@@ -25,12 +25,12 @@ export function useFavicon(logoUrl?: string | null, coachingName?: string | null
 
     // --- Page title ---
     if (coachingName?.trim()) {
-      document.title = `${coachingName.trim()} | Powered by UNIV.LIVE`;
+      document.title = `${coachingName.trim()} | Powered by PREPAREKARO.IN`;
     }
 
     // Restore defaults when the component unmounts (navigating away from tenant page)
     return () => {
-      if (link) link.href = "/favicon.png";
+      if (link) link.href = "/logo.png";
     };
   }, [logoUrl, coachingName]);
 }

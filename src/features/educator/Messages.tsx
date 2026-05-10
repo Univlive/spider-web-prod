@@ -29,7 +29,7 @@ export default function Messages() {
   const handleWhatsApp = () => {
     const educatorDetails = `Educator ID: ${uid || "Unknown"} ${email ? `\nEmail: ${email}` : ""}`;
     const text = encodeURIComponent(
-      `Hello Univ.live Support,\n\nI am an educator on your platform.\n${educatorDetails}\n\nI need assistance with an issue. Please get back in touch with me for a resolution.\n\nThank you.`
+      `Hello Preparekaro.in Support,\n\nI am an educator on your platform.\n${educatorDetails}\n\nI need assistance with an issue. Please get back in touch with me for a resolution.\n\nThank you.`
     );
     // Assuming Indian country code (+91) for the provided 10-digit number
     window.open(`https://wa.me/919630896410?text=${text}`, "_blank");

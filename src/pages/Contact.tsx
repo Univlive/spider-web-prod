@@ -34,7 +34,7 @@ const Contact = () => {
       <SEO
         title="Contact Us — Univ.live AI Test Series Platform"
         description="Get in touch with Univ.live. Book a demo, ask about pricing, or get support for setting up your coaching institute's AI-powered test series platform."
-        canonical="https://univlive.tech/contact"
+        canonical="https://preparekaro.in/contact"
       />
       <section className="section-padding section-1">
         <div className="container-main">

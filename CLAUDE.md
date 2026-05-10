@@ -66,6 +66,7 @@ Multi-tenant SaaS platform for coaching institutes. Built with React + TypeScrip
 - `/educator/*` — educator portal (dashboard, learners, billing, tests, content, etc.)
 - `/educator/dashboard` — focused: students count, live tests, avg score, active codes; quick actions
 - `/educator/analytics` — deep analytics: student growth, attempts chart, top performers, subject heatmap (existing Analytics.tsx, now routed)
+- `/educator/question-papers` — submit question paper files to admin for manual upload; shows status (PENDING/IN_PROGRESS/COMPLETE/CANCELLED); can edit/cancel while PENDING
 - `/educator/content` — per-course content management; import from admin library
 - `/student/*` — student portal (dashboard, tests, results, rankings, content)
 - `/student/dashboard` — live tests grid, resume in-progress, rank + avg score, leaderboard preview (top 5), score trend
@@ -96,16 +97,23 @@ Multi-tenant SaaS platform for coaching institutes. Built with React + TypeScrip
 - AI website content generation for educator profiles
 
 ## AI Chatbot (RAG)
-- **Route**: `/student/chatbot` — AI Tutor page for students
+- **Route**: `/student/chatbot` — AI Tutor page; 2-step flow: (1) content + topic selection, (2) chat
+- **Component**: `src/features/student/StudentChatbot.tsx`
+  - Setup screen: student picks indexed content items + optional topic/chapter hint
+  - Chat screen: markdown rendering (react-markdown + remark-gfm/math + rehype-katex), source citations, animated typing indicator
 - **Backend**: `monkey-king /api/chat/*` endpoints (FastAPI)
-  - `POST /api/chat/ingest` — indexes a content file into Pinecone (called automatically after educator upload)
-  - `POST /api/chat/message` — RAG chat; requires STUDENT auth; reads `users/{uid}.educatorId+courseId`
-  - `GET /api/chat/usage` — returns tokens used today vs. daily limit
-- **Toggle**: "General search" switch — if OFF, only course content excerpts used; if ON, LLM also uses general knowledge
-- **Token limit**: `educators/{uid}.chatDailyTokenLimit` (default 100,000) — set by admin via Educators page "Chat Limit" button
-- **Daily usage**: `educators/{uid}/chatUsage/{YYYY-MM-DD}.tokensUsed` — auto-resets by date key
-- **Vector DB**: Pinecone index `univ-content`, namespace `edu-{educatorId}`, metadata filter on `courseId`
-- **Embeddings**: Google `text-embedding-004` (768-dim), Chat: `gemini-2.0-flash`
+  - `POST /api/chat/message` — `content_ids[]` filters Pinecone to selected content; `topic_context` injected into system prompt; returns `contextSources[]`
+  - `GET /api/chat/usage` — tokens used today vs. limit
+- **Token limit**: `educators/{uid}.chatDailyTokenLimit` (default 100,000)
+
+## DPP Auto-Scheduling
+- **Route**: `/educator/dpp` — DppGenerator with two tabs: "Generate Now" (manual) + "Schedule Series" (automated)
+- **Component**: `src/features/educator/DppGenerator.tsx`
+  - Schedule form: content picker, difficulty, date range, time of day, batch multi-select, daily topics table (per-day topic text)
+  - Saves to `POST /api/dpp/schedules`; active schedules list with pause/resume/delete
+- **Backend**: `monkey-king /api/dpp/schedules/*`
+  - APScheduler job runs every 15 min, auto-generates DPPs for due schedules and publishes to `targetBatches`
+  - `source: "schedule"` bypasses daily manual DPP limit
 
 ## Content Management
 - **Firestore**: `admin_library/{contentId}` — admin-uploaded books/notes scoped by subject

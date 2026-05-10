@@ -123,7 +123,7 @@ export default function HeroSection() {
                     </div>
                     <div className="text-left">
                       <p className="font-semibold text-sm">Elite Academy</p>
-                      <p className="text-xs text-muted-foreground">yourcoaching.univ.live</p>
+                      <p className="text-xs text-muted-foreground">yourcoaching.preparekaro.in</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-2">

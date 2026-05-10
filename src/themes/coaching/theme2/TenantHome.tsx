@@ -617,7 +617,7 @@ export default function TenantHomeTheme2() {
             <div>
                <h4 className="font-bold text-zinc-950 mb-4">Powered By</h4>
                <p className="text-zinc-500 text-sm leading-relaxed mb-4">
-                 Built on UNIV.LIVE to help educators scale their testing and reach.
+                 Built on PREPAREKARO.IN to help educators scale their testing and reach.
                </p>
                <div className="inline-flex items-center justify-center rounded-full bg-zinc-100 px-3 py-1">
               

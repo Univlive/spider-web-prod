@@ -158,7 +158,7 @@ export function TeamSection() {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
             The Experts Behind{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
-              Univ.live
+              Preparekaro.in
             </span>
           </h2>
           <p className="text-muted-foreground text-lg">

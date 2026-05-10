@@ -53,7 +53,7 @@ export function HeroSection() {
 
             {/* Subtext */}
             <p className="text-lg lg:text-xl text-muted-foreground max-w-xl mb-8 leading-relaxed">
-              <strong className="text-foreground">Univ.live</strong> is a CUET test series platform crafted by top academic teams and subject experts, built specifically for coaching centers.
+              <strong className="text-foreground">Preparekaro.in</strong> is a CUET test series platform crafted by top academic teams and subject experts, built specifically for coaching centers.
             </p>
 
             {/* CTA Buttons */}
@@ -116,7 +116,7 @@ export function HeroSection() {
             <div className="relative aspect-video bg-gradient-to-br from-primary/5 to-accent/5 rounded-3xl overflow-hidden border-2 border-border shadow-elevated group">
               <iframe
                 src="https://www.youtube.com/embed/KdVzlfhzDpc"
-                title="Univ.live Demo"
+                title="Preparekaro.in Demo"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 className="absolute inset-0 w-full h-full rounded-3xl"

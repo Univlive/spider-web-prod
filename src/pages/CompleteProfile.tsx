@@ -288,7 +288,7 @@ export default function CompleteProfile() {
     <div className="min-h-screen w-full lg:grid lg:grid-cols-2 bg-background">
       <div className="flex flex-col min-h-screen p-6 lg:p-12 relative">
         <div className="flex justify-between items-center mb-8">
-          <div className="font-bold text-2xl tracking-tighter">UNIV.LIVE</div>
+          <div className="font-bold text-2xl tracking-tighter">PREPAREKARO.IN</div>
           <Link
             to="/"
             className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"

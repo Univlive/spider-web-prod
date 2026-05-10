@@ -16,7 +16,7 @@ const features = [
   {
     icon: Globe,
     title: "Branded Subdomain",
-    description: "Get your own yourcoaching.univ.live subdomain with custom branding and design.",
+    description: "Get your own yourcoaching.preparekaro.in subdomain with custom branding and design.",
     bgColor: "bg-pastel-mint",
   },
   {

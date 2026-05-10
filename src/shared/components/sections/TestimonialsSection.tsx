@@ -9,7 +9,7 @@ const testimonials = [
     avatar: "AJ",
     rating: 5,
     quote:
-      "I gave multiple CUET mocks through Univ.live. The analytics clearly showed where I was losing marks, especially in time management.",
+      "I gave multiple CUET mocks through Preparekaro.in. The analytics clearly showed where I was losing marks, especially in time management.",
   },
   {
     name: "Amit Sharma",
@@ -17,7 +17,7 @@ const testimonials = [
     avatar: "AS",
     rating: 5,
     quote:
-      "Univ.live is very teacher-friendly. At SEA Classes, Indore, we use it mainly for mock tests and student analysis, and it saves us a lot of manual work.",
+      "Preparekaro.in is very teacher-friendly. At SEA Classes, Indore, we use it mainly for mock tests and student analysis, and it saves us a lot of manual work.",
   },
   {
     name: "Rajesh Verma",
@@ -25,7 +25,7 @@ const testimonials = [
     avatar: "RV",
     rating: 5,
     quote:
-      "We started using Univ.live for our CUET mock tests at Apex Commerce Academy, Jaipur, and the transition was smooth. Our students adapted quickly, and the test experience feels very close to the real exam.",
+      "We started using Preparekaro.in for our CUET mock tests at Apex Commerce Academy, Jaipur, and the transition was smooth. Our students adapted quickly, and the test experience feels very close to the real exam.",
   },
   {
     name: "Neha Sharma",
@@ -33,7 +33,7 @@ const testimonials = [
     avatar: "NS",
     rating: 5,
     quote:
-      "The performance reports on Univ.live helped us identify weak areas much faster. At Bright Future Classes, Shivpuri, this has improved how we plan our revision sessions.",
+      "The performance reports on Preparekaro.in helped us identify weak areas much faster. At Bright Future Classes, Shivpuri, this has improved how we plan our revision sessions.",
   },
 ];
 
@@ -63,7 +63,7 @@ export function TestimonialsSection() {
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
             What Coaching Centers Say About{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Univ.live</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Preparekaro.in</span>
           </h2>
         </motion.div>
 

@@ -73,7 +73,7 @@ function getAllowedDomainSuffixes(): string[] {
     .map((x) => sanitizeDomain(x))
     .filter(Boolean);
 
-  const fallback = ["univ.live"];
+  const fallback = ["preparekaro.in"];
 
   const unique: string[] = [];
   for (const domain of [...fromCorsSuffixes, ...fromAppDomains, ...fallback]) {

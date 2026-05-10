@@ -4,4 +4,4 @@ Disallow: /admin/
 Disallow: /student/
 Disallow: /educator/
 
-Sitemap: https://univlive.tech/sitemap.xml
+Sitemap: https://preparekaro.in/sitemap.xml

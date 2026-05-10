@@ -20,7 +20,7 @@ export default function StudentMessages() {
   const handleWhatsApp = () => {
     const studentDetails = `Student ID: ${uid || "Unknown"} ${email ? `\nEmail: ${email}` : ""}`;
     const text = encodeURIComponent(
-      `Hello Univ.live Support,\n\nI am a student on your platform.\n${studentDetails}\n\nI need assistance with an issue. Please get back in touch with me for a resolution.\n\nThank you.`
+      `Hello Preparekaro.in Support,\n\nI am a student on your platform.\n${studentDetails}\n\nI need assistance with an issue. Please get back in touch with me for a resolution.\n\nThank you.`
     );
     window.open(`https://wa.me/919630896410?text=${text}`, "_blank");
   };

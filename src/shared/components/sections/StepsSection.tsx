@@ -10,7 +10,7 @@ const steps = [
     number: "01",
     title: "Sign Up",
     subtitle: "Create your account instantly",
-    description: "Register on Univ.live and access your dashboard within seconds.",
+    description: "Register on Preparekaro.in and access your dashboard within seconds.",
     visual: "signup",
   },
   {
@@ -51,7 +51,7 @@ const StepVisual = ({ type }: { type: string }) => {
             </div>
             <div>
               <div className="text-xs text-muted-foreground">Welcome to</div>
-              <div className="text-sm font-semibold text-foreground">Univ.live</div>
+              <div className="text-sm font-semibold text-foreground">Preparekaro.in</div>
             </div>
           </div>
           <div className="space-y-2">
@@ -116,7 +116,7 @@ const StepVisual = ({ type }: { type: string }) => {
           </div>
           <div className="bg-background rounded-lg p-3 border border-border">
             <div className="text-xs text-muted-foreground mb-1">Your Platform</div>
-            <div className="text-sm font-semibold text-foreground">yourcoaching.univ.live</div>
+            <div className="text-sm font-semibold text-foreground">yourcoaching.preparekaro.in</div>
           </div>
           <div className="mt-3 flex gap-2">
             <div className="flex-1 h-6 bg-primary/10 rounded flex items-center justify-center">

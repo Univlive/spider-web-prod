@@ -42,7 +42,7 @@ const Features = () => {
       <SEO
         title="Features — AI-Powered Test Series & Coaching Management | Univ.live"
         description="Explore Univ.live features: AI question import, objective & subjective tests, student analytics, AI chatbot tutor, rankings, and support for JEE, NEET, CUET, CBSE and all exams."
-        canonical="https://univlive.tech/features"
+        canonical="https://preparekaro.in/features"
       />
       <section className="section-padding section-1">
         <div className="container-main">

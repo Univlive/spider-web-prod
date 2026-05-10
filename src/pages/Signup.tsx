@@ -11,7 +11,6 @@ import { Button } from "@shared/ui/button";
 import { Input } from "@shared/ui/input";
 import { Label } from "@shared/ui/label";
 import { registerStudentForTenant } from "@shared/lib/studentRegistration";
-import logo from "../assets/univ-logo.png";
 import { generateSessionId, setLocalSessionId, syncSessionWithFirestore } from "@shared/lib/session";
 
 type RoleUI = "student" | "educator";
@@ -239,7 +238,7 @@ export default function Signup() {
         {/* Header / Nav */}
         <div className="flex justify-between items-center mb-6">
            {effectiveRole === "educator" ? (
-            <img src={logo} className="w-25 h-10" alt="UNIV.LIVE Logo" />
+            <img src="/logo.png" className="w-25 h-10" alt="UNIV.LIVE Logo" />
           ) : (
             <div />
           )}

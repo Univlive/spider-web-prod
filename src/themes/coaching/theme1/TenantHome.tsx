@@ -767,7 +767,7 @@ export default function TenantHomeTheme2() {
                 })}
               </div>
               <p className="text-xs font-light text-stone-500">
-                Powered by UNIV.LIVE to help educators publish and scale.
+                Powered by PREPAREKARO.IN to help educators publish and scale.
               </p>
             </div>
           </div>

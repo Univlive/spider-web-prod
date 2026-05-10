@@ -35,8 +35,6 @@ import {
   DropdownMenuTrigger,
 } from "@shared/ui/dropdown-menu";
 import { cn } from "@shared/lib/utils";
-import logo from "@/assets/logo.png";
-import univLogo from "@/assets/univ-logo-1.png";
 
 import { useAuth } from "@app/providers/AuthProvider";
 import { useTenant } from "@app/providers/TenantProvider";
@@ -243,8 +241,7 @@ export default function StudentLayout() {
           {/* Logo Section */}
           <div className="h-16 flex items-center justify-between px-4 border-b border-border shrink-0">
             <div className="flex items-center gap-2">
-              
-              {/* <span className="font-display font-bold text-lg tracking-tight">Student Portal</span> */}
+              <img src={sidebarCollapsed ? "/logo-compact.png" : "/logo.png"} alt="UNIV.LIVE" className={sidebarCollapsed ? "h-10 w-10 object-contain" : "h-10 w-auto"} />
             </div>
             <Button variant="ghost" size="icon" className="hidden lg:inline-flex" onClick={() => setSidebarCollapsed((prev) => !prev)}>
               {sidebarCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}

@@ -246,7 +246,7 @@ export default function Theme1Layout({ children }: Theme1LayoutProps) {
         </div>
 
         <div className="text-center text-sm py-4 border-t">
-          © {new Date().getFullYear()} {coachingName}. Powered by UNIV.LIVE
+          © {new Date().getFullYear()} {coachingName}. Powered by PREPAREKARO.IN
         </div>
       </footer>
     </div>

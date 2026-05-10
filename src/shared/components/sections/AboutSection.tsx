@@ -28,14 +28,14 @@ export function AboutSection() {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
             About{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
-              Univ.live
+              Preparekaro.in
             </span>
           </h2>
           <p className="text-2xl text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent font-bold mb-4">
             Tayari Exam Jaisi.
           </p>
           <p className="text-lg text-muted-foreground">
-            Univ.live is a technology platform built to help coaching centers deliver{" "}
+            Preparekaro.in is a technology platform built to help coaching centers deliver{" "}
             <strong className="text-foreground">real CUET CBT exam preparation</strong>—exactly the
             way the exam is conducted.
           </p>
@@ -60,13 +60,13 @@ export function AboutSection() {
               leads to poor time management, confusion, and unnecessary panic on exam day.
             </p>
             <p className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent relative z-10">
-              Univ.live bridges this gap by enabling coaching centers to offer exam-realistic CBT
+              Preparekaro.in bridges this gap by enabling coaching centers to offer exam-realistic CBT
               practice to their students.
             </p>
           </div>
         </motion.div>
 
-        {/* Why Univ.live */}
+        {/* Why Preparekaro.in */}
         <motion.div
           className="text-center max-w-3xl mx-auto mb-12"
           initial={{ opacity: 0, y: 20 }}
@@ -74,7 +74,7 @@ export function AboutSection() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h3 className="text-2xl lg:text-3xl font-bold mb-4">Why Univ.live</h3>
+          <h3 className="text-2xl lg:text-3xl font-bold mb-4">Why Preparekaro.in</h3>
           <p className="text-muted-foreground text-lg">
             We believe preparation should feel exactly like the real exam.
           </p>

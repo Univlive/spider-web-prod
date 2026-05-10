@@ -224,7 +224,7 @@ export default function AdminEducators() {
 
   function copyCredentials() {
     if (!created) return;
-    navigator.clipboard.writeText(`Email: ${created.email}\nPassword: ${created.password}\nPortal: https://${created.tenantSlug}.univ.live`);
+    navigator.clipboard.writeText(`Email: ${created.email}\nPassword: ${created.password}\nPortal: https://${created.tenantSlug}.preparekaro.in`);
     setCredCopied(true);
     setTimeout(() => setCredCopied(false), 2000);
   }
@@ -306,7 +306,7 @@ export default function AdminEducators() {
                         <div className="flex items-center gap-2">
                           <Badge variant="secondary">{edu.tenantSlug}</Badge>
                           <a 
-                            href={`https://${edu.tenantSlug}.univ.live`} 
+                            href={`https://${edu.tenantSlug}.preparekaro.in`} 
                             target="_blank" 
                             rel="noreferrer"
                             className="text-muted-foreground hover:text-primary"
@@ -427,7 +427,7 @@ export default function AdminEducators() {
                 <div><span className="text-muted-foreground">UID: </span>{created.uid}</div>
                 <div><span className="text-muted-foreground">Email: </span>{created.email}</div>
                 <div><span className="text-muted-foreground">Password: </span>{created.password}</div>
-                <div><span className="text-muted-foreground">Portal: </span>https://{created.tenantSlug}.univ.live</div>
+                <div><span className="text-muted-foreground">Portal: </span>https://{created.tenantSlug}.preparekaro.in</div>
               </div>
               <div className="flex gap-2">
                 <Button className="flex-1 gap-2" onClick={copyCredentials}>
@@ -460,7 +460,7 @@ export default function AdminEducators() {
                     placeholder="sharma-classes"
                     className="rounded-r-none"
                   />
-                  <span className="h-10 px-3 flex items-center border border-l-0 rounded-r-md bg-muted text-sm text-muted-foreground whitespace-nowrap">.univ.live</span>
+                  <span className="h-10 px-3 flex items-center border border-l-0 rounded-r-md bg-muted text-sm text-muted-foreground whitespace-nowrap">.preparekaro.in</span>
                 </div>
               </div>
               <div>

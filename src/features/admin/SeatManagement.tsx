@@ -199,6 +199,7 @@ export default function SeatManagement() {
   // AI config
   const [chatTokenLimit, setChatTokenLimit] = useState(100000);
   const [dppDailyLimit, setDppDailyLimit] = useState(3);
+  const [maxQpRequests, setMaxQpRequests] = useState(5);
   const [savingAiConfig, setSavingAiConfig] = useState(false);
 
   const seatLimit = Math.max(0, Number(educator?.seatLimit || 0));
@@ -268,6 +269,7 @@ export default function SeatManagement() {
     setAllowedCourseIds((educator as any).allowedCourseIds ?? []);
     setChatTokenLimit((educator as any).chatDailyTokenLimit ?? 100000);
     setDppDailyLimit((educator as any).dppDailyLimit ?? 3);
+    setMaxQpRequests((educator as any).maxQuestionPaperRequests ?? 5);
   }, [educator]);
 
   // Subscribe educator + billingSeats + transactions
@@ -514,6 +516,7 @@ export default function SeatManagement() {
       await updateDoc(doc(db, "educators", targetId), {
         chatDailyTokenLimit: Math.max(0, Math.floor(chatTokenLimit)),
         dppDailyLimit: Math.max(0, Math.floor(dppDailyLimit)),
+        maxQuestionPaperRequests: Math.max(0, Math.floor(maxQpRequests)),
         updatedAt: serverTimestamp(),
       });
       toast.success("AI config saved");
@@ -934,6 +937,17 @@ export default function SeatManagement() {
                     className="max-w-xs mt-1"
                   />
                   <p className="text-xs text-muted-foreground mt-1">Max DPP papers generated per day (default 3)</p>
+                </div>
+                <div>
+                  <Label className="text-sm text-muted-foreground">Question Paper Requests / Month</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={maxQpRequests}
+                    onChange={(e) => setMaxQpRequests(Number(e.target.value))}
+                    className="max-w-xs mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Max question paper upload requests per month (default 5)</p>
                 </div>
               </div>
               <Button onClick={saveAiConfig} disabled={savingAiConfig}>

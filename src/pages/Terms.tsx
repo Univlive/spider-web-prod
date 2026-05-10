@@ -17,24 +17,24 @@ const Terms = () => {
 
             <div className="prose prose-lg max-w-none">
               <p>
-                Welcome to <strong>Univ.live</strong>. By accessing or using our website and platform, you agree to comply with and be bound by the following Terms of Use. Please read them carefully.
+                Welcome to <strong>Preparekaro.in</strong>. By accessing or using our website and platform, you agree to comply with and be bound by the following Terms of Use. Please read them carefully.
               </p>
 
               <h2>1. Acceptance of Terms</h2>
               <p>
-                By using Univ.live, you agree to these Terms of Use and our Privacy Policy. If you do not agree, please do not use the platform.
+                By using Preparekaro.in, you agree to these Terms of Use and our Privacy Policy. If you do not agree, please do not use the platform.
               </p>
 
-              <h2>2. About Univ.live</h2>
+              <h2>2. About Preparekaro.in</h2>
               <p>
-                Univ.live is a technology platform that provides CBT-based test series infrastructure for coaching centers and educational institutions, primarily for CUET preparation.
+                Preparekaro.in is a technology platform that provides CBT-based test series infrastructure for coaching centers and educational institutions, primarily for CUET preparation.
               </p>
 
               <h2>3. Account Responsibility</h2>
               <ul>
                 <li>You are responsible for maintaining the confidentiality of your account credentials.</li>
                 <li>Any activity performed through your account is your responsibility.</li>
-                <li>Univ.live is not liable for unauthorized access caused by user negligence.</li>
+                <li>Preparekaro.in is not liable for unauthorized access caused by user negligence.</li>
               </ul>
 
               <h2>4. Platform Usage</h2>
@@ -54,7 +54,7 @@ const Terms = () => {
 
               <h2>6. Intellectual Property</h2>
               <p>
-                All content, software, branding, and technology on Univ.live are the intellectual property of Univ.live and may not be copied or reused without permission.
+                All content, software, branding, and technology on Preparekaro.in are the intellectual property of Preparekaro.in and may not be copied or reused without permission.
               </p>
 
               <h2>7. Service Availability</h2>
@@ -63,7 +63,7 @@ const Terms = () => {
               </p>
 
               <h2>8. Limitation of Liability</h2>
-              <p>Univ.live shall not be liable for:</p>
+              <p>Preparekaro.in shall not be liable for:</p>
               <ul>
                 <li>Exam results or academic outcomes</li>
                 <li>Loss of data due to user error</li>

@@ -53,7 +53,7 @@ export default function HowItWorks() {
       <SEO
         title="How It Works — Launch Any Test Series in Minutes | Univ.live"
         description="See how Univ.live works: set up your coaching portal, create test series for JEE, NEET, CUET, CBSE and more, and track student performance — all in minutes with AI."
-        canonical="https://univlive.tech/how-it-works"
+        canonical="https://preparekaro.in/how-it-works"
       />
       <div className="pb-20">
         {/* Hero */}

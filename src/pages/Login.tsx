@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import { useTenant } from "@app/providers/TenantProvider";
 import { useAuth } from "@app/providers/AuthProvider";
 import { registerStudentForTenant } from "@shared/lib/studentRegistration";
-import logo from "../assets/univ-logo.png";
 import {
   Dialog,
   DialogContent,
@@ -199,7 +198,7 @@ export default function Login() {
         {/* Header / Nav */}
         <div className="flex justify-between items-center mb-8">
           {role === "educator" ? (
-            <img src={logo} className="w-25 h-10" alt="UNIV.LIVE Logo" />
+            <img src="/logo.png" className="w-25 h-10" alt="UNIV.LIVE Logo" />
           ) : (
             <div />
           )}

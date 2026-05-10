@@ -17,6 +17,7 @@ import EducatorQuestionBank from "@features/educator/QuestionBank";
 import Settings from "@features/educator/Settings";
 import { ManageQuestionsPage, TestSeries } from "@features/educator/test-series";
 import WebsiteSettings from "@features/educator/WebsiteSettings";
+import QuestionPaperRequests from "@features/educator/QuestionPaperRequests";
 
 export function getEducatorRoutes() {
   return (
@@ -45,6 +46,7 @@ export function getEducatorRoutes() {
       <Route path="dpp" element={<DppGenerator />} />
       <Route path="analytics" element={<EducatorAnalytics />} />
       <Route path="website-builder" element={<InstituteBuilder />} />
+      <Route path="question-papers" element={<QuestionPaperRequests />} />
     </Route>
   );
 }

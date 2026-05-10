@@ -17,7 +17,7 @@ const Privacy = () => {
 
             <div className="prose prose-lg max-w-none">
               <p>
-                At <strong>Univ.live</strong>, your privacy is important to us. This Privacy Policy explains how we collect, use, and protect your information.
+                At <strong>Preparekaro.in</strong>, your privacy is important to us. This Privacy Policy explains how we collect, use, and protect your information.
               </p>
 
               <h2>1. Information We Collect</h2>
@@ -45,7 +45,7 @@ const Privacy = () => {
               <p>We do not sell or rent your personal data to third parties. We may share information only when required by law or with trusted service providers (e.g., email or hosting services).</p>
 
               <h2>5. Cookies</h2>
-              <p>Univ.live may use cookies to improve user experience and platform performance.</p>
+              <p>Preparekaro.in may use cookies to improve user experience and platform performance.</p>
 
               <h2>6. Student Data</h2>
               <p>Student performance data is used strictly for analytics, progress tracking, and improving learning outcomes. We do not use student data for advertising purposes.</p>

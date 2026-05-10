@@ -429,7 +429,7 @@ export default function WebsiteSettings() {
                 </h1>
                 <p className="text-white/80 text-sm sm:text-base max-w-xl">
                   Your website is love! on {" "}
-                  <span className="font-semibold text-white">https://{tenant.tenantSlug}.univ.live</span>
+                  <span className="font-semibold text-white">https://{tenant.tenantSlug}.preparekaro.in</span>
                 </p>
                 <div className="flex flex-wrap gap-3 mt-4">
                   <Button
@@ -449,7 +449,7 @@ export default function WebsiteSettings() {
                         toast.error("Website not available — tenant slug is missing.");
                         return;
                       }
-                      const url = `https://${slug}.univ.live`;
+                      const url = `https://${slug}.preparekaro.in`;
                       // Open in a new tab safely
                       window.open(url, "_blank", "noopener,noreferrer");
                     }}

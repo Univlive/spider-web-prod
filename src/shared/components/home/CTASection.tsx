@@ -64,7 +64,7 @@ export default function CTASection() {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="text-lg text-white/80 mb-10 max-w-2xl mx-auto"
             >
-              Join 500+ coaching institutes already using UNIV.LIVE. 
+              Join 500+ coaching institutes already using PREPAREKARO.IN. 
               Get your AI-powered website in just 6 hours.
             </motion.p>
 

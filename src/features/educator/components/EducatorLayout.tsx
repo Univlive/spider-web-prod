@@ -20,6 +20,7 @@ import {
   Database,
   BarChart3,
   UserPlus,
+  ClipboardList,
 } from "lucide-react";
 import { Button } from "@shared/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@shared/ui/avatar";
@@ -34,7 +35,6 @@ import {
 } from "@shared/ui/dropdown-menu";
 import { cn, stringToColor } from "@shared/lib/utils";
 import { buildTenantUrl } from "@shared/lib/tenant";
-import univLogo from "@/assets/univ-logo-1.png";
 import { useAuth } from "@app/providers/AuthProvider";
 import { signOut } from "firebase/auth";
 import { auth, db } from "@shared/lib/firebase";
@@ -121,6 +121,7 @@ export default function EducatorLayout() {
         href: "/educator/test-series",
         children: [
           { icon: Database, label: "Question Bank", href: "/educator/question-bank" },
+          { icon: ClipboardList, label: "Admin Test Upload", href: "/educator/question-papers" },
           { icon: Zap, label: "DPP Generator", href: "/educator/dpp" },
         ],
       },
@@ -210,7 +211,7 @@ export default function EducatorLayout() {
         <div className="flex flex-col h-full">
           <div className="h-16 flex items-center justify-between px-4 border-b border-border">
             <Link to="/" className={cn("flex items-center gap-2", sidebarCollapsed && "lg:justify-center lg:w-full")}>
-              <img src={univLogo} alt="UNIV.LIVE" className="h-8 w-auto" />
+              <img src={sidebarCollapsed ? "/logo-compact.png" : "/logo.png"} alt="UNIV.LIVE" className={sidebarCollapsed ? "h-10 w-10 object-contain" : "h-10 w-auto"} />
             </Link>
             <Button variant="ghost" size="icon" className="hidden lg:inline-flex" onClick={() => setSidebarCollapsed((prev) => !prev)}>
               {sidebarCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}

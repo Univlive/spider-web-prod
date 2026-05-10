@@ -1,7 +1,6 @@
 import { forwardRef } from "react";
 import { Link } from "react-router-dom";
 import { Instagram, Linkedin, Facebook, Mail, Phone } from "lucide-react";
-import univLogo from "@/assets/univ-logo-2.png";
 
 const footerLinks = {
   product: [
@@ -38,7 +37,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           {/* Brand */}
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center mb-5">
-              <img src={univLogo} alt="Univ.live" className="h-10 w-auto invert" />
+              <img src="/logo.png" alt="Preparekaro.in" className="h-10 w-auto invert" />
             </Link>
             <p className="text-background/90 text-lg font-medium mb-4">
               Tayaari Exam Jaisi
@@ -60,7 +59,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
             </div>
             
             <p className="text-background/50 text-xs">
-              © {new Date().getFullYear()} Univ.live. All rights reserved.
+              © {new Date().getFullYear()} Preparekaro.in. All rights reserved.
             </p>
           </div>
 

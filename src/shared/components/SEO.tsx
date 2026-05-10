@@ -8,8 +8,8 @@ interface SEOProps {
 }
 
 export default function SEO({ title, description, canonical, ogImage }: SEOProps) {
-  const image = ogImage ?? "https://univlive.tech/og-image.png";
-  const url = canonical ?? "https://univlive.tech/";
+  const image = ogImage ?? "https://preparekaro.in/og-image.png";
+  const url = canonical ?? "https://preparekaro.in/";
 
   return (
     <Helmet>

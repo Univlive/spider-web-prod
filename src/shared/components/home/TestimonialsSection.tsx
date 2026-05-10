@@ -12,7 +12,7 @@ const testimonials = [
     location: "Delhi",
     image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face",
     content:
-      "UNIV.LIVE transformed our coaching institute completely. Within 6 hours, we had a professional website that looks better than competitors who spent lakhs on development. Our enrollments increased by 40% in the first month!",
+      "PREPAREKARO.IN transformed our coaching institute completely. Within 6 hours, we had a professional website that looks better than competitors who spent lakhs on development. Our enrollments increased by 40% in the first month!",
     rating: 5,
   },
   {
@@ -42,7 +42,7 @@ const testimonials = [
     location: "Jaipur",
     image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
     content:
-      "We were spending hours managing student data and tests manually. UNIV.LIVE automated everything. The dashboard gives us real-time insights, and the support team is incredibly responsive.",
+      "We were spending hours managing student data and tests manually. PREPAREKARO.IN automated everything. The dashboard gives us real-time insights, and the support team is incredibly responsive.",
     rating: 5,
   },
 ];
@@ -80,7 +80,7 @@ export default function TestimonialsSection() {
             Loved by <span className="gradient-text">500+</span> Coaching Institutes
           </h2>
           <p className="text-lg text-muted-foreground">
-            See what educators and students are saying about UNIV.LIVE
+            See what educators and students are saying about PREPAREKARO.IN
           </p>
         </motion.div>
 

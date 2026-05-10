@@ -10,6 +10,7 @@ import AdminDppTemplate from "@features/admin/DppTemplate";
 import AdminEducators from "@features/admin/Educators";
 import AdminLayout from "@features/admin/AdminLayout";
 import AdminPaymentLogs from "@features/admin/PaymentLogs";
+import AdminQuestionPaperRequests from "@features/admin/QuestionPaperRequests";
 import AdminPlanManagement from "@features/admin/PlanManagement";
 import AdminQuestionBank from "@features/admin/QuestionBank";
 import AdminQuestions from "@features/admin/Questions";
@@ -48,6 +49,7 @@ export function getAdminRoutes(adminIndexRoute: React.ReactElement) {
       <Route path="dpp-template" element={<AdminDppTemplate />} />
       <Route path="coupons" element={<AdminCouponManagement />} />
       <Route path="payment-logs" element={<AdminPaymentLogs />} />
+      <Route path="question-paper-requests" element={<AdminQuestionPaperRequests />} />
     </Route>
   );
 }

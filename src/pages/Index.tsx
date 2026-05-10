@@ -6,7 +6,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import SEO from "@shared/components/SEO";
-import logo from "@/assets/univ-logo.png";
 import "./landing.css";
 
 const PRIMARY = "#6C47FF";
@@ -59,8 +58,8 @@ const COMPARISON_ROWS = [
 
 // ─── TESTIMONIALS DATA ────────────────────────────────────────────────────────
 const TESTIMONIALS = [
-  { name: "Rajesh Sharma", role: "Director, Pinnacle Academy", initials: "RS", text: "Univ.live transformed how we run our JEE test series. The AI analytics helped our top students improve their weak subjects by 30% in just 2 months.", rating: 5 },
-  { name: "Priya Menon", role: "Founder, NEET Guru Institute", initials: "PM", text: "We shifted from OMR sheets to Univ.live and saved ₹8,000/month in paper costs alone. The parent report feature has increased trust dramatically.", rating: 5 },
+  { name: "Rajesh Sharma", role: "Director, Pinnacle Academy", initials: "RS", text: "Preparekaro.in transformed how we run our JEE test series. The AI analytics helped our top students improve their weak subjects by 30% in just 2 months.", rating: 5 },
+  { name: "Priya Menon", role: "Founder, NEET Guru Institute", initials: "PM", text: "We shifted from OMR sheets to Preparekaro.in and saved ₹8,000/month in paper costs alone. The parent report feature has increased trust dramatically.", rating: 5 },
   { name: "Arvind Khanna", role: "Centre Head, Career Catalyst", initials: "AK", text: "The personalised test papers are a game-changer. Each student gets targeted practice, and our results have improved across all batches this year.", rating: 5 },
   { name: "Sunita Patel", role: "Teacher, Excel Coaching", initials: "SP", text: "AI doubt support means I don't have to answer WhatsApp messages at midnight anymore. Students get instant answers and I get my life back!", rating: 5 },
 ];
@@ -85,9 +84,9 @@ function LandingNavbar() {
       transition: "all 0.3s ease",
       boxShadow: scrolled ? "0 2px 24px rgba(108,71,255,0.07)" : "none",
     }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", height: 68, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <a href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-          <img src={logo} alt="Univ.live" style={{ height: 38, width: "auto" }} />
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px 0 8px", height: 68, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <a href="/" style={{ display: "flex", alignItems: "center", gap: 6, textDecoration: "none",  }}>
+          <img src="/logo.png" alt="preparekaro.in" style={{ height: 68, width: "auto" }} />
         </a>
 
         <div className="desktop-nav" style={{ display: "flex", alignItems: "center", gap: 36 }}>
@@ -114,6 +113,7 @@ function LandingNavbar() {
 
       {mobileOpen && (
         <div style={{ background: "#fff", borderTop: "1px solid #f0eeff", padding: "16px 24px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
+          <img src="/logo-compact.png" alt="Preparekaro.in" style={{ height: 40, width: 40 }} />
           {NAV_LINKS.map(l => (
             <a key={l} href={`#${l.toLowerCase().replace(/\s+/g, "-")}`}
               onClick={() => setMobileOpen(false)}
@@ -162,7 +162,7 @@ function HeroSection() {
             ))}
           </div>
           <p style={{ fontSize: 16, lineHeight: 1.7, color: "#5a5970", marginBottom: 36, fontFamily: "'Inter', sans-serif", maxWidth: 480 }}>
-            Univ.live empowers coaching institutes to run their own branded exam platform for any competitive exam with AI-powered tools, question banks, and real-time analytics.
+            Preparekaro.in empowers coaching institutes to run their own branded exam platform for any competitive exam with AI-powered tools, question banks, and real-time analytics.
           </p>
           <div className="hero-cta" style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
             <a href="#interest-widget"
@@ -198,7 +198,7 @@ function HeroSection() {
                 {[0,1,2].map(i => <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(255,255,255,0.4)" }}></div>)}
               </div>
               <div style={{ flex: 1, background: "rgba(255,255,255,0.15)", borderRadius: 6, padding: "4px 12px", fontSize: 11, color: "rgba(255,255,255,0.85)", fontFamily: "monospace" }}>
-                yourcoaching.univ.live
+                yourcoaching.preparekaro.in
               </div>
             </div>
             <div style={{ padding: 20 }}>
@@ -434,14 +434,14 @@ function ComparisonSection() {
             <span style={{ fontSize: 12, fontWeight: 600, color: PRIMARY, letterSpacing: "0.06em", textTransform: "uppercase" }}>Why Switch</span>
           </div>
           <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: "clamp(28px,4vw,44px)", color: "#0f0e17", letterSpacing: "-1px", lineHeight: 1.15 }}>
-            Traditional vs Univ.live
+            Traditional vs Preparekaro.in
           </h2>
         </div>
         <div style={{ borderRadius: 20, overflow: "hidden", border: "1.5px solid #f0eeff", boxShadow: "0 8px 48px rgba(108,71,255,0.08)" }}>
           <div className="comparison-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1.5fr", background: "#faf9ff" }}>
             <div className="comparison-cell" style={{ padding: "16px 24px", fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 13, color: "#8b8aa0" }}>Feature</div>
             <div className="comparison-cell" style={{ padding: "16px 24px", fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: 14, color: "#ef4444", borderLeft: "1px solid #f0eeff", textAlign: "center" }}>Traditional Method</div>
-            <div className="comparison-cell" style={{ padding: "16px 24px", fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: 14, color: PRIMARY, borderLeft: "1px solid #f0eeff", textAlign: "center", background: `${PRIMARY}06` }}>Univ.live Platform</div>
+            <div className="comparison-cell" style={{ padding: "16px 24px", fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: 14, color: PRIMARY, borderLeft: "1px solid #f0eeff", textAlign: "center", background: `${PRIMARY}06` }}>Preparekaro.in Platform</div>
           </div>
           {COMPARISON_ROWS.map((r, i) => (
             <div key={i} className="comparison-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1.5fr", borderTop: "1px solid #f0eeff", background: i % 2 === 0 ? "#fff" : "#fdf9ff" }}>
@@ -479,7 +479,7 @@ function TestimonialsSection() {
             <span style={{ fontSize: 12, fontWeight: 600, color: PRIMARY, letterSpacing: "0.06em", textTransform: "uppercase" }}>Testimonials</span>
           </div>
           <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: "clamp(28px,4vw,44px)", color: "#0f0e17", letterSpacing: "-1px", lineHeight: 1.15 }}>
-            What Coaching Centers<br />Say About <span style={{ color: PRIMARY }}>Univ.live</span>
+            What Coaching Centers<br />Say About <span style={{ color: PRIMARY }}>Preparekaro.in</span>
           </h2>
         </div>
         <div className="testimonial-card" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} style={{ background: "#fff", borderRadius: 24, padding: "40px 48px", border: "1.5px solid #f0eeff", boxShadow: "0 8px 48px rgba(108,71,255,0.08)", marginBottom: 32, position: "relative" }}>
@@ -541,12 +541,24 @@ function InterestWidgetSection() {
     return e;
   };
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setSubmitting(true);
-    setTimeout(() => { setSubmitting(false); setStep(2); }, 1200);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_MONKEY_KING_API_URL}/api/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setStep(2);
+    } catch {
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const inputStyle = (key: keyof FormState): React.CSSProperties => ({
@@ -569,7 +581,7 @@ function InterestWidgetSection() {
               Ready to transform your coaching institute?
             </h2>
             <p style={{ fontSize: 15, color: "#9b9aae", lineHeight: 1.75, marginBottom: 36 }}>
-              Schedule a personalised demo with our team. We'll show you exactly how Univ.live can work for your institute and exam category.
+              Schedule a personalised demo with our team. We'll show you exactly how Preparekaro.in can work for your institute and exam category.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {DEMO_PERKS.map((item, i) => (
@@ -685,7 +697,7 @@ function LandingFooter() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 24, marginBottom: 36 }}>
           <div>
             <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: 22, color: "#fff", letterSpacing: "-0.5px" }}>
-              univ<span style={{ color: PRIMARY }}>.</span>live
+              preparekaro<span style={{ color: PRIMARY }}>.</span>in
             </span>
             <p style={{ fontSize: 13, color: "#5a5970", marginTop: 8, maxWidth: 300 }}>Empowering coaching institutes across India with intelligent test platforms.</p>
           </div>
@@ -699,7 +711,7 @@ function LandingFooter() {
           </div>
         </div>
         <div style={{ display: "flex", gap: 28, flexWrap: "wrap", marginBottom: 32 }}>
-          <a href="mailto:support@univ.live" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#9b9aae", textDecoration: "none", transition: "color 0.2s" }}
+          <a href="mailto:support@univlive" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#9b9aae", textDecoration: "none", transition: "color 0.2s" }}
             onMouseEnter={e => (e.currentTarget.style.color = "#fff")} onMouseLeave={e => (e.currentTarget.style.color = "#9b9aae")}>
             <Mail size={15} color={PRIMARY} />
             support@univ.live
@@ -711,7 +723,7 @@ function LandingFooter() {
           </a>
         </div>
         <div style={{ borderTop: "1px solid #1a1830", paddingTop: 24, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-          <span style={{ fontSize: 12, color: "#3d3c4a" }}>© {new Date().getFullYear()} Univ.live. All rights reserved.</span>
+          <span style={{ fontSize: 12, color: "#3d3c4a" }}>© {new Date().getFullYear()} Preparekaro.in. All rights reserved.</span>
           <span style={{ fontSize: 12, color: "#3d3c4a" }}>Made for India's coaching institutes ���🇳</span>
         </div>
       </div>
@@ -724,9 +736,9 @@ export default function Index() {
   return (
     <>
       <SEO
-        title="Univ.live — AI Test Series Platform for Coaching Institutes | JEE, NEET, CUET & More"
-        description="Launch your AI-powered test series platform in minutes. Univ.live supports JEE, NEET, CUET, CBSE, State Board and all exam types — objective & subjective. Built for coaching institutes."
-        canonical="https://univlive.tech/"
+        title="preparekaro.in : AI Test Series Platform for Coaching Institutes | JEE, NEET, CUET & More"
+        description="Launch your AI-powered test series platform in minutes. Preparekaro.in supports JEE, NEET, CUET, CBSE, State Board and all exam types — objective & subjective. Built for coaching institutes."
+        canonical="https://preparekaro.in/"
       />
       <LandingNavbar />
       <HeroSection />

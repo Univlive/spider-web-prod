@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { cn } from "@shared/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import univLogo from "@/assets/univ-logo-1.png";
 import { SHOW_ANNOUNCEMENT } from "./AnnouncementBar";
 
 const navLinks = [
@@ -48,7 +47,7 @@ export default function Navbar() {
       <nav className="container-main flex items-center justify-between py-4">
         {/* Logo */}
         <Link to="/" className="flex items-center">
-          <img src={univLogo} alt="Univ.live" className="h-10 w-auto" />
+          <img src="/logo.png" alt="Univ.live" className="h-16 w-auto" />
         </Link>
 
         {/* Desktop Nav Links */}
@@ -89,6 +88,7 @@ export default function Navbar() {
             className="md:hidden bg-background/95 backdrop-blur-xl border-b border-border overflow-hidden"
           >
             <div className="container-main py-4 flex flex-col gap-2">
+              <img src="/logo-compact.png" alt="Univ.live" className="h-10 w-10 mb-2" />
               {navLinks.map((link) => (
                 <Link
                   key={link.path}

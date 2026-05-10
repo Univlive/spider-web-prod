@@ -621,14 +621,14 @@ export default function TenantHomeTheme2() {
             <div>
               <div className="font-semibold text-white mb-6">Powered By</div>
               <div className="text-sm text-neutral-400 leading-relaxed">
-                UNIV.LIVE helps educators publish test series, onboard students, and track progress at scale.
+                PREPAREKARO.IN helps educators publish test series, onboard students, and track progress at scale.
               </div>
             </div>
           </div>
 
           <div className="border-t border-neutral-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-neutral-600">
             <span>© {new Date().getFullYear()} {coachingName}. All rights reserved.</span>
-            <span>Built with <span className="text-neutral-500 font-medium">UNIV.LIVE</span></span>
+            <span>Built with <span className="text-neutral-500 font-medium">PREPAREKARO.IN</span></span>
           </div>
         </div>
       </footer>

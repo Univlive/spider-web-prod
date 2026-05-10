@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => ({
     strictPort: true,
     proxy: {
       "/api": {
-        target: mode === "vercel" ? "http://localhost:3000" : "https://www.univlive.tech",
+        target: mode === "vercel" ? "http://localhost:3000" : "https://www.preparekaro.in",
         changeOrigin: true,
         secure: mode !== "vercel",
       },

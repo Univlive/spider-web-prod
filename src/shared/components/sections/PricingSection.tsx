@@ -159,7 +159,7 @@ export function PricingSection() {
             Comparison
           </span>
           <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
-            OMR vs Univ.live CBT — Per Student Comparison
+            OMR vs Preparekaro.in CBT — Per Student Comparison
           </h3>
         </motion.div>
 
@@ -176,7 +176,7 @@ export function PricingSection() {
                 <tr className="border-b-2 border-border">
                   <th className="text-left p-5 font-bold">Feature / Cost Factor</th>
                   <th className="text-center p-5 font-bold bg-destructive/10 text-destructive">Traditional OMR Tests</th>
-                  <th className="text-center p-5 font-bold bg-primary/10 text-primary">Univ.live CBT Platform</th>
+                  <th className="text-center p-5 font-bold bg-primary/10 text-primary">Preparekaro.in CBT Platform</th>
                 </tr>
               </thead>
               <tbody>

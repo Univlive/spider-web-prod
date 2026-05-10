@@ -10,7 +10,7 @@ function sanitizeDomain(rawDomain: string): string {
     .replace(/^\.+|\.+$/g, "")
     .replace(/^www\./, "");
 
-  return cleaned || "univ.live";
+  return cleaned || "preparekaro.in";
 }
 
 export function getConfiguredAppDomain(): string {
@@ -26,7 +26,7 @@ function getConfiguredAppDomains(): string[] {
   const legacy = [
     import.meta.env.VITE_APP_DOMAIN as string | undefined,
     import.meta.env.VITE_APP_BASE_DOMAIN as string | undefined,
-    "univ.live",
+    "preparekaro.in",
   ]
     .map((x) => sanitizeDomain(String(x || "")))
     .filter(Boolean);

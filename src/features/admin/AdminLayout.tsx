@@ -12,7 +12,6 @@ import {
   Menu,
   Sun,
   Moon,
-  Shield,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -22,6 +21,7 @@ import {
   Receipt,
   Library,
   LayoutList,
+  ClipboardList,
 } from "lucide-react";
 import { Button } from "@shared/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@shared/ui/sheet";
@@ -38,6 +38,7 @@ const sidebarGroups = [
       { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
       { icon: BarChart3, label: "Analytics", path: "/admin/analytics" },
       { icon: Users, label: "Educators", path: "/admin/educators" },
+      { icon: ClipboardList, label: "Question Papers", path: "/admin/question-paper-requests" },
       { icon: BookMarked, label: "Courses", path: "/admin/subjects" },
     ],
   },
@@ -126,15 +127,15 @@ export default function AdminLayout() {
       <div className={cn("p-6 border-b border-border", collapsed && !mobile && "px-3")}>
         <div className={cn("flex items-center", collapsed && !mobile ? "justify-center" : "justify-between")}>
         <Link to="/admin" className={cn("flex items-center gap-3", collapsed && !mobile && "justify-center")}>
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
-            <Shield className="h-6 w-6 text-white" />
+          <div className="flex items-center gap-3">
+            <img src="/logo-compact.png" alt="UNIV.LIVE" className="h-10 w-10 object-contain flex-shrink-0" />
+            {(!collapsed || mobile) && (
+              <div className="min-w-0 bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text">
+                <h1 className="font-bold text-sm leading-tight tracking-tight text-transparent bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text">Admin Panel</h1>
+                <p className="text-[9px] text-muted-foreground leading-tight">with great power comes great responsibility</p>
+              </div>
+            )}
           </div>
-          {!collapsed && (
-          <div>
-            <h1 className="font-bold text-lg text-foreground">Admin Panel</h1>
-            <p className="text-xs text-muted-foreground">Internal</p>
-          </div>
-          )}
         </Link>
         {!mobile && (
           <Button variant="ghost" size="icon" onClick={() => setSidebarCollapsed((prev) => !prev)}>
@@ -216,7 +217,7 @@ export default function AdminLayout() {
             </SheetContent>
           </Sheet>
           <div className="flex items-center gap-2">
-            <Shield className="h-6 w-6 text-primary" />
+            <img src="/logo-compact.png" alt="Admin" className="h-6 w-6 object-contain" />
             <span className="font-bold text-foreground">Admin</span>
           </div>
         </div>
