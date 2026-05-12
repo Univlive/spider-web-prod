@@ -1,4 +1,4 @@
-import  Layout  from "@widgets/layout/Layout";
+import Layout from "@widgets/layout/Layout";
 import SEO from "@shared/components/SEO";
 import { motion } from "framer-motion";
 import { Mail, Phone, Clock } from "lucide-react";
@@ -39,20 +39,23 @@ const Contact = () => {
       <section className="section-padding section-1">
         <div className="container-main">
           <motion.div
-            className="text-center max-w-3xl mx-auto mb-16"
+            className="mx-auto mb-16 max-w-3xl text-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-              Contact <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Us</span>
+            <h1 className="mb-6 text-4xl font-bold sm:text-5xl lg:text-6xl">
+              Contact{" "}
+              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Us
+              </span>
             </h1>
             <p className="text-lg text-muted-foreground">
               Have questions or need support? We're here to help.
             </p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 max-w-5xl mx-auto">
+          <div className="mx-auto grid max-w-5xl gap-12 lg:grid-cols-2 lg:gap-20">
             {/* Left - Info */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
@@ -61,54 +64,62 @@ const Contact = () => {
             >
               <div className="space-y-8">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center shrink-0">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-accent/10">
                     <Phone className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <div className="font-semibold mb-1">Phone</div>
-                    <a href="tel:+919625394589" className="text-muted-foreground hover:text-primary transition-colors">
+                    <div className="mb-1 font-semibold">Phone</div>
+                    <a
+                      href="tel:+919625394589"
+                      className="text-muted-foreground transition-colors hover:text-primary"
+                    >
                       +91 96253 94589
                     </a>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center shrink-0">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-accent/10">
                     <Mail className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <div className="font-semibold mb-1">Email</div>
-                    <a href="mailto:info.univlive@gmail.com" className="text-muted-foreground hover:text-primary transition-colors">
+                    <div className="mb-1 font-semibold">Email</div>
+                    <a
+                      href="mailto:info.univlive@gmail.com"
+                      className="text-muted-foreground transition-colors hover:text-primary"
+                    >
                       info.univlive@gmail.com
                     </a>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center shrink-0">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-accent/10">
                     <Clock className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <div className="font-semibold mb-1">Support Available</div>
-                    <p className="text-muted-foreground">
-                      10:00 AM – 10:00 PM
-                    </p>
+                    <div className="mb-1 font-semibold">Support Available</div>
+                    <p className="text-muted-foreground">10:00 AM – 10:00 PM</p>
                   </div>
                 </div>
               </div>
 
               {/* CTA Card */}
               <motion.div
-                className="mt-12 bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-6"
+                className="mt-12 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 p-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <h3 className="font-bold text-lg mb-2">Book a Demo</h3>
-                <p className="text-muted-foreground text-sm mb-4">
+                <h3 className="mb-2 text-lg font-bold">Book a Demo</h3>
+                <p className="mb-4 text-sm text-muted-foreground">
                   See how Univ.live can transform your coaching center's CUET preparation.
                 </p>
-                <a href="https://calendly.com/info-univlive" target="_blank" rel="noopener noreferrer">
+                <a
+                  href="https://calendly.com/info-univlive"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <ButtonWithIcon variant="hero" size="default">
                     Schedule Demo
                   </ButtonWithIcon>
@@ -124,11 +135,11 @@ const Contact = () => {
             >
               <form
                 onSubmit={handleSubmit}
-                className="bg-card rounded-3xl p-8 lg:p-10 border border-border shadow-card"
+                className="rounded-3xl border border-border bg-card p-8 shadow-card lg:p-10"
               >
                 <div className="space-y-6">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium mb-2">
+                    <label htmlFor="name" className="mb-2 block text-sm font-medium">
                       Full Name
                     </label>
                     <input
@@ -138,13 +149,13 @@ const Contact = () => {
                       value={formData.name}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
                       placeholder="Your name"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium mb-2">
+                    <label htmlFor="email" className="mb-2 block text-sm font-medium">
                       Email Address
                     </label>
                     <input
@@ -154,13 +165,13 @@ const Contact = () => {
                       value={formData.email}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
                       placeholder="your@email.com"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium mb-2">
+                    <label htmlFor="phone" className="mb-2 block text-sm font-medium">
                       Phone Number
                     </label>
                     <input
@@ -170,13 +181,13 @@ const Contact = () => {
                       value={formData.phone}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
                       placeholder="+91 XXXXX XXXXX"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="coachingCenter" className="block text-sm font-medium mb-2">
+                    <label htmlFor="coachingCenter" className="mb-2 block text-sm font-medium">
                       Coaching Center Name
                     </label>
                     <input
@@ -185,13 +196,13 @@ const Contact = () => {
                       name="coachingCenter"
                       value={formData.coachingCenter}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
                       placeholder="Your coaching center"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="message" className="block text-sm font-medium mb-2">
+                    <label htmlFor="message" className="mb-2 block text-sm font-medium">
                       Message
                     </label>
                     <textarea
@@ -201,7 +212,7 @@ const Contact = () => {
                       onChange={handleChange}
                       required
                       rows={4}
-                      className="w-full px-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+                      className="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
                       placeholder="How can we help you?"
                     />
                   </div>

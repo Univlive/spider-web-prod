@@ -18,7 +18,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
   render() {
     if (this.state.crashed) {
       return (
-        <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+        <div className="flex min-h-screen items-center justify-center text-muted-foreground">
           Something went wrong. Please refresh the page.
         </div>
       );

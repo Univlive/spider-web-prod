@@ -12,21 +12,21 @@ const stats = [
 
 const categories = [
   "Engineering Courses",
-  "MBA Courses", 
+  "MBA Courses",
   "Language Courses",
   "SSC & PSC Courses",
   "Creative Courses",
-  "Health & Nursing"
+  "Health & Nursing",
 ];
 
 export default function HeroSection() {
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden pt-20 pb-12">
+    <section className="relative flex min-h-screen items-center overflow-hidden pb-12 pt-20">
       {/* Background */}
       <div className="absolute inset-0 -z-10 bg-pastel-cream dark:bg-background" />
-      
+
       <div className="container mx-auto px-4 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           {/* Left Content */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -38,7 +38,7 @@ export default function HeroSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold leading-tight mb-6"
+              className="mb-6 font-display text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl"
             >
               <span className="gradient-text">Education</span> is the
               <br />
@@ -50,10 +50,10 @@ export default function HeroSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-lg lg:text-xl text-muted-foreground leading-relaxed mb-8 max-w-lg"
+              className="mb-8 max-w-lg text-lg leading-relaxed text-muted-foreground lg:text-xl"
             >
-              Launch your AI-powered coaching website in just 6 hours. 
-              Advanced CBT practice platform for students. One platform, endless possibilities.
+              Launch your AI-powered coaching website in just 6 hours. Advanced CBT practice
+              platform for students. One platform, endless possibilities.
             </motion.p>
 
             {/* Search Bar Style CTA */}
@@ -63,13 +63,13 @@ export default function HeroSection() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="relative mb-8"
             >
-              <div className="bg-card rounded-2xl p-2 shadow-card border border-border/30 flex items-center gap-2 max-w-lg">
-                <div className="flex-1 flex items-center gap-3 px-4">
-                  <Search className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-muted-foreground text-sm">Search Your Courses</span>
+              <div className="flex max-w-lg items-center gap-2 rounded-2xl border border-border/30 bg-card p-2 shadow-card">
+                <div className="flex flex-1 items-center gap-3 px-4">
+                  <Search className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Search Your Courses</span>
                 </div>
                 <Button variant="gradient" className="rounded-xl px-6">
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="h-5 w-5" />
                 </Button>
               </div>
             </motion.div>
@@ -79,12 +79,12 @@ export default function HeroSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="flex flex-wrap gap-2 mb-10"
+              className="mb-10 flex flex-wrap gap-2"
             >
               {categories.map((category, index) => (
                 <span
                   key={category}
-                  className="px-4 py-2 rounded-full bg-card border border-border/30 text-sm font-medium text-foreground hover:border-primary/50 transition-colors cursor-pointer"
+                  className="cursor-pointer rounded-full border border-border/30 bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/50"
                 >
                   {category}
                 </span>
@@ -100,43 +100,43 @@ export default function HeroSection() {
             className="relative"
           >
             {/* Main Hero Visual */}
-            <div className="relative bg-pastel-mint dark:bg-surface rounded-[2rem] p-6 lg:p-8 overflow-hidden">
+            <div className="relative overflow-hidden rounded-[2rem] bg-pastel-mint p-6 dark:bg-surface lg:p-8">
               {/* Decorative elements */}
-              <div className="absolute top-4 right-4 w-16 h-16 rounded-full bg-pastel-yellow dark:bg-pastel-yellow/30" />
-              <div className="absolute bottom-8 left-8 w-12 h-12 rounded-full bg-pastel-lavender dark:bg-pastel-lavender/30" />
-              
+              <div className="absolute right-4 top-4 h-16 w-16 rounded-full bg-pastel-yellow dark:bg-pastel-yellow/30" />
+              <div className="absolute bottom-8 left-8 h-12 w-12 rounded-full bg-pastel-lavender dark:bg-pastel-lavender/30" />
+
               {/* Hero Content */}
-              <div className="relative z-10 text-center py-8">
-                <div className="w-24 h-24 mx-auto mb-6 rounded-full gradient-bg flex items-center justify-center">
-                  <GraduationCap className="w-12 h-12 text-white" />
+              <div className="relative z-10 py-8 text-center">
+                <div className="gradient-bg mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full">
+                  <GraduationCap className="h-12 w-12 text-white" />
                 </div>
-                <h3 className="text-xl font-display font-bold mb-3">Your Coaching, Your Brand</h3>
-                <p className="text-muted-foreground text-sm mb-6 max-w-xs mx-auto">
+                <h3 className="mb-3 font-display text-xl font-bold">Your Coaching, Your Brand</h3>
+                <p className="mx-auto mb-6 max-w-xs text-sm text-muted-foreground">
                   AI-generated professional websites for coaching institutes
                 </p>
-                
+
                 {/* Mini Dashboard Preview */}
-                <div className="bg-card rounded-2xl p-4 shadow-card border border-border/30 mx-auto max-w-sm">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full gradient-bg flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">EA</span>
+                <div className="mx-auto max-w-sm rounded-2xl border border-border/30 bg-card p-4 shadow-card">
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className="gradient-bg flex h-10 w-10 items-center justify-center rounded-full">
+                      <span className="text-sm font-bold text-white">EA</span>
                     </div>
                     <div className="text-left">
-                      <p className="font-semibold text-sm">Elite Academy</p>
+                      <p className="text-sm font-semibold">Elite Academy</p>
                       <p className="text-xs text-muted-foreground">yourcoaching.preparekaro.in</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-pastel-mint dark:bg-secondary rounded-xl p-2 text-center">
-                      <p className="font-bold text-sm gradient-text">1,247</p>
+                    <div className="rounded-xl bg-pastel-mint p-2 text-center dark:bg-secondary">
+                      <p className="gradient-text text-sm font-bold">1,247</p>
                       <p className="text-xs text-muted-foreground">Students</p>
                     </div>
-                    <div className="bg-pastel-yellow dark:bg-secondary rounded-xl p-2 text-center">
-                      <p className="font-bold text-sm gradient-text">156</p>
+                    <div className="rounded-xl bg-pastel-yellow p-2 text-center dark:bg-secondary">
+                      <p className="gradient-text text-sm font-bold">156</p>
                       <p className="text-xs text-muted-foreground">Tests</p>
                     </div>
-                    <div className="bg-pastel-lavender dark:bg-secondary rounded-xl p-2 text-center">
-                      <p className="font-bold text-sm gradient-text">₹4.2L</p>
+                    <div className="rounded-xl bg-pastel-lavender p-2 text-center dark:bg-secondary">
+                      <p className="gradient-text text-sm font-bold">₹4.2L</p>
                       <p className="text-xs text-muted-foreground">Revenue</p>
                     </div>
                   </div>
@@ -149,14 +149,14 @@ export default function HeroSection() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.8 }}
-              className="absolute -left-4 top-1/4 bg-card rounded-2xl p-4 shadow-card-hover border border-border/30 animate-float"
+              className="absolute -left-4 top-1/4 animate-float rounded-2xl border border-border/30 bg-card p-4 shadow-card-hover"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-pastel-mint dark:bg-secondary flex items-center justify-center">
-                  <Users className="w-5 h-5 text-primary" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pastel-mint dark:bg-secondary">
+                  <Users className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-bold text-sm">50+</p>
+                  <p className="text-sm font-bold">50+</p>
                   <p className="text-xs text-muted-foreground">Institutes</p>
                 </div>
               </div>
@@ -171,16 +171,16 @@ export default function HeroSection() {
           transition={{ duration: 0.6, delay: 0.5 }}
           className="mt-16 lg:mt-24"
         >
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:gap-6">
             {stats.map((stat, index) => (
               <motion.div
                 key={stat.label}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
-                className={`${stat.bgColor} dark:bg-secondary rounded-2xl lg:rounded-3xl p-6 text-center`}
+                className={`${stat.bgColor} rounded-2xl p-6 text-center dark:bg-secondary lg:rounded-3xl`}
               >
-                <p className="text-2xl lg:text-3xl font-display font-bold text-foreground mb-1">
+                <p className="mb-1 font-display text-2xl font-bold text-foreground lg:text-3xl">
                   {stat.value}
                 </p>
                 <p className="text-sm text-muted-foreground">{stat.label}</p>

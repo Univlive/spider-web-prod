@@ -69,11 +69,25 @@ export default function ManageQuestionsPage() {
                     questionsCount: Number.isFinite(Number(section?.questionsCount))
                       ? Number(section.questionsCount)
                       : null,
-                    topics: Array.isArray(section?.topics) ? section.topics.map(String).filter(Boolean) : [],
-                    difficultyLevel: Number.isFinite(Number(section?.difficultyLevel)) ? Number(section.difficultyLevel) : undefined,
-                    questionsLimit: Number.isFinite(Number(section?.questionsLimit)) ? Number(section.questionsLimit) : undefined,
-                    attemptsLimit: Number.isFinite(Number(section?.attemptsLimit ?? section?.attemptlimit)) ? Number(section.attemptsLimit ?? section.attemptlimit) : undefined,
-                    timeLimit: Number.isFinite(Number(section?.timeLimit ?? section?.durationMinutes)) ? Number(section.timeLimit ?? section.durationMinutes) : undefined,
+                    topics: Array.isArray(section?.topics)
+                      ? section.topics.map(String).filter(Boolean)
+                      : [],
+                    difficultyLevel: Number.isFinite(Number(section?.difficultyLevel))
+                      ? Number(section.difficultyLevel)
+                      : undefined,
+                    questionsLimit: Number.isFinite(Number(section?.questionsLimit))
+                      ? Number(section.questionsLimit)
+                      : undefined,
+                    attemptsLimit: Number.isFinite(
+                      Number(section?.attemptsLimit ?? section?.attemptlimit)
+                    )
+                      ? Number(section.attemptsLimit ?? section.attemptlimit)
+                      : undefined,
+                    timeLimit: Number.isFinite(
+                      Number(section?.timeLimit ?? section?.durationMinutes)
+                    )
+                      ? Number(section.timeLimit ?? section.durationMinutes)
+                      : undefined,
                     markingScheme: section?.markingScheme ?? undefined,
                   }))
                   .filter((section: any) => section.id)
@@ -96,7 +110,7 @@ export default function ManageQuestionsPage() {
 
   if (authLoading || testLoading) {
     return (
-      <div className="p-6 flex items-center gap-2 text-muted-foreground">
+      <div className="flex items-center gap-2 p-6 text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" /> Loading questions manager...
       </div>
     );
@@ -105,7 +119,7 @@ export default function ManageQuestionsPage() {
   if (!firebaseUser) {
     return (
       <Card>
-        <CardContent className="p-6 space-y-4">
+        <CardContent className="space-y-4 p-6">
           <p className="text-sm text-muted-foreground">Please login to manage questions.</p>
           <Button onClick={() => navigate("/login?role=educator")}>Go to Login</Button>
         </CardContent>
@@ -116,9 +130,11 @@ export default function ManageQuestionsPage() {
   if (!testId || !testMeta) {
     return (
       <Card>
-        <CardContent className="p-6 space-y-4">
+        <CardContent className="space-y-4 p-6">
           <p className="text-sm text-muted-foreground">Test not found or you do not have access.</p>
-          <Button variant="outline" onClick={() => navigate("/educator/test-series")}>Back to Test Series</Button>
+          <Button variant="outline" onClick={() => navigate("/educator/test-series")}>
+            Back to Test Series
+          </Button>
         </CardContent>
       </Card>
     );

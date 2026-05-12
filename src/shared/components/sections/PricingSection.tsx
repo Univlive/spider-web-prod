@@ -44,12 +44,22 @@ const plans = [
 
 const comparisonData = [
   { feature: "Cost per test paper", omr: "₹5 (printing + OMR)", univ: "₹0", omrBad: true },
-  { feature: "No. of papers (5 subjects × 10 tests)", omr: "50 papers", univ: "More Than 50 Tests", omrBad: true },
+  {
+    feature: "No. of papers (5 subjects × 10 tests)",
+    omr: "50 papers",
+    univ: "More Than 50 Tests",
+    omrBad: true,
+  },
   { feature: "Total cost", omr: "₹250 per student", univ: "₹169-₹199", omrBad: true },
   { feature: "Manual checking", omr: "Required", univ: "Automated", omrBad: true },
   { feature: "Instant results", omr: "No", univ: "Yes", omrBad: true },
   { feature: "Real computer based experience", omr: "No", univ: "Yes", omrBad: true },
-  { feature: "Performance analytics", omr: "Not available", univ: "AI-powered Advance", omrBad: true },
+  {
+    feature: "Performance analytics",
+    omr: "Not available",
+    univ: "AI-powered Advance",
+    omrBad: true,
+  },
   { feature: "Time & accuracy insights", omr: "No", univ: "Yes", omrBad: true },
 ];
 
@@ -59,17 +69,19 @@ export function PricingSection() {
       <div className="container-main">
         {/* Pricing Header */}
         <motion.div
-          className="text-center max-w-3xl mx-auto mb-16"
+          className="mx-auto mb-16 max-w-3xl text-center"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <span className="inline-block px-4 py-1.5 bg-primary/10 text-primary text-sm font-semibold rounded-full mb-4">
+          <span className="mb-4 inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary">
             Simple Pricing
           </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Pricing</span>
+          <h2 className="mb-4 text-3xl font-bold sm:text-4xl lg:text-5xl">
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Pricing
+            </span>
           </h2>
           <p className="text-lg text-muted-foreground">
             No setup fee. No fixed cost. Pay only for enrolled students.
@@ -77,14 +89,12 @@ export function PricingSection() {
         </motion.div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-24">
+        <div className="mx-auto mb-24 grid max-w-4xl gap-8 md:grid-cols-2">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
-              className={`bg-card rounded-3xl p-8 border-2 shadow-card relative hover-lift ${
-                plan.popular
-                  ? "border-primary ring-4 ring-primary/10"
-                  : "border-border"
+              className={`hover-lift relative rounded-3xl border-2 bg-card p-8 shadow-card ${
+                plan.popular ? "border-primary ring-4 ring-primary/10" : "border-border"
               }`}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -92,54 +102,54 @@ export function PricingSection() {
               transition={{ duration: 0.4, delay: index * 0.1 }}
             >
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-accent text-primary-foreground text-sm font-semibold px-5 py-1.5 rounded-full flex items-center gap-2 shadow-lg">
+                <div className="absolute -top-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-5 py-1.5 text-sm font-semibold text-primary-foreground shadow-lg">
                   <Sparkles className="h-4 w-4" />
                   Most Popular
                 </div>
               )}
 
               <div className="mb-8">
-                <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
-                
+                <h3 className="mb-2 text-xl font-semibold">{plan.name}</h3>
+
                 {/* Updated Price Display with Discount */}
-                <div className="flex flex-col gap-1 mb-3">
-                  <div className="flex items-center gap-2 mb-1">
+                <div className="mb-3 flex flex-col gap-1">
+                  <div className="mb-1 flex items-center gap-2">
                     <span className="text-xl font-bold text-muted-foreground line-through decoration-2">
                       ₹{plan.originalPrice}
                     </span>
-                    <span className="text-xs font-bold text-green-700 bg-green-500/20 px-2.5 py-0.5 rounded-full dark:text-green-400 dark:bg-green-500/10">
+                    <span className="rounded-full bg-green-500/20 px-2.5 py-0.5 text-xs font-bold text-green-700 dark:bg-green-500/10 dark:text-green-400">
                       30% OFF
                     </span>
                   </div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-5xl font-extrabold text-transparent lg:text-6xl">
                       ₹{plan.price}
                     </span>
-                    <span className="text-muted-foreground font-medium">/ Student</span>
+                    <span className="font-medium text-muted-foreground">/ Student</span>
                   </div>
                 </div>
 
                 <p className="text-muted-foreground">{plan.description}</p>
               </div>
 
-              <Link to="/signup" className="block mb-8">
+              <Link to="/signup" className="mb-8 block">
                 <ButtonWithIcon
                   variant={plan.popular ? "hero" : "heroOutline"}
                   size="lg"
-                  className="w-full justify-center group"
+                  className="group w-full justify-center"
                 >
                   {plan.cta}
-                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </ButtonWithIcon>
               </Link>
 
               <ul className="space-y-4">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
                       <Check className="h-3 w-3 text-primary" />
                     </div>
-                    <span className="text-muted-foreground text-sm leading-relaxed">{feature}</span>
+                    <span className="text-sm leading-relaxed text-muted-foreground">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -149,22 +159,22 @@ export function PricingSection() {
 
         {/* Comparison Section */}
         <motion.div
-          className="text-center max-w-3xl mx-auto mb-12"
+          className="mx-auto mb-12 max-w-3xl text-center"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <span className="inline-block px-4 py-1.5 bg-primary/10 text-primary text-sm font-semibold rounded-full mb-4">
+          <span className="mb-4 inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary">
             Comparison
           </span>
-          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
+          <h3 className="mb-4 text-2xl font-bold sm:text-3xl lg:text-4xl">
             OMR vs Preparekaro.in CBT — Per Student Comparison
           </h3>
         </motion.div>
 
         <motion.div
-          className="bg-card rounded-3xl border-2 border-border shadow-card overflow-hidden max-w-4xl mx-auto mb-12"
+          className="mx-auto mb-12 max-w-4xl overflow-hidden rounded-3xl border-2 border-border bg-card shadow-card"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -174,23 +184,30 @@ export function PricingSection() {
             <table className="w-full">
               <thead>
                 <tr className="border-b-2 border-border">
-                  <th className="text-left p-5 font-bold">Feature / Cost Factor</th>
-                  <th className="text-center p-5 font-bold bg-destructive/10 text-destructive">Traditional OMR Tests</th>
-                  <th className="text-center p-5 font-bold bg-primary/10 text-primary">Preparekaro.in CBT Platform</th>
+                  <th className="p-5 text-left font-bold">Feature / Cost Factor</th>
+                  <th className="bg-destructive/10 p-5 text-center font-bold text-destructive">
+                    Traditional OMR Tests
+                  </th>
+                  <th className="bg-primary/10 p-5 text-center font-bold text-primary">
+                    Preparekaro.in CBT Platform
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {comparisonData.map((row, index) => (
-                  <tr key={row.feature} className={`border-b border-border/50 ${index % 2 === 0 ? "bg-muted/30" : ""}`}>
-                    <td className="p-4 font-medium text-sm">{row.feature}</td>
-                    <td className="text-center p-4 bg-destructive/5">
-                      <span className="inline-flex items-center gap-2 text-destructive text-sm">
+                  <tr
+                    key={row.feature}
+                    className={`border-b border-border/50 ${index % 2 === 0 ? "bg-muted/30" : ""}`}
+                  >
+                    <td className="p-4 text-sm font-medium">{row.feature}</td>
+                    <td className="bg-destructive/5 p-4 text-center">
+                      <span className="inline-flex items-center gap-2 text-sm text-destructive">
                         <X className="h-4 w-4" />
                         {row.omr}
                       </span>
                     </td>
-                    <td className="text-center p-4 bg-primary/5">
-                      <span className="inline-flex items-center gap-2 text-primary text-sm font-medium">
+                    <td className="bg-primary/5 p-4 text-center">
+                      <span className="inline-flex items-center gap-2 text-sm font-medium text-primary">
                         <Check className="h-4 w-4" />
                         {row.univ}
                       </span>
@@ -213,7 +230,7 @@ export function PricingSection() {
           <Link to="/signup">
             <ButtonWithIcon variant="hero" size="lg" className="group">
               Get Started For Free
-              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </ButtonWithIcon>
           </Link>
           <a href="https://calendly.com/info-univlive" target="_blank" rel="noopener noreferrer">

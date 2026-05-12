@@ -1,11 +1,30 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  ArrowRight, Check, ChevronDown, ChevronUp, Copy, Download,
-  Loader2, RefreshCw, Search, Upload, UserCheck, UserPlus, UserX, Pencil,
+  ArrowRight,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Download,
+  Loader2,
+  RefreshCw,
+  Search,
+  Upload,
+  UserCheck,
+  UserPlus,
+  UserX,
+  Pencil,
 } from "lucide-react";
 import {
-  collection, doc, getDocs, onSnapshot, orderBy, query, updateDoc, writeBatch,
+  collection,
+  doc,
+  getDocs,
+  onSnapshot,
+  orderBy,
+  query,
+  updateDoc,
+  writeBatch,
 } from "firebase/firestore";
 import { db, auth } from "@shared/lib/firebase";
 import { useAccessibleCourses } from "@shared/hooks/useAccessibleCourses";
@@ -15,15 +34,9 @@ import { Label } from "@shared/ui/label";
 import { toast } from "sonner";
 import { useAuth } from "@app/providers/AuthProvider";
 import { Badge } from "@shared/ui/badge";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@shared/ui/select";
-import {
-  Card, CardContent, CardHeader, CardTitle,
-} from "@shared/ui/card";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@shared/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@shared/ui/dialog";
 
 const API = import.meta.env.VITE_MONKEY_KING_API_URL;
 
@@ -40,7 +53,14 @@ type Learner = {
 
 type Branch = { id: string; name: string };
 type Course = { id: string; name: string; branchId: string };
-type Batch = { id: string; name: string; seatLimit: number; usedSeats: number; courseId: string; branchId: string };
+type Batch = {
+  id: string;
+  name: string;
+  seatLimit: number;
+  usedSeats: number;
+  courseId: string;
+  branchId: string;
+};
 
 type BulkRow = {
   row: number;
@@ -122,23 +142,30 @@ export default function Learners() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!authLoading && role && role !== "EDUCATOR" && role !== "ADMIN") nav("/login?role=educator");
+    if (!authLoading && role && role !== "EDUCATOR" && role !== "ADMIN")
+      nav("/login?role=educator");
   }, [authLoading, role, nav]);
 
   useEffect(() => {
     if (!educatorId) return;
 
-    const qLearners = query(collection(db, "educators", educatorId, "students"), orderBy("joinedAt", "desc"));
+    const qLearners = query(
+      collection(db, "educators", educatorId, "students"),
+      orderBy("joinedAt", "desc")
+    );
     const unsubL = onSnapshot(qLearners, (snap) => {
       setLearners(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
     });
-    const unsubSeats = onSnapshot(collection(db, "educators", educatorId, "billingSeats"), (snap) => {
-      const map: Record<string, boolean> = {};
-      snap.docs.forEach((d) => {
-        map[d.id] = String((d.data() as any)?.status || "").toLowerCase() === "active";
-      });
-      setSeatMap(map);
-    });
+    const unsubSeats = onSnapshot(
+      collection(db, "educators", educatorId, "billingSeats"),
+      (snap) => {
+        const map: Record<string, boolean> = {};
+        snap.docs.forEach((d) => {
+          map[d.id] = String((d.data() as any)?.status || "").toLowerCase() === "active";
+        });
+        setSeatMap(map);
+      }
+    );
     const unsubEdu = onSnapshot(doc(db, "educators", educatorId), (snap) => {
       setEducator(snap.exists() ? snap.data() : null);
     });
@@ -157,7 +184,9 @@ export default function Learners() {
       const cs: Course[] = [];
       const bts: Batch[] = [];
       for (const b of branchSnap.docs) {
-        const courseSnap = await getDocs(collection(db, "educators", educatorId, "branches", b.id, "courses"));
+        const courseSnap = await getDocs(
+          collection(db, "educators", educatorId, "branches", b.id, "courses")
+        );
         for (const c of courseSnap.docs) {
           cs.push({ id: c.id, name: c.data().name || c.id, branchId: b.id });
           const batchSnap = await getDocs(
@@ -180,35 +209,62 @@ export default function Learners() {
     }
     loadFullHierarchy();
 
-    return () => { unsubL(); unsubSeats(); unsubEdu(); };
+    return () => {
+      unsubL();
+      unsubSeats();
+      unsubEdu();
+    };
   }, [educatorId, refreshTick]);
 
   // Load courses when branch changes
   useEffect(() => {
-    if (!educatorId || !selBranch) { setCourses([]); setSelCourse(""); return; }
-    getDocs(collection(db, "educators", educatorId, "branches", selBranch, "courses")).then((snap) =>
-      setCourses(snap.docs.map((d) => ({ id: d.id, name: d.data().name || d.id })))
+    if (!educatorId || !selBranch) {
+      setCourses([]);
+      setSelCourse("");
+      return;
+    }
+    getDocs(collection(db, "educators", educatorId, "branches", selBranch, "courses")).then(
+      (snap) => setCourses(snap.docs.map((d) => ({ id: d.id, name: d.data().name || d.id })))
     );
   }, [educatorId, selBranch]);
 
   // Load batches when course changes
   useEffect(() => {
-    if (!educatorId || !selBranch || !selCourse) { setBatches([]); setSelBatch(""); return; }
+    if (!educatorId || !selBranch || !selCourse) {
+      setBatches([]);
+      setSelBatch("");
+      return;
+    }
     getDocs(
-      collection(db, "educators", educatorId, "branches", selBranch, "courses", selCourse, "batches")
+      collection(
+        db,
+        "educators",
+        educatorId,
+        "branches",
+        selBranch,
+        "courses",
+        selCourse,
+        "batches"
+      )
     ).then((snap) =>
-      setBatches(snap.docs.map((d) => ({
-        id: d.id,
-        name: d.data().name || d.id,
-        seatLimit: d.data().seatLimit || 0,
-        usedSeats: d.data().usedSeats || 0,
-      })))
+      setBatches(
+        snap.docs.map((d) => ({
+          id: d.id,
+          name: d.data().name || d.id,
+          seatLimit: d.data().seatLimit || 0,
+          usedSeats: d.data().usedSeats || 0,
+        }))
+      )
     );
   }, [educatorId, selBranch, selCourse]);
 
   const selectedBatch = batches.find((b) => b.id === selBatch);
 
-  const seatLimit = Math.max(0, Number(educator?.seatLimit || 0));
+  const seatLimit = Math.max(
+    0,
+    Number(educator?.seatLimit || 0),
+    Number(educator?.purchasedSeatLimit || 0)
+  );
   const usedSeats = useMemo(() => Object.values(seatMap).filter(Boolean).length, [seatMap]);
   const canAssign = seatLimit > 0 && usedSeats < seatLimit;
 
@@ -250,7 +306,9 @@ export default function Learners() {
       toast.success("Seat granted");
     } catch (e: any) {
       toast.error(e?.message || "Failed to grant seat");
-    } finally { setBusyId(null); }
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const revokeSeat = async (studentId: string) => {
@@ -260,7 +318,9 @@ export default function Learners() {
       toast.success("Seat revoked");
     } catch (e: any) {
       toast.error(e?.message || "Failed to revoke seat");
-    } finally { setBusyId(null); }
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const toggleActive = async (studentId: string, next: "ACTIVE" | "INACTIVE") => {
@@ -285,21 +345,33 @@ export default function Learners() {
     setAssigning(true);
     try {
       const batch = writeBatch(db);
-      batch.set(doc(db, "educators", educatorId, "students", assignTarget.id), {
-        branchId: assignBranch,
-        courseId: assignCourse,
-        batchId: assignBatch,
-      }, { merge: true });
-      batch.update(doc(db, "users", assignTarget.id), {
-        branchId: assignBranch,
-        courseId: assignCourse,
-        batchId: assignBatch,
-      });
-      batch.update(doc(db, "educators", educatorId, "billingSeats", assignTarget.id), {
-        branchId: assignBranch,
-        courseId: assignCourse,
-        batchId: assignBatch,
-      });
+      batch.set(
+        doc(db, "educators", educatorId, "students", assignTarget.id),
+        {
+          branchId: assignBranch,
+          courseId: assignCourse,
+          batchId: assignBatch,
+        },
+        { merge: true }
+      );
+      batch.set(
+        doc(db, "users", assignTarget.id),
+        {
+          branchId: assignBranch,
+          courseId: assignCourse,
+          batchId: assignBatch,
+        },
+        { merge: true }
+      );
+      batch.set(
+        doc(db, "educators", educatorId, "billingSeats", assignTarget.id),
+        {
+          branchId: assignBranch,
+          courseId: assignCourse,
+          batchId: assignBatch,
+        },
+        { merge: true }
+      );
       await batch.commit();
       toast.success(`Assigned to ${batchInfo?.name || assignBatch}`);
       setAssignTarget(null);
@@ -311,8 +383,14 @@ export default function Learners() {
   }
 
   async function generateInviteLink() {
-    if (!selBranch || !selCourse || !selBatch) { toast.error("Select branch, program and batch"); return; }
-    if (availableSeats <= 0) { toast.error("No available seats in this batch"); return; }
+    if (!selBranch || !selCourse || !selBatch) {
+      toast.error("Select branch, program and batch");
+      return;
+    }
+    if (availableSeats <= 0) {
+      toast.error("No available seats in this batch");
+      return;
+    }
     const globalCourse = globalCourses.find((c) => c.id === selGlobalCourse);
     setGeneratingLink(true);
     try {
@@ -331,7 +409,9 @@ export default function Learners() {
       setInviteUrl(`${window.location.origin}/join/${data.token}`);
     } catch (e: any) {
       toast.error(e.message || "Failed to generate link");
-    } finally { setGeneratingLink(false); }
+    } finally {
+      setGeneratingLink(false);
+    }
   }
 
   function copyLink(url: string) {
@@ -342,7 +422,8 @@ export default function Learners() {
   }
 
   function downloadTemplate() {
-    const csv = "name,email,branch_name,program_name,batch_name\nJohn Doe,john@example.com,Branch Name,Program Name,Batch Name\n";
+    const csv =
+      "name,email,branch_name,program_name,batch_name\nJohn Doe,john@example.com,Branch Name,Program Name,Batch Name\n";
     const blob = new Blob([csv], { type: "text/csv" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -393,14 +474,14 @@ export default function Learners() {
 
   if (authLoading || !role) {
     return (
-      <div className="p-6 flex items-center gap-2 text-muted-foreground">
+      <div className="flex items-center gap-2 p-6 text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" /> Loading…
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="space-y-5 p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Learners</h1>
@@ -409,7 +490,7 @@ export default function Learners() {
           </p>
         </div>
         <Button variant="outline" onClick={() => setRefreshTick((x) => x + 1)}>
-          <RefreshCw className="h-4 w-4 mr-2" />
+          <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
       </div>
@@ -417,118 +498,184 @@ export default function Learners() {
       {/* Invite via Link */}
       <Card>
         <CardHeader
-          className="cursor-pointer select-none hover:bg-muted/30 transition-colors rounded-t-lg"
+          className="cursor-pointer select-none rounded-t-lg transition-colors hover:bg-muted/30"
           onClick={() => setInviteOpen((o) => !o)}
         >
           <CardTitle className="flex items-center justify-between text-base">
-            <span className="flex items-center gap-2"><UserPlus className="h-4 w-4" />Invite via Link</span>
+            <span className="flex items-center gap-2">
+              <UserPlus className="h-4 w-4" />
+              Invite via Link
+            </span>
             {inviteOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CardTitle>
         </CardHeader>
         {inviteOpen && (
           <CardContent className="space-y-4 pt-0">
-              <div className="grid sm:grid-cols-3 gap-3">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="space-y-1">
+                <Label>Branch</Label>
+                <Select
+                  value={selBranch}
+                  onValueChange={(v) => {
+                    setSelBranch(v);
+                    setSelCourse("");
+                    setSelBatch("");
+                    setInviteUrl("");
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select branch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>
+                        {b.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Program</Label>
+                <Select
+                  value={selCourse}
+                  onValueChange={(v) => {
+                    setSelCourse(v);
+                    setSelBatch("");
+                    setInviteUrl("");
+                  }}
+                  disabled={!selBranch}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select program" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courses.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Batch</Label>
+                <Select
+                  value={selBatch}
+                  onValueChange={(v) => {
+                    setSelBatch(v);
+                    setInviteUrl("");
+                  }}
+                  disabled={!selCourse}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select batch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {batches.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>
+                        {b.name} (
+                        {b.seatLimit > 0 ? b.seatLimit - b.usedSeats : seatLimit - usedSeats} free)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {globalCourses.length > 0 && (
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <Label>Branch</Label>
-                  <Select value={selBranch} onValueChange={(v) => { setSelBranch(v); setSelCourse(""); setSelBatch(""); setInviteUrl(""); }}>
-                    <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
+                  <Label>Course</Label>
+                  <Select
+                    value={selGlobalCourse}
+                    onValueChange={(v) => {
+                      setSelGlobalCourse(v);
+                      setSelSubjectIds([]);
+                      setInviteUrl("");
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select course (JEE / NEET…)" />
+                    </SelectTrigger>
                     <SelectContent>
-                      {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label>Program</Label>
-                  <Select value={selCourse} onValueChange={(v) => { setSelCourse(v); setSelBatch(""); setInviteUrl(""); }} disabled={!selBranch}>
-                    <SelectTrigger><SelectValue placeholder="Select program" /></SelectTrigger>
-                    <SelectContent>
-                      {courses.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label>Batch</Label>
-                  <Select value={selBatch} onValueChange={(v) => { setSelBatch(v); setInviteUrl(""); }} disabled={!selCourse}>
-                    <SelectTrigger><SelectValue placeholder="Select batch" /></SelectTrigger>
-                    <SelectContent>
-                      {batches.map((b) => (
-                        <SelectItem key={b.id} value={b.id}>
-                          {b.name} ({b.seatLimit > 0 ? b.seatLimit - b.usedSeats : seatLimit - usedSeats} free)
+                      {globalCourses.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              {globalCourses.length > 0 && (
-                <div className="grid sm:grid-cols-2 gap-3">
+                {selGlobalCourse && (
                   <div className="space-y-1">
-                    <Label>Course</Label>
-                    <Select value={selGlobalCourse} onValueChange={(v) => { setSelGlobalCourse(v); setSelSubjectIds([]); setInviteUrl(""); }}>
-                      <SelectTrigger><SelectValue placeholder="Select course (JEE / NEET…)" /></SelectTrigger>
-                      <SelectContent>
-                        {globalCourses.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {selGlobalCourse && (
-                    <div className="space-y-1">
-                      <Label>Subjects</Label>
-                      <div className="flex flex-wrap gap-1.5 border rounded-md px-3 py-2 min-h-[40px]">
-                        {globalSubjects
-                          .filter((s) => s.courseId === selGlobalCourse)
-                          .map((s) => (
-                            <button
-                              key={s.id}
-                              type="button"
-                              onClick={() =>
-                                setSelSubjectIds((prev) =>
-                                  prev.includes(s.id) ? prev.filter((x) => x !== s.id) : [...prev, s.id]
-                                )
-                              }
-                              className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
-                                selSubjectIds.includes(s.id)
-                                  ? "bg-primary text-primary-foreground border-primary"
-                                  : "bg-muted text-muted-foreground border-border hover:border-primary"
-                              }`}
-                            >
-                              {s.name}
-                            </button>
-                          ))}
-                      </div>
+                    <Label>Subjects</Label>
+                    <div className="flex min-h-[40px] flex-wrap gap-1.5 rounded-md border px-3 py-2">
+                      {globalSubjects
+                        .filter((s) => s.courseId === selGlobalCourse)
+                        .map((s) => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() =>
+                              setSelSubjectIds((prev) =>
+                                prev.includes(s.id)
+                                  ? prev.filter((x) => x !== s.id)
+                                  : [...prev, s.id]
+                              )
+                            }
+                            className={`rounded-full border px-2 py-0.5 text-xs transition-colors ${
+                              selSubjectIds.includes(s.id)
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border bg-muted text-muted-foreground hover:border-primary"
+                            }`}
+                          >
+                            {s.name}
+                          </button>
+                        ))}
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
+            )}
 
-              {selectedBatch && (
-                availableSeats > 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    <b>{availableSeats}</b> seats available in {selectedBatch.name}
-                  </p>
+            {selectedBatch &&
+              (availableSeats > 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  <b>{availableSeats}</b> seats available in {selectedBatch.name}
+                </p>
+              ) : (
+                <p className="text-sm text-destructive">
+                  No seats available — all {seatLimit} institute seats are in use
+                </p>
+              ))}
+
+            <div className="flex gap-2">
+              <Button
+                onClick={generateInviteLink}
+                disabled={!selBatch || generatingLink || availableSeats <= 0}
+              >
+                {generatingLink ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                  <p className="text-sm text-destructive">
-                    No seats available — all {seatLimit} institute seats are in use
-                  </p>
-                )
-              )}
+                  <UserPlus className="mr-2 h-4 w-4" />
+                )}
+                Generate Link
+              </Button>
+            </div>
 
+            {inviteUrl && (
               <div className="flex gap-2">
-                <Button onClick={generateInviteLink} disabled={!selBatch || generatingLink || availableSeats <= 0}>
-                  {generatingLink ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <UserPlus className="h-4 w-4 mr-2" />}
-                  Generate Link
+                <Input value={inviteUrl} readOnly className="font-mono text-xs" />
+                <Button variant="outline" size="icon" onClick={() => copyLink(inviteUrl)}>
+                  {copied ? (
+                    <Check className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
-
-              {inviteUrl && (
-                <div className="flex gap-2">
-                  <Input value={inviteUrl} readOnly className="font-mono text-xs" />
-                  <Button variant="outline" size="icon" onClick={() => copyLink(inviteUrl)}>
-                    {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-                  </Button>
-                </div>
-              )}
+            )}
           </CardContent>
         )}
       </Card>
@@ -536,89 +683,120 @@ export default function Learners() {
       {/* Bulk CSV Upload */}
       <Card>
         <CardHeader
-          className="cursor-pointer select-none hover:bg-muted/30 transition-colors rounded-t-lg"
+          className="cursor-pointer select-none rounded-t-lg transition-colors hover:bg-muted/30"
           onClick={() => setBulkOpen((o) => !o)}
         >
           <CardTitle className="flex items-center justify-between text-base">
-            <span className="flex items-center gap-2"><Upload className="h-4 w-4" />Bulk Upload via CSV</span>
+            <span className="flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              Bulk Upload via CSV
+            </span>
             {bulkOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CardTitle>
         </CardHeader>
         {bulkOpen && (
           <CardContent className="space-y-4 pt-0">
-              <p className="text-sm text-muted-foreground">
-                Upload a CSV with columns: <code className="bg-muted px-1 rounded text-xs">name, email, branch_name, program_name, batch_name</code>
-              </p>
-              <div className="flex gap-2 flex-wrap">
-                <Button variant="outline" size="sm" onClick={downloadTemplate}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Template
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
-                  {uploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-                  Upload CSV
-                </Button>
-                <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleBulkUpload} />
-              </div>
+            <p className="text-sm text-muted-foreground">
+              Upload a CSV with columns:{" "}
+              <code className="rounded bg-muted px-1 text-xs">
+                name, email, branch_name, program_name, batch_name
+              </code>
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={downloadTemplate}>
+                <Download className="mr-2 h-4 w-4" />
+                Download Template
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+                )}
+                Upload CSV
+              </Button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onChange={handleBulkUpload}
+              />
+            </div>
 
-              {bulkRows.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">Results</p>
-                    <Button variant="outline" size="sm" onClick={copyAllLinks}>
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copy All Links
-                    </Button>
-                  </div>
-                  <div className="rounded-md border overflow-x-auto">
-                    <table className="w-full text-xs">
-                      <thead className="bg-muted/50">
-                        <tr>
-                          <th className="px-3 py-2 text-left">#</th>
-                          <th className="px-3 py-2 text-left">Name</th>
-                          <th className="px-3 py-2 text-left">Email</th>
-                          <th className="px-3 py-2 text-left">Batch</th>
-                          <th className="px-3 py-2 text-left">Status</th>
-                          <th className="px-3 py-2 text-left">Invite Link</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {bulkRows.map((r) => (
-                          <tr key={r.row} className="border-t">
-                            <td className="px-3 py-2">{r.row}</td>
-                            <td className="px-3 py-2">{r.name}</td>
-                            <td className="px-3 py-2">{r.email}</td>
-                            <td className="px-3 py-2">{r.batch_name}</td>
-                            <td className="px-3 py-2">
-                              {r.error
-                                ? <Badge variant="destructive">Error: {r.error}</Badge>
-                                : <Badge variant="default">Generated</Badge>}
-                            </td>
-                            <td className="px-3 py-2">
-                              {r.invite_url && (
-                                <button
-                                  className="flex items-center gap-1 text-primary hover:underline font-mono"
-                                  onClick={() => navigator.clipboard.writeText(r.invite_url!).then(() => toast.success("Copied"))}
-                                >
-                                  <Copy className="h-3 w-3" />
-                                  Copy
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+            {bulkRows.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium">Results</p>
+                  <Button variant="outline" size="sm" onClick={copyAllLinks}>
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy All Links
+                  </Button>
                 </div>
-              )}
+                <div className="overflow-x-auto rounded-md border">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="px-3 py-2 text-left">#</th>
+                        <th className="px-3 py-2 text-left">Name</th>
+                        <th className="px-3 py-2 text-left">Email</th>
+                        <th className="px-3 py-2 text-left">Batch</th>
+                        <th className="px-3 py-2 text-left">Status</th>
+                        <th className="px-3 py-2 text-left">Invite Link</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bulkRows.map((r) => (
+                        <tr key={r.row} className="border-t">
+                          <td className="px-3 py-2">{r.row}</td>
+                          <td className="px-3 py-2">{r.name}</td>
+                          <td className="px-3 py-2">{r.email}</td>
+                          <td className="px-3 py-2">{r.batch_name}</td>
+                          <td className="px-3 py-2">
+                            {r.error ? (
+                              <Badge variant="destructive">Error: {r.error}</Badge>
+                            ) : (
+                              <Badge variant="default">Generated</Badge>
+                            )}
+                          </td>
+                          <td className="px-3 py-2">
+                            {r.invite_url && (
+                              <button
+                                className="flex items-center gap-1 font-mono text-primary hover:underline"
+                                onClick={() =>
+                                  navigator.clipboard
+                                    .writeText(r.invite_url!)
+                                    .then(() => toast.success("Copied"))
+                                }
+                              >
+                                <Copy className="h-3 w-3" />
+                                Copy
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </CardContent>
         )}
       </Card>
 
       <div className="flex items-center gap-2">
         <Search className="h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search learners..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        <Input
+          placeholder="Search learners..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
       <div className="grid gap-3">
@@ -629,46 +807,89 @@ export default function Learners() {
           const courseName = allCourses.find((c) => c.id === l.courseId)?.name;
           const branchName = allBranches.find((b) => b.id === l.branchId)?.name;
           return (
-            <div key={l.id} className="border rounded-lg p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-              <button type="button" onClick={() => nav(`/educator/learners/${l.id}`)} className="text-left group">
+            <div
+              key={l.id}
+              className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-center md:justify-between"
+            >
+              <button
+                type="button"
+                onClick={() => nav(`/educator/learners/${l.id}`)}
+                className="group text-left"
+              >
                 <div className="font-semibold">
                   {l.name || "Student"}
-                  {inactive && <span className="text-xs text-red-500 ml-2">(INACTIVE)</span>}
+                  {inactive && <span className="ml-2 text-xs text-red-500">(INACTIVE)</span>}
                 </div>
-                <div className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">{l.email || l.id}</div>
-                <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
-                  <span>Seat: {seatOn
-                    ? <span className="text-green-600 font-medium">GRANTED</span>
-                    : <span className="text-orange-600 font-medium">NOT GRANTED</span>}
+                <div className="text-sm text-muted-foreground transition-colors group-hover:text-foreground">
+                  {l.email || l.id}
+                </div>
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                  <span>
+                    Seat:{" "}
+                    {seatOn ? (
+                      <span className="font-medium text-green-600">GRANTED</span>
+                    ) : (
+                      <span className="font-medium text-orange-600">NOT GRANTED</span>
+                    )}
                   </span>
-                  {batchName
-                    ? <span>Batch: <span className="font-medium text-foreground">{branchName && `${branchName} › `}{courseName && `${courseName} › `}{batchName}</span></span>
-                    : <span className="text-orange-500">No batch assigned</span>}
+                  {batchName ? (
+                    <span>
+                      Batch:{" "}
+                      <span className="font-medium text-foreground">
+                        {branchName && `${branchName} › `}
+                        {courseName && `${courseName} › `}
+                        {batchName}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="text-orange-500">No batch assigned</span>
+                  )}
                 </div>
               </button>
 
               <div className="flex flex-wrap gap-2">
                 <Button variant="secondary" onClick={() => nav(`/educator/learners/${l.id}`)}>
-                  View Details <ArrowRight className="h-4 w-4 ml-2" />
+                  View Details <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <Button variant="outline" onClick={() => openAssignBatch(l)}>
-                  <Pencil className="h-4 w-4 mr-2" />
+                  <Pencil className="mr-2 h-4 w-4" />
                   {l.batchId ? "Change Batch" : "Assign Batch"}
                 </Button>
                 {!seatOn ? (
-                  <Button disabled={!canAssign || busyId === l.id || inactive} onClick={() => grantSeat(l.id)}>
-                    {busyId === l.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserCheck className="h-4 w-4 mr-2" />}
+                  <Button
+                    disabled={!canAssign || busyId === l.id || inactive}
+                    onClick={() => grantSeat(l.id)}
+                  >
+                    {busyId === l.id ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <UserCheck className="mr-2 h-4 w-4" />
+                    )}
                     Grant Seat
                   </Button>
                 ) : (
-                  <Button variant="outline" disabled={busyId === l.id} onClick={() => revokeSeat(l.id)}>
-                    {busyId === l.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserX className="h-4 w-4 mr-2" />}
+                  <Button
+                    variant="outline"
+                    disabled={busyId === l.id}
+                    onClick={() => revokeSeat(l.id)}
+                  >
+                    {busyId === l.id ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <UserX className="mr-2 h-4 w-4" />
+                    )}
                     Revoke Seat
                   </Button>
                 )}
-                {inactive
-                  ? <Button variant="outline" onClick={() => toggleActive(l.id, "ACTIVE")}>Set ACTIVE</Button>
-                  : <Button variant="outline" onClick={() => toggleActive(l.id, "INACTIVE")}>Set INACTIVE</Button>}
+                {inactive ? (
+                  <Button variant="outline" onClick={() => toggleActive(l.id, "ACTIVE")}>
+                    Set ACTIVE
+                  </Button>
+                ) : (
+                  <Button variant="outline" onClick={() => toggleActive(l.id, "INACTIVE")}>
+                    Set INACTIVE
+                  </Button>
+                )}
               </div>
             </div>
           );
@@ -676,48 +897,89 @@ export default function Learners() {
       </div>
 
       {/* Assign / Change Batch Dialog */}
-      <Dialog open={!!assignTarget} onOpenChange={(o) => { if (!o) setAssignTarget(null); }}>
+      <Dialog
+        open={!!assignTarget}
+        onOpenChange={(o) => {
+          if (!o) setAssignTarget(null);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{assignTarget?.batchId ? "Change Batch" : "Assign Batch"} — {assignTarget?.name}</DialogTitle>
+            <DialogTitle>
+              {assignTarget?.batchId ? "Change Batch" : "Assign Batch"} — {assignTarget?.name}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1">
               <Label>Branch</Label>
-              <Select value={assignBranch} onValueChange={(v) => { setAssignBranch(v); setAssignCourse(""); setAssignBatch(""); }}>
-                <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
+              <Select
+                value={assignBranch}
+                onValueChange={(v) => {
+                  setAssignBranch(v);
+                  setAssignCourse("");
+                  setAssignBatch("");
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select branch" />
+                </SelectTrigger>
                 <SelectContent>
-                  {allBranches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                  {allBranches.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
               <Label>Course</Label>
-              <Select value={assignCourse} onValueChange={(v) => { setAssignCourse(v); setAssignBatch(""); }} disabled={!assignBranch}>
-                <SelectTrigger><SelectValue placeholder="Select course" /></SelectTrigger>
+              <Select
+                value={assignCourse}
+                onValueChange={(v) => {
+                  setAssignCourse(v);
+                  setAssignBatch("");
+                }}
+                disabled={!assignBranch}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select course" />
+                </SelectTrigger>
                 <SelectContent>
-                  {allCourses.filter((c) => c.branchId === assignBranch).map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
+                  {allCourses
+                    .filter((c) => c.branchId === assignBranch)
+                    .map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
               <Label>Batch</Label>
               <Select value={assignBatch} onValueChange={setAssignBatch} disabled={!assignCourse}>
-                <SelectTrigger><SelectValue placeholder="Select batch" /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select batch" />
+                </SelectTrigger>
                 <SelectContent>
-                  {allBatches.filter((b) => b.courseId === assignCourse && b.branchId === assignBranch).map((b) => (
-                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                  ))}
+                  {allBatches
+                    .filter((b) => b.courseId === assignCourse && b.branchId === assignBranch)
+                    .map((b) => (
+                      <SelectItem key={b.id} value={b.id}>
+                        {b.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAssignTarget(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setAssignTarget(null)}>
+              Cancel
+            </Button>
             <Button disabled={!assignBatch || assigning} onClick={saveAssignBatch}>
-              {assigning && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {assigning && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save
             </Button>
           </DialogFooter>
@@ -725,7 +987,7 @@ export default function Learners() {
       </Dialog>
 
       {seatLimit <= 0 && (
-        <div className="text-sm text-muted-foreground border rounded-lg p-4">
+        <div className="rounded-lg border p-4 text-sm text-muted-foreground">
           No seats are assigned to your coaching yet. Purchase seats in Billing to get started.
         </div>
       )}

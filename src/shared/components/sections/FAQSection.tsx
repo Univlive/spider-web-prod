@@ -1,10 +1,5 @@
 import { motion } from "framer-motion";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@shared/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@shared/ui/accordion";
 
 const faqs = [
   {
@@ -39,23 +34,23 @@ export function FAQSection() {
     <section className="section-padding">
       <div className="container-main">
         <motion.div
-          className="text-center max-w-2xl mx-auto mb-16"
+          className="mx-auto mb-16 max-w-2xl text-center"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+          <h2 className="mb-4 text-3xl font-bold sm:text-4xl lg:text-5xl">
             Everything You Need to Know About LearnFlow
           </h2>
-          <p className="text-muted-foreground text-lg">
-            Got questions? Visit our comprehensive FAQs for detailed info on LearnFlow's
-            competitive pricing, diverse courses, and dedicated support!
+          <p className="text-lg text-muted-foreground">
+            Got questions? Visit our comprehensive FAQs for detailed info on LearnFlow's competitive
+            pricing, diverse courses, and dedicated support!
           </p>
         </motion.div>
 
         <motion.div
-          className="max-w-3xl mx-auto"
+          className="mx-auto max-w-3xl"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -66,12 +61,12 @@ export function FAQSection() {
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="bg-card rounded-2xl border border-border shadow-soft px-6 data-[state=open]:shadow-card transition-shadow"
+                className="rounded-2xl border border-border bg-card px-6 shadow-soft transition-shadow data-[state=open]:shadow-card"
               >
-                <AccordionTrigger className="text-left font-semibold hover:no-underline py-5 [&[data-state=open]]:text-primary">
+                <AccordionTrigger className="py-5 text-left font-semibold hover:no-underline [&[data-state=open]]:text-primary">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-5 leading-relaxed">
+                <AccordionContent className="pb-5 leading-relaxed text-muted-foreground">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>

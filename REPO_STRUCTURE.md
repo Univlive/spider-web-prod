@@ -30,14 +30,14 @@ src/
 
 ## Path Aliases
 
-| Alias | Maps to |
-|-------|---------|
-| `@app/*` | `src/app/*` |
-| `@features/*` | `src/features/*` |
-| `@entities/*` | `src/entities/*` |
-| `@widgets/*` | `src/widgets/*` |
-| `@shared/*` | `src/shared/*` |
-| `@/*` | `src/*` (fallback — prefer specific aliases) |
+| Alias         | Maps to                                      |
+| ------------- | -------------------------------------------- |
+| `@app/*`      | `src/app/*`                                  |
+| `@features/*` | `src/features/*`                             |
+| `@entities/*` | `src/entities/*`                             |
+| `@widgets/*`  | `src/widgets/*`                              |
+| `@shared/*`   | `src/shared/*`                               |
+| `@/*`         | `src/*` (fallback — prefer specific aliases) |
 
 ## Rules
 

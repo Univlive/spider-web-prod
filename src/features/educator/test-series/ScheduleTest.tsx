@@ -8,18 +8,19 @@
 
 import { useEffect, useState } from "react";
 import { Clock, X, RefreshCw, Loader2 } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@shared/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@shared/ui/dialog";
 import { Button } from "@shared/ui/button";
 import { Label } from "@shared/ui/label";
 import { Switch } from "@shared/ui/switch";
 import { Input } from "@shared/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
 import { toast } from "sonner";
 import { doc, updateDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { db, auth } from "@shared/lib/firebase";
@@ -171,7 +172,10 @@ export default function ScheduleTest({ open, onOpenChange, test, userId }: Sched
   async function fireTestNotification({
     hasSchedule,
     isScheduleActive: newActive,
-  }: { hasSchedule: boolean; isScheduleActive: boolean }) {
+  }: {
+    hasSchedule: boolean;
+    isScheduleActive: boolean;
+  }) {
     const batchIds: string[] = test.targetBatches ?? [];
     if (!batchIds.length) return; // no eligible students
 
@@ -182,8 +186,15 @@ export default function ScheduleTest({ open, onOpenChange, test, userId }: Sched
     let notifTitle = "";
     let notifBody = "";
 
-    const fmtStart = startTime ? new Date(startTime).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "";
-    const fmtPrev = prevStartStr ? new Date(prevStartStr).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "";
+    const fmtStart = startTime
+      ? new Date(startTime).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+      : "";
+    const fmtPrev = prevStartStr
+      ? new Date(prevStartStr).toLocaleString(undefined, {
+          dateStyle: "medium",
+          timeStyle: "short",
+        })
+      : "";
     const testName = test.title || "Upcoming Test";
     const duration = test.durationMinutes ? ` · ${test.durationMinutes} min` : "";
 
@@ -219,7 +230,7 @@ export default function ScheduleTest({ open, onOpenChange, test, userId }: Sched
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md rounded-2xl">
+      <DialogContent className="rounded-2xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-primary" />
@@ -235,7 +246,9 @@ export default function ScheduleTest({ open, onOpenChange, test, userId }: Sched
           {/* Date/time inputs */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="startTime" className="text-xs">Start</Label>
+              <Label htmlFor="startTime" className="text-xs">
+                Start
+              </Label>
               <Input
                 id="startTime"
                 type="datetime-local"
@@ -245,7 +258,9 @@ export default function ScheduleTest({ open, onOpenChange, test, userId }: Sched
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="endTime" className="text-xs">End</Label>
+              <Label htmlFor="endTime" className="text-xs">
+                End
+              </Label>
               <Input
                 id="endTime"
                 type="datetime-local"
@@ -265,22 +280,22 @@ export default function ScheduleTest({ open, onOpenChange, test, userId }: Sched
                   Test becomes live automatically when the schedule starts
                 </p>
               </div>
-              <Switch
-                checked={isScheduleActive}
-                onCheckedChange={setIsScheduleActive}
-              />
+              <Switch checked={isScheduleActive} onCheckedChange={setIsScheduleActive} />
             </div>
           )}
 
           {/* Recurrence */}
-          {(startTime && endTime) && (
+          {startTime && endTime && (
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label className="text-xs flex items-center gap-1.5">
+                <Label className="flex items-center gap-1.5 text-xs">
                   <RefreshCw className="h-3.5 w-3.5" />
                   Recurrence
                 </Label>
-                <Select value={recurrenceType} onValueChange={(v) => setRecurrenceType(v as RecurrenceType)}>
+                <Select
+                  value={recurrenceType}
+                  onValueChange={(v) => setRecurrenceType(v as RecurrenceType)}
+                >
                   <SelectTrigger className="rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
@@ -301,9 +316,9 @@ export default function ScheduleTest({ open, onOpenChange, test, userId }: Sched
                         key={i}
                         type="button"
                         onClick={() => setRecurrenceDayOfWeek(i)}
-                        className={`flex-1 py-1 rounded-lg text-xs font-medium border transition-colors ${
+                        className={`flex-1 rounded-lg border py-1 text-xs font-medium transition-colors ${
                           recurrenceDayOfWeek === i
-                            ? "bg-primary text-white border-primary"
+                            ? "border-primary bg-primary text-white"
                             : "border-muted text-muted-foreground hover:border-primary/50"
                         }`}
                       >
@@ -316,14 +331,18 @@ export default function ScheduleTest({ open, onOpenChange, test, userId }: Sched
 
               {recurrenceType === "monthly" && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="dayOfMonth" className="text-xs">Day of month (1–28)</Label>
+                  <Label htmlFor="dayOfMonth" className="text-xs">
+                    Day of month (1–28)
+                  </Label>
                   <Input
                     id="dayOfMonth"
                     type="number"
                     min={1}
                     max={28}
                     value={recurrenceDayOfMonth}
-                    onChange={(e) => setRecurrenceDayOfMonth(Math.min(28, Math.max(1, Number(e.target.value))))}
+                    onChange={(e) =>
+                      setRecurrenceDayOfMonth(Math.min(28, Math.max(1, Number(e.target.value))))
+                    }
                     className="rounded-xl"
                   />
                 </div>
@@ -331,7 +350,9 @@ export default function ScheduleTest({ open, onOpenChange, test, userId }: Sched
 
               {recurrenceType !== "none" && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="endsAt" className="text-xs">Recurrence ends (optional)</Label>
+                  <Label htmlFor="endsAt" className="text-xs">
+                    Recurrence ends (optional)
+                  </Label>
                   <Input
                     id="endsAt"
                     type="datetime-local"
@@ -349,20 +370,29 @@ export default function ScheduleTest({ open, onOpenChange, test, userId }: Sched
               variant="ghost"
               size="sm"
               onClick={handleClear}
-              className="w-fit text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
+              className="w-fit rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive"
             >
-              <X className="h-4 w-4 mr-1" />
+              <X className="mr-1 h-4 w-4" />
               Clear Schedule
             </Button>
           )}
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl" disabled={loading}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="rounded-xl"
+            disabled={loading}
+          >
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={loading} className="rounded-xl gradient-bg text-white">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+          <Button
+            onClick={handleSave}
+            disabled={loading}
+            className="gradient-bg rounded-xl text-white"
+          >
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Save Schedule
           </Button>
         </DialogFooter>

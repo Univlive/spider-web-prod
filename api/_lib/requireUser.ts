@@ -21,7 +21,7 @@ export async function requireUser(
     if (!token) {
       throw new Error("Missing Authorization token");
     }
-    
+
     const admin = getAdmin();
     let decoded;
     try {
@@ -42,7 +42,7 @@ export async function requireUser(
       console.error("[requireUser] ❌ Database error:", dbMsg);
       throw new Error(`Database error: ${dbMsg}`);
     }
-    
+
     const profile = userSnap.exists ? userSnap.data() : null;
 
     const rawRole = String(profile?.role || "STUDENT").toUpperCase();
@@ -50,7 +50,12 @@ export async function requireUser(
       rawRole === "ADMIN" || rawRole === "EDUCATOR" ? (rawRole as AppRole) : "STUDENT";
 
     if (opts?.roles?.length && !opts.roles.includes(role)) {
-      console.error("[requireUser] ❌ Forbidden: user role", role, "not in allowed roles", opts.roles);
+      console.error(
+        "[requireUser] ❌ Forbidden: user role",
+        role,
+        "not in allowed roles",
+        opts.roles
+      );
       throw new Error("Forbidden");
     }
 
@@ -67,4 +72,3 @@ export async function requireUser(
     throw e;
   }
 }
-

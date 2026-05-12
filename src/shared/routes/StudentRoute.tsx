@@ -13,7 +13,7 @@ export default function StudentRoute() {
   // wait for both contexts
   if (authLoading || tenantLoading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center gap-2 text-muted-foreground">
+      <div className="flex min-h-[60vh] items-center justify-center gap-2 text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
         Loading…
       </div>
@@ -49,8 +49,8 @@ export default function StudentRoute() {
   const enrolledTenants = Array.isArray(profile?.enrolledTenants)
     ? profile!.enrolledTenants!
     : typeof profile?.tenantSlug === "string"
-    ? [profile.tenantSlug]
-    : [];
+      ? [profile.tenantSlug]
+      : [];
 
   if (!tenantSlug || !enrolledTenants.includes(tenantSlug)) {
     return <Navigate to="/signup?role=student" replace state={{ from: location.pathname }} />;

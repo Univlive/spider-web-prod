@@ -7,7 +7,15 @@ import { Badge } from "@shared/ui/badge";
 import { Button } from "@shared/ui/button";
 import { Card, CardContent } from "@shared/ui/card";
 import { Input } from "@shared/ui/input";
-import { BookOpen, ExternalLink, FileText, Loader2, Network, ScrollText, Search } from "lucide-react";
+import {
+  BookOpen,
+  ExternalLink,
+  FileText,
+  Loader2,
+  Network,
+  ScrollText,
+  Search,
+} from "lucide-react";
 
 const TYPE_ICONS: Record<string, React.ElementType> = {
   book: BookOpen,
@@ -60,7 +68,16 @@ export default function StudentContent() {
 
     const unsub = onSnapshot(
       query(
-        collection(db, "educators", educatorId, "branches", branchId, "courses", courseId, "content"),
+        collection(
+          db,
+          "educators",
+          educatorId,
+          "branches",
+          branchId,
+          "courses",
+          courseId,
+          "content"
+        ),
         orderBy("createdAt", "desc")
       ),
       (snap) => {
@@ -82,7 +99,7 @@ export default function StudentContent() {
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="animate-spin h-6 w-6 text-muted-foreground" />
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -96,16 +113,16 @@ export default function StudentContent() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold">Content</h1>
         <p className="text-sm text-muted-foreground">Books and notes for your course</p>
       </div>
 
       {/* Search + filter */}
-      <div className="flex gap-3 flex-wrap">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-wrap gap-3">
+        <div className="relative max-w-xs flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-9"
             placeholder="Search..."
@@ -113,8 +130,12 @@ export default function StudentContent() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex gap-1 flex-wrap">
-          <Button size="sm" variant={filterType === "all" ? "default" : "outline"} onClick={() => setFilterType("all")}>
+        <div className="flex flex-wrap gap-1">
+          <Button
+            size="sm"
+            variant={filterType === "all" ? "default" : "outline"}
+            onClick={() => setFilterType("all")}
+          >
             All
           </Button>
           {activeTypes.map((t) => (
@@ -131,29 +152,33 @@ export default function StudentContent() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">No content available yet</div>
+        <div className="py-16 text-center text-muted-foreground">No content available yet</div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((item) => (
             <Card key={item.id} className="flex flex-col">
-              <CardContent className="p-4 flex flex-col gap-3 flex-1">
+              <CardContent className="flex flex-1 flex-col gap-3 p-4">
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 text-muted-foreground">
                     <ContentTypeIcon slug={item.type} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium leading-tight truncate">{item.title}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium leading-tight">{item.title}</p>
                     {item.description && (
-                      <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{item.description}</p>
+                      <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
+                        {item.description}
+                      </p>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center justify-between mt-auto">
-                  <div className="flex gap-2 items-center">
+                <div className="mt-auto flex items-center justify-between">
+                  <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="text-xs">
                       {activeTypes.find((t) => t.slug === item.type)?.name ?? item.type}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">{formatBytes(item.fileSize)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {formatBytes(item.fileSize)}
+                    </span>
                   </div>
                   <Button size="sm" variant="outline" asChild>
                     <a href={item.fileUrl} target="_blank" rel="noreferrer">

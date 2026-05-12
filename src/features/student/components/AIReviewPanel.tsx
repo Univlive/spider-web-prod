@@ -1,5 +1,16 @@
 import { motion } from "framer-motion";
-import { Sparkles, CheckCircle, AlertCircle, Lightbulb, BookOpen, Loader2, TrendingUp, Book, Target, Zap } from "lucide-react";
+import {
+  Sparkles,
+  CheckCircle,
+  AlertCircle,
+  Lightbulb,
+  BookOpen,
+  Loader2,
+  TrendingUp,
+  Book,
+  Target,
+  Zap,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
 import { Badge } from "@shared/ui/badge";
 import { Progress } from "@shared/ui/progress";
@@ -45,17 +56,24 @@ interface AIReviewPanelProps {
   onCancel?: () => void;
 }
 
-export function AIReviewPanel({ status, review, className, progress, error, onCancel }: AIReviewPanelProps) {
+export function AIReviewPanel({
+  status,
+  review,
+  className,
+  progress,
+  error,
+  onCancel,
+}: AIReviewPanelProps) {
   if (status === "queued") {
     return (
       <Card className={cn("card-soft border-0 bg-pastel-lavender", className)}>
-        <CardContent className="p-6 text-center space-y-4">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+        <CardContent className="space-y-4 p-6 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
             <Sparkles className="h-8 w-8 text-primary" />
           </div>
           <div>
-            <h3 className="font-semibold text-lg">AI Review Queued</h3>
-            <p className="text-sm text-muted-foreground mt-1">
+            <h3 className="text-lg font-semibold">AI Review Queued</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
               Your personalized analysis will be ready in approximately 2 minutes.
             </p>
           </div>
@@ -68,21 +86,21 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
   if (status === "in-progress") {
     return (
       <Card className={cn("card-soft border-0 bg-pastel-yellow", className)}>
-        <CardContent className="p-6 space-y-4">
+        <CardContent className="space-y-4 p-6">
           <div className="text-center">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-              className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto"
+              className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10"
             >
               <Loader2 className="h-8 w-8 text-primary" />
             </motion.div>
             <div className="mt-4">
-              <h3 className="font-semibold text-lg">AI Analyzing Your Performance</h3>
+              <h3 className="text-lg font-semibold">AI Analyzing Your Performance</h3>
               {progress ? (
-                <p className="text-sm text-muted-foreground mt-2">{progress}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{progress}</p>
               ) : (
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="mt-1 text-sm text-muted-foreground">
                   Our AI is reviewing your answers and preparing personalized feedback...
                 </p>
               )}
@@ -90,10 +108,10 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
           </div>
           <Progress value={65} className="h-2" />
           {onCancel && (
-            <div className="text-center pt-2">
+            <div className="pt-2 text-center">
               <button
                 onClick={onCancel}
-                className="text-sm text-muted-foreground hover:text-foreground underline"
+                className="text-sm text-muted-foreground underline hover:text-foreground"
               >
                 Cancel
               </button>
@@ -107,16 +125,16 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
   if (status === "failed") {
     return (
       <Card className={cn("card-soft border-0 bg-pastel-peach", className)}>
-        <CardContent className="p-6 text-center space-y-4">
-          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+        <CardContent className="space-y-4 p-6 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
             <AlertCircle className="h-8 w-8 text-destructive" />
           </div>
           <div>
-            <h3 className="font-semibold text-lg">Analysis Failed</h3>
+            <h3 className="text-lg font-semibold">Analysis Failed</h3>
             {error ? (
-              <p className="text-sm text-destructive mt-2">{error}</p>
+              <p className="mt-2 text-sm text-destructive">{error}</p>
             ) : (
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Something went wrong. Please try again later.
               </p>
             )}
@@ -136,13 +154,16 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
       <Card className="card-soft border-0">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl gradient-bg">
+            <div className="gradient-bg rounded-xl p-2">
               <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div>
               <CardTitle className="text-lg">AI Performance Review</CardTitle>
-              <Badge variant="secondary" className="mt-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                <CheckCircle className="h-3 w-3 mr-1" />
+              <Badge
+                variant="secondary"
+                className="mt-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+              >
+                <CheckCircle className="mr-1 h-3 w-3" />
                 Completed
               </Badge>
             </div>
@@ -150,13 +171,13 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Overall Analysis */}
-          <div className="p-4 rounded-xl bg-pastel-mint">
+          <div className="rounded-xl bg-pastel-mint p-4">
             <p className="text-sm text-foreground">{review.overallAnalysis}</p>
           </div>
 
           {/* Strengths */}
           <div>
-            <h4 className="font-semibold flex items-center gap-2 text-green-600 mb-3">
+            <h4 className="mb-3 flex items-center gap-2 font-semibold text-green-600">
               <CheckCircle className="h-4 w-4" />
               Strengths
             </h4>
@@ -169,7 +190,7 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
                   transition={{ delay: index * 0.1 }}
                   className="flex items-start gap-2 text-sm"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 flex-shrink-0" />
+                  <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-green-500" />
                   <span>{strength}</span>
                 </motion.li>
               ))}
@@ -178,7 +199,7 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
 
           {/* Weak Areas */}
           <div>
-            <h4 className="font-semibold flex items-center gap-2 text-orange-600 mb-3">
+            <h4 className="mb-3 flex items-center gap-2 font-semibold text-orange-600">
               <AlertCircle className="h-4 w-4" />
               Areas to Improve
             </h4>
@@ -191,7 +212,7 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
                   transition={{ delay: index * 0.1 + 0.3 }}
                   className="flex items-start gap-2 text-sm"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-2 flex-shrink-0" />
+                  <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-orange-500" />
                   <span>{area}</span>
                 </motion.li>
               ))}
@@ -200,7 +221,7 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
 
           {/* Suggestions */}
           <div>
-            <h4 className="font-semibold flex items-center gap-2 text-primary mb-3">
+            <h4 className="mb-3 flex items-center gap-2 font-semibold text-primary">
               <Lightbulb className="h-4 w-4" />
               Suggestions
             </h4>
@@ -213,7 +234,7 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
                   transition={{ delay: index * 0.1 + 0.6 }}
                   className="flex items-start gap-2 text-sm"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+                  <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
                   <span>{suggestion}</span>
                 </motion.li>
               ))}
@@ -222,7 +243,7 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
 
           {/* Next Test Recommendations */}
           <div>
-            <h4 className="font-semibold flex items-center gap-2 mb-3">
+            <h4 className="mb-3 flex items-center gap-2 font-semibold">
               <BookOpen className="h-4 w-4" />
               Recommended Next Tests
             </h4>
@@ -231,7 +252,7 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
                 <Badge
                   key={index}
                   variant="secondary"
-                  className="rounded-full bg-pastel-lavender cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                  className="cursor-pointer rounded-full bg-pastel-lavender transition-colors hover:bg-primary hover:text-primary-foreground"
                 >
                   {test}
                 </Badge>
@@ -249,7 +270,7 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
               <Target className="h-5 w-5 text-orange-600" />
               Key Prerequisites Missing
             </CardTitle>
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="mt-2 text-sm text-muted-foreground">
               These foundational concepts caused your incorrect answers:
             </p>
           </CardHeader>
@@ -260,29 +281,31 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                className="p-3 rounded-lg bg-white/50 dark:bg-slate-900/50 border border-orange-200 dark:border-orange-900/30"
+                className="rounded-lg border border-orange-200 bg-white/50 p-3 dark:border-orange-900/30 dark:bg-slate-900/50"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h5 className="font-semibold text-sm">{prereq.topic}</h5>
+                    <div className="mb-1 flex items-center gap-2">
+                      <h5 className="text-sm font-semibold">{prereq.topic}</h5>
                       <Badge
                         variant="secondary"
                         className={cn(
-                          "text-xs rounded-full",
+                          "rounded-full text-xs",
                           prereq.importance === "high"
                             ? "bg-red-100 text-red-700 dark:bg-red-900/30"
                             : prereq.importance === "medium"
-                            ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30"
-                            : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30"
+                              ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30"
+                              : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30"
                         )}
                       >
-                        {prereq.importance.charAt(0).toUpperCase() + prereq.importance.slice(1)} Impact
+                        {prereq.importance.charAt(0).toUpperCase() + prereq.importance.slice(1)}{" "}
+                        Impact
                       </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-2">{prereq.description}</p>
+                    <p className="mb-2 text-xs text-muted-foreground">{prereq.description}</p>
                     <div className="text-xs text-slate-600 dark:text-slate-400">
-                      <span className="font-medium">Related Questions:</span> {prereq.relatedQuestions.join(", ")}
+                      <span className="font-medium">Related Questions:</span>{" "}
+                      {prereq.relatedQuestions.join(", ")}
                     </div>
                   </div>
                 </div>
@@ -300,7 +323,7 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
               <Book className="h-5 w-5 text-blue-600" />
               Topics to Master
             </CardTitle>
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="mt-2 text-sm text-muted-foreground">
               Topics that directly address your weak areas and their potential mark gains:
             </p>
           </CardHeader>
@@ -311,33 +334,36 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                className="p-3 rounded-lg bg-white/50 dark:bg-slate-900/50 border border-blue-200 dark:border-blue-900/30"
+                className="rounded-lg border border-blue-200 bg-white/50 p-3 dark:border-blue-900/30 dark:bg-slate-900/50"
               >
                 <div className="space-y-2">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h5 className="font-semibold text-sm">{topic.topic}</h5>
+                      <div className="mb-1 flex items-center gap-2">
+                        <h5 className="text-sm font-semibold">{topic.topic}</h5>
                         <Badge
                           variant="secondary"
                           className={cn(
-                            "text-xs rounded-full",
+                            "rounded-full text-xs",
                             topic.difficulty === "beginner"
                               ? "bg-green-100 text-green-700 dark:bg-green-900/30"
                               : topic.difficulty === "intermediate"
-                              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30"
-                              : "bg-purple-100 text-purple-700 dark:bg-purple-900/30"
+                                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30"
+                                : "bg-purple-100 text-purple-700 dark:bg-purple-900/30"
                           )}
                         >
                           {topic.difficulty.charAt(0).toUpperCase() + topic.difficulty.slice(1)}
                         </Badge>
                       </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">
-                        <span className="font-medium">Covers:</span> {topic.questionsItCovers.join(", ")}
+                      <p className="mb-2 text-xs text-slate-600 dark:text-slate-400">
+                        <span className="font-medium">Covers:</span>{" "}
+                        {topic.questionsItCovers.join(", ")}
                       </p>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-semibold text-green-600">+{topic.estimatedMarksGain} marks</div>
+                      <div className="text-sm font-semibold text-green-600">
+                        +{topic.estimatedMarksGain} marks
+                      </div>
                       <div className="text-xs text-muted-foreground">potential gain</div>
                     </div>
                   </div>
@@ -362,7 +388,7 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-center p-3 rounded-lg bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700"
+                className="rounded-lg border border-slate-200 bg-white/50 p-3 text-center dark:border-slate-700 dark:bg-slate-900/50"
               >
                 <div className="text-2xl font-bold text-slate-700 dark:text-slate-300">
                   {extendedReview.marksProjection.currentScore}
@@ -374,10 +400,12 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 }}
-                className="text-center p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/30"
+                className="rounded-lg border border-green-200 bg-green-50 p-3 text-center dark:border-green-900/30 dark:bg-green-900/20"
               >
                 <div className="text-2xl font-bold text-green-600">
-                  +{extendedReview.marksProjection.potentialScore - extendedReview.marksProjection.currentScore}
+                  +
+                  {extendedReview.marksProjection.potentialScore -
+                    extendedReview.marksProjection.currentScore}
                 </div>
                 <div className="text-xs text-muted-foreground">Possible Gain</div>
               </motion.div>
@@ -386,7 +414,7 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-center p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/30"
+                className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-center dark:border-blue-900/30 dark:bg-blue-900/20"
               >
                 <div className="text-2xl font-bold text-blue-600">
                   {extendedReview.marksProjection.potentialScore}
@@ -396,39 +424,41 @@ export function AIReviewPanel({ status, review, className, progress, error, onCa
             </div>
 
             <div className="space-y-3">
-              <h5 className="font-semibold text-sm">How to Improve:</h5>
+              <h5 className="text-sm font-semibold">How to Improve:</h5>
               {extendedReview.marksProjection.improvementAreas.map((area, idx) => (
                 <motion.div
                   key={idx}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.1 }}
-                  className="p-3 rounded-lg bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700"
+                  className="rounded-lg border border-slate-200 bg-white/50 p-3 dark:border-slate-700 dark:bg-slate-900/50"
                 >
-                  <div className="flex items-center justify-between gap-3 mb-2">
+                  <div className="mb-2 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium">{area.topic}</span>
                       <Badge
                         variant="secondary"
                         className={cn(
-                          "text-xs rounded-full",
+                          "rounded-full text-xs",
                           area.effort === "easy"
                             ? "bg-green-100 text-green-700 dark:bg-green-900/30"
                             : area.effort === "medium"
-                            ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30"
-                            : "bg-red-100 text-red-700 dark:bg-red-900/30"
+                              ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30"
+                              : "bg-red-100 text-red-700 dark:bg-red-900/30"
                         )}
                       >
                         {area.effort === "easy" ? (
                           <>
-                            <Zap className="h-3 w-3 mr-1" /> Easy
+                            <Zap className="mr-1 h-3 w-3" /> Easy
                           </>
                         ) : (
                           area.effort.charAt(0).toUpperCase() + area.effort.slice(1)
                         )}
                       </Badge>
                     </div>
-                    <div className="text-sm font-semibold text-green-600">+{area.possibleMarksGain}</div>
+                    <div className="text-sm font-semibold text-green-600">
+                      +{area.possibleMarksGain}
+                    </div>
                   </div>
                 </motion.div>
               ))}

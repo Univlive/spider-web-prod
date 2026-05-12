@@ -41,13 +41,7 @@ import { Input } from "@shared/ui/input";
 import { Label } from "@shared/ui/label";
 import { Textarea } from "@shared/ui/textarea";
 import { Badge } from "@shared/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
 import { Checkbox } from "@shared/ui/checkbox";
 import { cn } from "@shared/lib/utils";
 
@@ -79,18 +73,28 @@ type Props = {
 
 // ─── component ───────────────────────────────────────────────────────────────
 
-export default function CreateGroupModal({ open, onOpenChange, groupToEdit, educatorUid, onSaved }: Props) {
+export default function CreateGroupModal({
+  open,
+  onOpenChange,
+  groupToEdit,
+  educatorUid,
+  onSaved,
+}: Props) {
   const isEdit = !!groupToEdit;
 
   // Step state
   const [step, setStep] = useState<1 | 2>(1);
 
   // Step 1 fields
-  const [groupType, setGroupType] = useState<QuestionGroupType>(groupToEdit?.type ?? "comprehension");
+  const [groupType, setGroupType] = useState<QuestionGroupType>(
+    groupToEdit?.type ?? "comprehension"
+  );
   const [title, setTitle] = useState(groupToEdit?.title ?? "");
   const [passageContent, setPassageContent] = useState(groupToEdit?.passageContent ?? "");
   const [subjectName, setSubjectName] = useState(groupToEdit?.subjectName ?? "");
-  const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">(groupToEdit?.difficulty ?? "medium");
+  const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">(
+    groupToEdit?.difficulty ?? "medium"
+  );
 
   // Step 2: question selection
   const [bankQuestions, setBankQuestions] = useState<BankQuestion[]>([]);
@@ -125,7 +129,9 @@ export default function CreateGroupModal({ open, onOpenChange, groupToEdit, educ
           ? collection(db, "educators", educatorUid, "question_bank")
           : collection(db, "question_bank");
         const snap = await getDocs(query(col, orderBy("createdAt", "desc")));
-        setBankQuestions(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<BankQuestion, "id">) })));
+        setBankQuestions(
+          snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<BankQuestion, "id">) }))
+        );
       } catch (err) {
         logError(err, "CreateGroupModal.loadBankQuestions");
         toast.error("Failed to load question bank");
@@ -147,13 +153,13 @@ export default function CreateGroupModal({ open, onOpenChange, groupToEdit, educ
   }, [bankQuestions, qSearch]);
 
   function toggleQuestion(id: string) {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
   const canAdvance =
-    step === 1 ? title.trim().length > 0 && passageContent.trim().length > 0 : selectedIds.length >= 2;
+    step === 1
+      ? title.trim().length > 0 && passageContent.trim().length > 0
+      : selectedIds.length >= 2;
 
   async function handleSave() {
     if (selectedIds.length < 2) {
@@ -228,7 +234,10 @@ export default function CreateGroupModal({ open, onOpenChange, groupToEdit, educ
         let batch = writeBatch(db);
         let ops = 0;
         for (let i = 0; i < selectedIds.length; i++) {
-          batch.update(doc(col, selectedIds[i]), { groupOrder: i + 1, updatedAt: serverTimestamp() });
+          batch.update(doc(col, selectedIds[i]), {
+            groupOrder: i + 1,
+            updatedAt: serverTimestamp(),
+          });
           ops++;
           if (ops >= BATCH_SIZE) {
             await batch.commit();
@@ -244,7 +253,11 @@ export default function CreateGroupModal({ open, onOpenChange, groupToEdit, educ
         let batch = writeBatch(db);
         let ops = 0;
         for (const id of removed) {
-          batch.update(doc(col, id), { groupId: null, groupOrder: null, updatedAt: serverTimestamp() });
+          batch.update(doc(col, id), {
+            groupId: null,
+            groupOrder: null,
+            updatedAt: serverTimestamp(),
+          });
           ops++;
           if (ops >= BATCH_SIZE) {
             await batch.commit();
@@ -282,7 +295,7 @@ export default function CreateGroupModal({ open, onOpenChange, groupToEdit, educ
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col rounded-2xl">
+      <DialogContent className="flex max-h-[90vh] flex-col rounded-2xl sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {groupType === "case_study" ? (
@@ -311,7 +324,7 @@ export default function CreateGroupModal({ open, onOpenChange, groupToEdit, educ
                       type="button"
                       onClick={() => setGroupType(t)}
                       className={cn(
-                        "flex-1 flex items-center gap-2 rounded-xl border p-3 text-sm font-medium transition-colors",
+                        "flex flex-1 items-center gap-2 rounded-xl border p-3 text-sm font-medium transition-colors",
                         groupType === t
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-muted text-muted-foreground hover:border-primary/50"
@@ -354,7 +367,7 @@ export default function CreateGroupModal({ open, onOpenChange, groupToEdit, educ
                   }
                   value={passageContent}
                   onChange={(e) => setPassageContent(e.target.value)}
-                  className="rounded-xl min-h-[180px] font-mono text-sm"
+                  className="min-h-[180px] rounded-xl font-mono text-sm"
                 />
                 <p className="text-xs text-muted-foreground">
                   HTML supported. For tables in case studies, paste raw HTML{" "}
@@ -376,7 +389,10 @@ export default function CreateGroupModal({ open, onOpenChange, groupToEdit, educ
                 </div>
                 <div className="space-y-2">
                   <Label>Difficulty</Label>
-                  <Select value={difficulty} onValueChange={(v) => setDifficulty(v as typeof difficulty)}>
+                  <Select
+                    value={difficulty}
+                    onValueChange={(v) => setDifficulty(v as typeof difficulty)}
+                  >
                     <SelectTrigger className="rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
@@ -410,9 +426,11 @@ export default function CreateGroupModal({ open, onOpenChange, groupToEdit, educ
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
               ) : (
-                <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
+                <div className="max-h-[350px] space-y-2 overflow-y-auto pr-1">
                   {filteredBank.length === 0 && (
-                    <p className="text-center text-sm text-muted-foreground py-6">No questions found</p>
+                    <p className="py-6 text-center text-sm text-muted-foreground">
+                      No questions found
+                    </p>
                   )}
                   {filteredBank.map((bq) => {
                     const isSelected = selectedIds.includes(bq.id);
@@ -422,11 +440,11 @@ export default function CreateGroupModal({ open, onOpenChange, groupToEdit, educ
                         key={bq.id}
                         onClick={() => !inDifferentGroup && toggleQuestion(bq.id)}
                         className={cn(
-                          "flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-colors text-sm",
+                          "flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition-colors",
                           isSelected
                             ? "border-primary bg-primary/5"
                             : "border-muted hover:border-primary/40",
-                          inDifferentGroup && "opacity-50 cursor-not-allowed"
+                          inDifferentGroup && "cursor-not-allowed opacity-50"
                         )}
                       >
                         <Checkbox
@@ -439,19 +457,23 @@ export default function CreateGroupModal({ open, onOpenChange, groupToEdit, educ
                         <div className="min-w-0 flex-1">
                           <p className="line-clamp-2 text-foreground">{bq.question}</p>
                           <div className="mt-1 flex flex-wrap gap-1">
-                            {bq.topic && <Badge variant="outline" className="text-xs">{bq.topic}</Badge>}
+                            {bq.topic && (
+                              <Badge variant="outline" className="text-xs">
+                                {bq.topic}
+                              </Badge>
+                            )}
                             {bq.difficulty && (
                               <Badge variant="outline" className="text-xs capitalize">
                                 {bq.difficulty}
                               </Badge>
                             )}
                             {bq.groupId && bq.groupId !== groupToEdit?.id && (
-                              <Badge variant="secondary" className="text-xs gap-1">
+                              <Badge variant="secondary" className="gap-1 text-xs">
                                 <Link2 className="h-3 w-3" /> In another group
                               </Badge>
                             )}
                             {bq.groupId && bq.groupId === groupToEdit?.id && (
-                              <Badge variant="default" className="text-xs gap-1">
+                              <Badge variant="default" className="gap-1 text-xs">
                                 <Link2 className="h-3 w-3" /> This group
                               </Badge>
                             )}
@@ -468,18 +490,28 @@ export default function CreateGroupModal({ open, onOpenChange, groupToEdit, educ
 
         <DialogFooter className="gap-2 pt-2">
           {step === 2 && (
-            <Button variant="outline" onClick={() => setStep(1)} className="rounded-xl" disabled={saving}>
+            <Button
+              variant="outline"
+              onClick={() => setStep(1)}
+              className="rounded-xl"
+              disabled={saving}
+            >
               Back
             </Button>
           )}
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl" disabled={saving}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="rounded-xl"
+            disabled={saving}
+          >
             Cancel
           </Button>
           {step === 1 ? (
             <Button
               onClick={() => setStep(2)}
               disabled={!canAdvance}
-              className="rounded-xl gradient-bg text-white"
+              className="gradient-bg rounded-xl text-white"
             >
               Next: Add Questions
             </Button>
@@ -487,9 +519,9 @@ export default function CreateGroupModal({ open, onOpenChange, groupToEdit, educ
             <Button
               onClick={handleSave}
               disabled={saving || !canAdvance}
-              className="rounded-xl gradient-bg text-white"
+              className="gradient-bg rounded-xl text-white"
             >
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               {isEdit ? "Save Changes" : "Create Group"}
             </Button>
           )}

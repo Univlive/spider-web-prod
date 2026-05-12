@@ -1,29 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  Plus,
-  Copy,
-  Check,
-  Key,
-  Calendar,
-  Users,
-  MoreVertical,
-  Trash2,
-  Edit,
-} from "lucide-react";
+import { Plus, Copy, Check, Key, Calendar, Users, MoreVertical, Trash2, Edit } from "lucide-react";
 import { Button } from "@shared/ui/button";
 import { Badge } from "@shared/ui/badge";
 import { Card, CardContent } from "@shared/ui/card";
 import { Input } from "@shared/ui/input";
 import { Label } from "@shared/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@shared/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -191,9 +175,7 @@ export default function AccessCodes() {
 
           const windowMins = Number(data?.windowMinutes ?? 0);
           const windowExpiredMs =
-            windowMins > 0 && createdAt
-              ? createdAt.toMillis() + windowMins * 60 * 1000
-              : null;
+            windowMins > 0 && createdAt ? createdAt.toMillis() + windowMins * 60 * 1000 : null;
           const isWindowExpired = windowExpiredMs !== null && Date.now() > windowExpiredMs;
 
           let status: "active" | "expired" | "exhausted" | "window_expired" = "active";
@@ -282,17 +264,27 @@ export default function AccessCodes() {
       await deleteDoc(doc(db, "educators", uid, "accessCodes", item.id));
       toast({ title: "Deleted", description: "Access code removed successfully." });
     } catch {
-      toast({ title: "Delete failed", description: "Could not delete the access code.", variant: "destructive" });
+      toast({
+        title: "Delete failed",
+        description: "Could not delete the access code.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleSave = async () => {
     if (!uid) {
-      toast({ title: "Please login", description: "You must be logged in as educator.", variant: "destructive" });
+      toast({
+        title: "Please login",
+        description: "You must be logged in as educator.",
+        variant: "destructive",
+      });
       return;
     }
 
-    const codeUpper = String(newCode || "").trim().toUpperCase();
+    const codeUpper = String(newCode || "")
+      .trim()
+      .toUpperCase();
     const max = Number(maxUses);
 
     if (!selectedTestSeriesId) {
@@ -308,7 +300,8 @@ export default function AccessCodes() {
       return;
     }
 
-    const testTitle = testSeriesOptions.find((t) => t.id === selectedTestSeriesId)?.title || "Test Series";
+    const testTitle =
+      testSeriesOptions.find((t) => t.id === selectedTestSeriesId)?.title || "Test Series";
     const expiresAt = expiryDate ? toEndOfDayTimestamp(expiryDate) : null;
 
     setIsSaving(true);
@@ -317,7 +310,11 @@ export default function AccessCodes() {
         const ref = doc(db, "educators", uid, "accessCodes", codeUpper);
         const existing = await getDoc(ref);
         if (existing.exists()) {
-          toast({ title: "Code already exists", description: "Please generate a different code.", variant: "destructive" });
+          toast({
+            title: "Code already exists",
+            description: "Please generate a different code.",
+            variant: "destructive",
+          });
           setIsSaving(false);
           return;
         }
@@ -333,14 +330,21 @@ export default function AccessCodes() {
           createdAt: serverTimestamp(),
         });
 
-        toast({ title: "Access code created!", description: "Your new access code is ready to share." });
+        toast({
+          title: "Access code created!",
+          description: "Your new access code is ready to share.",
+        });
       } else {
         const ref = doc(db, "educators", uid, "accessCodes", editingId);
 
         const current = accessCodes.find((c) => c.id === editingId);
         const used = current?.usesUsed || 0;
         if (max < used) {
-          toast({ title: "Max uses too low", description: `This code already used ${used} times.`, variant: "destructive" });
+          toast({
+            title: "Max uses too low",
+            description: `This code already used ${used} times.`,
+            variant: "destructive",
+          });
           setIsSaving(false);
           return;
         }
@@ -360,14 +364,19 @@ export default function AccessCodes() {
       setIsCreateOpen(false);
       resetDialog();
     } catch {
-      toast({ title: "Save failed", description: "Could not save access code. Try again.", variant: "destructive" });
+      toast({
+        title: "Save failed",
+        description: "Could not save access code. Try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
   };
 
   const expiringSoonCount = useMemo(() => {
-    return accessCodes.filter((c) => c.status === "active" && isExpiringSoon(c.expiresAtTs, 7)).length;
+    return accessCodes.filter((c) => c.status === "active" && isExpiringSoon(c.expiresAtTs, 7))
+      .length;
   }, [accessCodes]);
 
   const totalUses = useMemo(() => {
@@ -384,7 +393,7 @@ export default function AccessCodes() {
       header: "Access Code",
       render: (item: AccessCode) => (
         <div className="flex items-center gap-2">
-          <code className="px-2 py-1 rounded bg-muted font-mono text-sm">{item.code}</code>
+          <code className="rounded bg-muted px-2 py-1 font-mono text-sm">{item.code}</code>
           <Button
             variant="ghost"
             size="icon"
@@ -394,7 +403,11 @@ export default function AccessCodes() {
               copyToClipboard(item.code);
             }}
           >
-            {copiedCode === item.code ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+            {copiedCode === item.code ? (
+              <Check className="h-3 w-3 text-green-500" />
+            ) : (
+              <Copy className="h-3 w-3" />
+            )}
           </Button>
         </div>
       ),
@@ -410,8 +423,8 @@ export default function AccessCodes() {
 
         return (
           <div className="flex items-center gap-2">
-            <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-              <div className="h-full gradient-bg" style={{ width: `${pct}%` }} />
+            <div className="h-2 w-16 overflow-hidden rounded-full bg-muted">
+              <div className="gradient-bg h-full" style={{ width: `${pct}%` }} />
             </div>
             <span className="text-sm text-muted-foreground">
               {used}/{max}
@@ -431,10 +444,10 @@ export default function AccessCodes() {
             item.status === "active"
               ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
               : item.status === "expired"
-              ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-              : item.status === "window_expired"
-              ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
-              : "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400"
+                ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                : item.status === "window_expired"
+                  ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+                  : "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400"
           }
         >
           {item.status === "window_expired" ? "window expired" : item.status}
@@ -459,7 +472,7 @@ export default function AccessCodes() {
                 openEdit(item);
               }}
             >
-              <Edit className="h-4 w-4 mr-2" />
+              <Edit className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -468,7 +481,7 @@ export default function AccessCodes() {
                 copyToClipboard(item.code);
               }}
             >
-              <Copy className="h-4 w-4 mr-2" />
+              <Copy className="mr-2 h-4 w-4" />
               Copy Code
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -478,7 +491,7 @@ export default function AccessCodes() {
                 handleDelete(item);
               }}
             >
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 className="mr-2 h-4 w-4" />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -505,12 +518,16 @@ export default function AccessCodes() {
             <DialogTitle>{editingId ? "Edit Access Code" : "Create New Access Code"}</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 mt-4">
+          <div className="mt-4 space-y-4">
             <div className="space-y-2">
               <Label>Test Series</Label>
               <Select value={selectedTestSeriesId} onValueChange={setSelectedTestSeriesId}>
                 <SelectTrigger>
-                  <SelectValue placeholder={testSeriesOptions.length ? "Select test series" : "No test series yet"} />
+                  <SelectValue
+                    placeholder={
+                      testSeriesOptions.length ? "Select test series" : "No test series yet"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {testSeriesOptions.length ? (
@@ -528,7 +545,8 @@ export default function AccessCodes() {
               </Select>
               {!canCreate && (
                 <p className="text-xs text-muted-foreground">
-                  You don’t have any test series yet. Create one in <span className="font-medium">Test Series</span> first.
+                  You don’t have any test series yet. Create one in{" "}
+                  <span className="font-medium">Test Series</span> first.
                 </p>
               )}
             </div>
@@ -556,7 +574,11 @@ export default function AccessCodes() {
               </div>
               <div className="space-y-2">
                 <Label>Expiry Date</Label>
-                <Input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
+                <Input
+                  type="date"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                />
               </div>
             </div>
 
@@ -569,12 +591,13 @@ export default function AccessCodes() {
                 onChange={(e) => setWindowMinutes(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Students can only unlock within this many minutes after this code was generated. 0 = no limit.
+                Students can only unlock within this many minutes after this code was generated. 0 =
+                no limit.
               </p>
             </div>
 
             <Button
-              className="w-full gradient-bg text-white"
+              className="gradient-bg w-full text-white"
               onClick={handleSave}
               disabled={isSaving || !canCreate}
             >
@@ -588,8 +611,10 @@ export default function AccessCodes() {
       {!uid ? (
         <>
           <div>
-            <h1 className="text-2xl font-display font-bold">Access Codes</h1>
-            <p className="text-muted-foreground text-sm">Create and manage access codes for your test series</p>
+            <h1 className="font-display text-2xl font-bold">Access Codes</h1>
+            <p className="text-sm text-muted-foreground">
+              Create and manage access codes for your test series
+            </p>
           </div>
           <EmptyState
             icon={Key}
@@ -602,13 +627,15 @@ export default function AccessCodes() {
       ) : !hasData ? (
         <>
           {/* Empty state (no codes) */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div>
-              <h1 className="text-2xl font-display font-bold">Access Codes</h1>
-              <p className="text-muted-foreground text-sm">Create and manage access codes for your test series</p>
+              <h1 className="font-display text-2xl font-bold">Access Codes</h1>
+              <p className="text-sm text-muted-foreground">
+                Create and manage access codes for your test series
+              </p>
             </div>
             <Button className="gradient-bg text-white" onClick={openCreate}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Create Access Code
             </Button>
           </div>
@@ -624,19 +651,21 @@ export default function AccessCodes() {
       ) : (
         <>
           {/* Normal state */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div>
-              <h1 className="text-2xl font-display font-bold">Access Codes</h1>
-              <p className="text-muted-foreground text-sm">Create and manage access codes for your test series</p>
+              <h1 className="font-display text-2xl font-bold">Access Codes</h1>
+              <p className="text-sm text-muted-foreground">
+                Create and manage access codes for your test series
+              </p>
             </div>
             <Button className="gradient-bg text-white" onClick={openCreate}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Create Access Code
             </Button>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
               { icon: Key, label: "Total Codes", value: accessCodes.length },
               { icon: Users, label: "Total Uses", value: totalUses },
@@ -650,8 +679,8 @@ export default function AccessCodes() {
                 transition={{ delay: i * 0.08 }}
               >
                 <Card>
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10">
+                  <CardContent className="flex items-center gap-3 p-4">
+                    <div className="rounded-lg bg-primary/10 p-2">
                       <stat.icon className="h-5 w-5 text-primary" />
                     </div>
                     <div>

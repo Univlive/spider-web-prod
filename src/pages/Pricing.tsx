@@ -1,5 +1,5 @@
 import { useState } from "react";
-import  Layout  from "@widgets/layout/Layout";
+import Layout from "@widgets/layout/Layout";
 import SEO from "@shared/components/SEO";
 import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
@@ -44,12 +44,22 @@ const plans = [
 
 const comparisonData = [
   { feature: "Cost per test paper", omr: "₹5 (printing + OMR)", univ: "₹0", omrBad: true },
-  { feature: "No. of papers (5 subjects × 10 tests)", omr: "50 papers", univ: "More Than 50 Tests", omrBad: true },
+  {
+    feature: "No. of papers (5 subjects × 10 tests)",
+    omr: "50 papers",
+    univ: "More Than 50 Tests",
+    omrBad: true,
+  },
   { feature: "Total cost", omr: "₹250 per student", univ: "₹169-₹199", omrBad: true },
   { feature: "Manual checking", omr: "Required", univ: "Automated", omrBad: true },
   { feature: "Instant results", omr: "No", univ: "Yes", omrBad: true },
   { feature: "Real computer based experience", omr: "No", univ: "Yes", omrBad: true },
-  { feature: "Performance analytics", omr: "Not available", univ: "AI-powered Advance", omrBad: true },
+  {
+    feature: "Performance analytics",
+    omr: "Not available",
+    univ: "AI-powered Advance",
+    omrBad: true,
+  },
   { feature: "Time & accuracy insights", omr: "No", univ: "Yes", omrBad: true },
 ];
 
@@ -65,28 +75,24 @@ const Pricing = () => {
       <section className="section-padding section-1">
         <div className="container-main">
           <motion.div
-            className="text-center max-w-3xl mx-auto mb-16"
+            className="mx-auto mb-16 max-w-3xl text-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4">
-              Pricing
-            </h1>
+            <h1 className="mb-4 text-4xl font-bold sm:text-5xl lg:text-6xl">Pricing</h1>
             <p className="text-lg text-muted-foreground">
               No setup fee. No fixed cost. Pay only for enrolled students.
             </p>
           </motion.div>
 
           {/* Pricing Cards */}
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-20">
+          <div className="mx-auto mb-20 grid max-w-4xl gap-8 md:grid-cols-2">
             {plans.map((plan, index) => (
               <motion.div
                 key={plan.name}
-                className={`bg-card rounded-3xl p-8 border shadow-soft relative ${
-                  plan.popular
-                    ? "border-primary ring-2 ring-primary/20"
-                    : "border-border"
+                className={`relative rounded-3xl border bg-card p-8 shadow-soft ${
+                  plan.popular ? "border-primary ring-2 ring-primary/20" : "border-border"
                 }`}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -94,25 +100,25 @@ const Pricing = () => {
                 transition={{ duration: 0.4, delay: index * 0.1 }}
               >
                 {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-accent text-primary-foreground text-xs font-semibold px-4 py-1 rounded-full">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-primary to-accent px-4 py-1 text-xs font-semibold text-primary-foreground">
                     Most Popular
                   </div>
                 )}
 
                 <div className="mb-6">
-                  <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
+                  <h3 className="mb-2 text-xl font-semibold">{plan.name}</h3>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl lg:text-5xl font-bold">₹{plan.price}</span>
+                    <span className="text-4xl font-bold lg:text-5xl">₹{plan.price}</span>
                     <span className="text-muted-foreground">/ Student</span>
                   </div>
-                  <p className="text-muted-foreground mt-3">{plan.description}</p>
+                  <p className="mt-3 text-muted-foreground">{plan.description}</p>
                 </div>
 
                 <Link to="/signup">
                   <ButtonWithIcon
                     variant={plan.popular ? "hero" : "heroOutline"}
                     size="lg"
-                    className="w-full justify-center mb-8"
+                    className="mb-8 w-full justify-center"
                   >
                     {plan.cta}
                   </ButtonWithIcon>
@@ -121,8 +127,8 @@ const Pricing = () => {
                 <ul className="space-y-3">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-3">
-                      <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                      <span className="text-muted-foreground text-sm">{feature}</span>
+                      <Check className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                      <span className="text-sm text-muted-foreground">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -136,19 +142,19 @@ const Pricing = () => {
       <section className="section-padding section-2">
         <div className="container-main">
           <motion.div
-            className="text-center max-w-3xl mx-auto mb-12"
+            className="mx-auto mb-12 max-w-3xl text-center"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+            <h2 className="mb-4 text-3xl font-bold sm:text-4xl lg:text-5xl">
               OMR vs Univ.live CBT — Per Student Comparison
             </h2>
           </motion.div>
 
           <motion.div
-            className="bg-card rounded-3xl border border-border shadow-card overflow-hidden max-w-4xl mx-auto mb-12"
+            className="mx-auto mb-12 max-w-4xl overflow-hidden rounded-3xl border border-border bg-card shadow-card"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -158,22 +164,26 @@ const Pricing = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left p-4 font-semibold">Feature / Cost Factor</th>
-                    <th className="text-center p-4 font-semibold bg-red-50">Traditional OMR Tests</th>
-                    <th className="text-center p-4 font-semibold bg-green-50">Univ.live CBT Platform</th>
+                    <th className="p-4 text-left font-semibold">Feature / Cost Factor</th>
+                    <th className="bg-red-50 p-4 text-center font-semibold">
+                      Traditional OMR Tests
+                    </th>
+                    <th className="bg-green-50 p-4 text-center font-semibold">
+                      Univ.live CBT Platform
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {comparisonData.map((row, index) => (
                     <tr key={row.feature} className={index % 2 === 0 ? "bg-muted/30" : ""}>
                       <td className="p-4 font-medium">{row.feature}</td>
-                      <td className="text-center p-4 bg-red-50/50">
+                      <td className="bg-red-50/50 p-4 text-center">
                         <span className="inline-flex items-center gap-2 text-red-600">
                           <X className="h-4 w-4" />
                           {row.omr}
                         </span>
                       </td>
-                      <td className="text-center p-4 bg-green-50/50">
+                      <td className="bg-green-50/50 p-4 text-center">
                         <span className="inline-flex items-center gap-2 text-green-600">
                           <Check className="h-4 w-4" />
                           {row.univ}

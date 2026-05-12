@@ -1,4 +1,8 @@
-type AiFeatureName = "pdfImport" | "websiteContent" | "performanceAnalysis" | "subjectiveEvaluation";
+type AiFeatureName =
+  | "pdfImport"
+  | "websiteContent"
+  | "performanceAnalysis"
+  | "subjectiveEvaluation";
 
 const FALSE_LIKE_VALUES = new Set(["0", "false", "off", "no", "disabled"]);
 

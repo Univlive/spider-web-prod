@@ -11,20 +11,22 @@ async function getImageKitInstance() {
     if (!ImageKitModule) {
       ImageKitModule = await import("imagekit");
     }
-    
+
     if (!imagekitInstance) {
       const publicKey = process.env.IMAGEKIT_PUBLIC_KEY;
       const privateKey = process.env.IMAGEKIT_PRIVATE_KEY;
       const urlEndpoint = process.env.IMAGEKIT_URL_ENDPOINT;
-      
+
       if (!publicKey || !privateKey || !urlEndpoint) {
-        throw new Error(`ImageKit vars missing: pub=${!!publicKey}, priv=${!!privateKey}, url=${!!urlEndpoint}`);
+        throw new Error(
+          `ImageKit vars missing: pub=${!!publicKey}, priv=${!!privateKey}, url=${!!urlEndpoint}`
+        );
       }
-      
+
       const ImageKit = ImageKitModule.default || ImageKitModule;
       imagekitInstance = new ImageKit({ publicKey, privateKey, urlEndpoint });
     }
-    
+
     return imagekitInstance;
   } catch (e: any) {
     const msg = e?.message || String(e);
@@ -67,7 +69,10 @@ function getAllowedDomainSuffixes(): string[] {
     .filter(Boolean);
 
   const fromAppDomains = String(
-    process.env.VITE_APP_DOMAINS || process.env.VITE_APP_DOMAIN || process.env.VITE_APP_BASE_DOMAIN || ""
+    process.env.VITE_APP_DOMAINS ||
+      process.env.VITE_APP_DOMAIN ||
+      process.env.VITE_APP_BASE_DOMAIN ||
+      ""
   )
     .split(",")
     .map((x) => sanitizeDomain(x))
@@ -94,7 +99,9 @@ function isOriginAllowedByDomainSuffix(origin: string): boolean {
   if (!host) return false;
   if (host === "localhost" || host === "127.0.0.1" || host.endsWith(".localhost")) return true;
 
-  return getAllowedDomainSuffixes().some((domain) => host === domain || host.endsWith(`.${domain}`));
+  return getAllowedDomainSuffixes().some(
+    (domain) => host === domain || host.endsWith(`.${domain}`)
+  );
 }
 
 function setCors(req: VercelRequest, res: VercelResponse) {
@@ -125,14 +132,14 @@ function setCors(req: VercelRequest, res: VercelResponse) {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CRITICAL: Set JSON response type FIRST, BEFORE anything else
   res.setHeader("Content-Type", "application/json; charset=utf-8");
-  
+
   try {
     setCors(req, res);
 
     if (req.method === "OPTIONS") {
       return res.status(204).end();
     }
-    
+
     if (req.method !== "GET") {
       return res.status(405).json({ error: "Method not allowed" });
     }
@@ -156,7 +163,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch (authErr: any) {
       const authMsg = String(authErr?.message || "Auth failed");
       console.error(`[imagekit-auth] ❌ Auth error:`, authMsg);
-      
+
       if (authMsg.includes("Missing Authorization token")) {
         return res.status(401).json({ error: "Missing Authorization token" });
       }
@@ -192,7 +199,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error(`[imagekit-auth] ❌ Param error:`, paramMsg);
       return res.status(500).json({ error: paramMsg });
     }
-    
   } catch (e: any) {
     // Final safety net - ALWAYS return JSON
     const msg = String(e?.message || String(e) || "Unknown error");

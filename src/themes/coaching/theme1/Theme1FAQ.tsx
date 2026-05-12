@@ -1,11 +1,6 @@
 import { motion } from "framer-motion";
 import { Badge } from "@shared/ui/badge";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@shared/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@shared/ui/accordion";
 import { useTenant } from "@app/providers/TenantProvider";
 
 interface FAQItem {
@@ -46,20 +41,18 @@ export default function Theme1FAQ() {
 
   return (
     <section className="py-20">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <div className="text-center mb-12">
+      <div className="container mx-auto max-w-4xl px-4">
+        <div className="mb-12 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <Badge variant="outline" className="mb-4 px-4 py-1 rounded-full">
+            <Badge variant="outline" className="mb-4 rounded-full px-4 py-1">
               FAQ
             </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <h2 className="mb-4 text-3xl font-bold md:text-4xl">Frequently Asked Questions</h2>
+            <p className="mx-auto max-w-2xl text-muted-foreground">
               Find answers to common questions about our courses and admissions
             </p>
           </motion.div>
@@ -76,12 +69,12 @@ export default function Theme1FAQ() {
               <AccordionItem
                 key={index}
                 value={`faq-${index}`}
-                className="card-soft border-0 px-6 overflow-hidden"
+                className="card-soft overflow-hidden border-0 px-6"
               >
-                <AccordionTrigger className="text-left font-medium py-4 hover:no-underline">
+                <AccordionTrigger className="py-4 text-left font-medium hover:no-underline">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-4">
+                <AccordionContent className="pb-4 text-muted-foreground">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>
@@ -92,4 +85,3 @@ export default function Theme1FAQ() {
     </section>
   );
 }
-

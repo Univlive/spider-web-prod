@@ -39,7 +39,9 @@ function getConfiguredAppDomains(): string[] {
 }
 
 function normalizeSlug(value: string | null | undefined): string | null {
-  const raw = String(value || "").trim().toLowerCase();
+  const raw = String(value || "")
+    .trim()
+    .toLowerCase();
   if (!raw) return null;
 
   // Keep slug format strict to avoid accidental host/query abuse.
@@ -58,9 +60,11 @@ function isPreviewHost(hostname: string): boolean {
 }
 
 function shouldAllowQueryFallbackOnAnyHost(): boolean {
-  return String(import.meta.env.VITE_ALLOW_QUERY_TENANT_FALLBACK || "")
-    .trim()
-    .toLowerCase() === "true";
+  return (
+    String(import.meta.env.VITE_ALLOW_QUERY_TENANT_FALLBACK || "")
+      .trim()
+      .toLowerCase() === "true"
+  );
 }
 
 function isLocalHost(hostname: string): boolean {
@@ -118,8 +122,9 @@ function findMatchingConfiguredDomain(hostname: string): string | null {
 }
 
 export function getTenantSlugFromHostname(hostnameArg?: string): string | null {
-  const hostname =
-    (hostnameArg || (typeof window !== "undefined" ? window.location.hostname : "")).toLowerCase();
+  const hostname = (
+    hostnameArg || (typeof window !== "undefined" ? window.location.hostname : "")
+  ).toLowerCase();
   const tenantFromQuery = getTenantFromQuery();
 
   // LOCAL DEV SUPPORT
@@ -207,10 +212,10 @@ export function buildTenantUrl(tenantSlug: string, path = "/"): string {
       return url.toString();
     }
 
-    const activeDomain = findMatchingConfiguredDomain(hostname) ?? getBaseDomainFromHostname(hostname);
+    const activeDomain =
+      findMatchingConfiguredDomain(hostname) ?? getBaseDomainFromHostname(hostname);
     return `${protocol}//${normalizedSlug}.${activeDomain}${normalizedPath}`;
   }
 
   return `https://${normalizedSlug}.${getConfiguredAppDomain()}${normalizedPath}`;
 }
-

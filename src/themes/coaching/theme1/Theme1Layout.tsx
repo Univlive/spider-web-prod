@@ -42,9 +42,7 @@ export default function Theme1Layout({ children }: Theme1LayoutProps) {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(() =>
-    typeof window !== "undefined"
-      ? document.documentElement.classList.contains("dark")
-      : false
+    typeof window !== "undefined" ? document.documentElement.classList.contains("dark") : false
   );
 
   const toggleTheme = () => {
@@ -80,12 +78,12 @@ export default function Theme1Layout({ children }: Theme1LayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="flex min-h-screen flex-col bg-background">
       {/* Top Bar */}
       {(phone || email || Object.keys(socials || {}).length > 0) && (
         <div className="bg-muted/40 text-sm">
-          <div className="container mx-auto px-4 py-2 flex justify-between items-center gap-4">
-            <div className="flex items-center gap-4 flex-wrap">
+          <div className="container mx-auto flex items-center justify-between gap-4 px-4 py-2">
+            <div className="flex flex-wrap items-center gap-4">
               {phone ? <span>{phone}</span> : null}
               {email ? <span>{email}</span> : null}
             </div>
@@ -103,7 +101,7 @@ export default function Theme1Layout({ children }: Theme1LayoutProps) {
                     className="hover:text-primary"
                     title={platform}
                   >
-                    <Icon className="w-4 h-4" />
+                    <Icon className="h-4 w-4" />
                   </a>
                 );
               })}
@@ -114,10 +112,10 @@ export default function Theme1Layout({ children }: Theme1LayoutProps) {
 
       {/* Navbar */}
       <header className="border-b bg-background">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2">
             {logoUrl ? (
-              <div className="w-10 h-10 rounded-xl overflow-hidden border bg-muted/30 flex items-center justify-center flex-shrink-0">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-muted/30">
                 <img
                   src={logoUrl}
                   alt={`${coachingName} logo`}
@@ -125,7 +123,7 @@ export default function Theme1Layout({ children }: Theme1LayoutProps) {
                 />
               </div>
             ) : (
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white flex-shrink-0">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary text-white">
                 🎓
               </div>
             )}
@@ -136,12 +134,12 @@ export default function Theme1Layout({ children }: Theme1LayoutProps) {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden items-center gap-8 md:flex">
             {navItems.map((item) => (
               <Link
                 key={item.label}
                 to={item.path}
-                className="text-muted-foreground hover:text-foreground font-medium"
+                className="font-medium text-muted-foreground hover:text-foreground"
               >
                 {item.label}
               </Link>
@@ -149,7 +147,7 @@ export default function Theme1Layout({ children }: Theme1LayoutProps) {
           </nav>
 
           <div className="flex items-center gap-3">
-            <button onClick={toggleTheme} className="p-2 rounded-md">
+            <button onClick={toggleTheme} className="rounded-md p-2">
               {isDark ? <Sun size={18} /> : <Moon size={18} />}
             </button>
 
@@ -169,15 +167,15 @@ export default function Theme1Layout({ children }: Theme1LayoutProps) {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden fixed inset-0 bg-background z-50">
-            <div className="p-4 flex justify-between items-center border-b">
+          <div className="fixed inset-0 z-50 bg-background md:hidden">
+            <div className="flex items-center justify-between border-b p-4">
               <span className="font-bold">{coachingName}</span>
               <button onClick={() => setMobileMenuOpen(false)}>
                 <X />
               </button>
             </div>
 
-            <div className="p-6 flex flex-col gap-4">
+            <div className="flex flex-col gap-4 p-6">
               {navItems.map((item) => (
                 <Link
                   key={item.label}
@@ -197,13 +195,17 @@ export default function Theme1Layout({ children }: Theme1LayoutProps) {
       <main className="flex-1">{children}</main>
 
       {/* Footer */}
-      <footer className="bg-muted/30 border-t mt-12">
-        <div className="container mx-auto px-4 py-12 grid md:grid-cols-4 gap-8">
+      <footer className="mt-12 border-t bg-muted/30">
+        <div className="container mx-auto grid gap-8 px-4 py-12 md:grid-cols-4">
           <div>
-            <div className="flex items-center gap-2 mb-2">
+            <div className="mb-2 flex items-center gap-2">
               {logoUrl ? (
-                <div className="w-8 h-8 rounded-lg overflow-hidden border bg-muted/30 flex items-center justify-center flex-shrink-0">
-                  <img src={logoUrl} alt={`${coachingName} logo`} className="h-full w-full object-contain" />
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted/30">
+                  <img
+                    src={logoUrl}
+                    alt={`${coachingName} logo`}
+                    className="h-full w-full object-contain"
+                  />
                 </div>
               ) : null}
               <div className="font-bold">{coachingName}</div>
@@ -212,7 +214,7 @@ export default function Theme1Layout({ children }: Theme1LayoutProps) {
           </div>
 
           <div>
-            <div className="font-semibold mb-3">Quick Links</div>
+            <div className="mb-3 font-semibold">Quick Links</div>
             <ul className="space-y-2 text-sm">
               {navItems.map((item) => (
                 <li key={item.label}>
@@ -223,21 +225,21 @@ export default function Theme1Layout({ children }: Theme1LayoutProps) {
           </div>
 
           <div>
-            <div className="font-semibold mb-3">Contact</div>
+            <div className="mb-3 font-semibold">Contact</div>
             <p className="text-sm">{address || "Contact details not set"}</p>
             {phone ? <p className="text-sm">{phone}</p> : null}
             {email ? <p className="text-sm">{email}</p> : null}
           </div>
 
           <div>
-            <div className="font-semibold mb-3">Follow Us</div>
-            <div className="flex gap-3 flex-wrap">
+            <div className="mb-3 font-semibold">Follow Us</div>
+            <div className="flex flex-wrap gap-3">
               {Object.entries(socials || {}).map(([platform, url]) => {
                 const Icon = socialIcons[platform];
                 if (!Icon || !url) return null;
                 return (
                   <a key={platform} href={url} target="_blank" rel="noreferrer">
-                    <Icon className="w-5 h-5" />
+                    <Icon className="h-5 w-5" />
                   </a>
                 );
               })}
@@ -245,11 +247,10 @@ export default function Theme1Layout({ children }: Theme1LayoutProps) {
           </div>
         </div>
 
-        <div className="text-center text-sm py-4 border-t">
+        <div className="border-t py-4 text-center text-sm">
           © {new Date().getFullYear()} {coachingName}. Powered by PREPAREKARO.IN
         </div>
       </footer>
     </div>
   );
 }
-

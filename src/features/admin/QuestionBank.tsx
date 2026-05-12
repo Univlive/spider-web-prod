@@ -58,13 +58,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@shared/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
 import { Switch } from "@shared/ui/switch";
 import { Textarea } from "@shared/ui/textarea";
 import { uploadToImageKit } from "@shared/lib/imagekitUpload";
@@ -160,12 +154,49 @@ function sanitizeHtml(input: string) {
     const doc = parser.parseFromString(input, "text/html");
 
     const allowedTags = new Set([
-      "P","BR","B","STRONG","I","EM","U","S","SUB","SUP","UL","OL","LI",
-      "DIV","SPAN","IMG","A","H1","H2","H3","H4","H5","H6","TABLE","THEAD",
-      "TBODY","TR","TH","TD","CODE","PRE",
+      "P",
+      "BR",
+      "B",
+      "STRONG",
+      "I",
+      "EM",
+      "U",
+      "S",
+      "SUB",
+      "SUP",
+      "UL",
+      "OL",
+      "LI",
+      "DIV",
+      "SPAN",
+      "IMG",
+      "A",
+      "H1",
+      "H2",
+      "H3",
+      "H4",
+      "H5",
+      "H6",
+      "TABLE",
+      "THEAD",
+      "TBODY",
+      "TR",
+      "TH",
+      "TD",
+      "CODE",
+      "PRE",
     ]);
 
-    const allowedAttrs = new Set(["href", "target", "rel", "src", "alt", "title", "width", "height"]);
+    const allowedAttrs = new Set([
+      "href",
+      "target",
+      "rel",
+      "src",
+      "alt",
+      "title",
+      "width",
+      "height",
+    ]);
 
     Array.from(doc.body.querySelectorAll("*")).forEach((el) => {
       if (!allowedTags.has(el.tagName)) {
@@ -212,8 +243,16 @@ function ensureDifficulty(v: any): Difficulty {
 
 function normalizeTags(v: any): string[] {
   if (!v) return [];
-  if (Array.isArray(v)) return v.map(String).map((s) => s.trim()).filter(Boolean);
-  if (typeof v === "string") return v.split(",").map((s) => s.trim()).filter(Boolean);
+  if (Array.isArray(v))
+    return v
+      .map(String)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  if (typeof v === "string")
+    return v
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
   return [];
 }
 
@@ -232,7 +271,7 @@ function QuestionRenderer({
   if (!contentFormat || contentFormat === "html") {
     return (
       <div
-        className={cn("prose prose-sm max-w-none dark:prose-invert", className)}
+        className={cn("prose prose-sm dark:prose-invert max-w-none", className)}
         dangerouslySetInnerHTML={{ __html: sanitizeHtml(text) }}
       />
     );
@@ -250,14 +289,18 @@ function QuestionRenderer({
             return (
               <span
                 key={i}
-                className="block text-center my-1"
+                className="my-1 block text-center"
                 dangerouslySetInnerHTML={{
                   __html: katex.renderToString(math, { displayMode: true, throwOnError: false }),
                 }}
               />
             );
           } catch {
-            return <span key={i} className="font-mono text-xs bg-muted px-1 rounded">{seg}</span>;
+            return (
+              <span key={i} className="rounded bg-muted px-1 font-mono text-xs">
+                {seg}
+              </span>
+            );
           }
         }
         if (seg.startsWith("$") && seg.endsWith("$") && seg.length > 2) {
@@ -272,10 +315,18 @@ function QuestionRenderer({
               />
             );
           } catch {
-            return <span key={i} className="font-mono text-xs bg-muted px-1 rounded">{seg}</span>;
+            return (
+              <span key={i} className="rounded bg-muted px-1 font-mono text-xs">
+                {seg}
+              </span>
+            );
           }
         }
-        return <span key={i} style={{ whiteSpace: "pre-wrap" }}>{seg}</span>;
+        return (
+          <span key={i} style={{ whiteSpace: "pre-wrap" }}>
+            {seg}
+          </span>
+        );
       })}
     </div>
   );
@@ -297,8 +348,6 @@ async function uploadQuestionImageToImageKit(file: File): Promise<string> {
   if (!url) throw new Error("ImageKit upload returned no URL");
   return url;
 }
-
-
 
 // ContentEditable editor with paste-image support
 function RichHtmlEditor({
@@ -400,7 +449,11 @@ function RichHtmlEditor({
             onClick={() => fileRef.current?.click()}
             disabled={busy}
           >
-            {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <ImageIcon className="h-4 w-4 mr-2" />}
+            {busy ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <ImageIcon className="mr-2 h-4 w-4" />
+            )}
             Add Image
           </Button>
         </div>
@@ -412,8 +465,8 @@ function RichHtmlEditor({
         suppressContentEditableWarning
         className={cn(
           "min-h-[120px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          "prose prose-sm max-w-none dark:prose-invert",
-          busy && "opacity-60 pointer-events-none"
+          "prose prose-sm dark:prose-invert max-w-none",
+          busy && "pointer-events-none opacity-60"
         )}
         data-placeholder={placeholder || "Type here..."}
         onInput={(e) => onChange((e.target as HTMLDivElement).innerHTML)}
@@ -463,7 +516,9 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
 
   // Courses and subjects from Firestore (admin scope) or hook (educator scope)
   const [allCourses, setAllCourses] = useState<{ id: string; name: string }[]>([]);
-  const [allSubjects, setAllSubjects] = useState<{ id: string; name: string; courseId: string }[]>([]);
+  const [allSubjects, setAllSubjects] = useState<{ id: string; name: string; courseId: string }[]>(
+    []
+  );
   const { courses: accessibleCourses, subjects: accessibleSubjects } = useAccessibleCourses(
     scope === "educator" && educatorUid ? educatorUid : ""
   );
@@ -517,7 +572,9 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvImporting, setCsvImporting] = useState(false);
   const [csvProgress, setCsvProgress] = useState(0);
-  const [csvInfo, setCsvInfo] = useState<{ total: number; done: number; errors: number } | null>(null);
+  const [csvInfo, setCsvInfo] = useState<{ total: number; done: number; errors: number } | null>(
+    null
+  );
   const csvInputRef = useRef<HTMLInputElement>(null);
 
   // ── Passage / group inline editor state ──────────────────────────────────
@@ -529,52 +586,54 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
   const [passageTitle, setPassageTitle] = useState("");
   const [passageContent, setPassageContent] = useState("");
   const [passageFormat, setPassageFormat] = useState<"html" | "latex">("html");
-  const [existingGroupsList, setExistingGroupsList] = useState<{ id: string; title: string; type: string; questionCount: number }[]>([]);
+  const [existingGroupsList, setExistingGroupsList] = useState<
+    { id: string; title: string; type: string; questionCount: number }[]
+  >([]);
   const [loadingExistingGroups, setLoadingExistingGroups] = useState(false);
 
-async function processImageFile(file: File) {
-  setImgUploading(true);
-  setImgUrl("");
+  async function processImageFile(file: File) {
+    setImgUploading(true);
+    setImgUrl("");
 
-  try {
-    const result = await uploadToImageKit(
-      file,
-      file.name || "pasted-image.png",
-      "/question-bank",
-      "question-bank"
-    );
+    try {
+      const result = await uploadToImageKit(
+        file,
+        file.name || "pasted-image.png",
+        "/question-bank",
+        "question-bank"
+      );
 
-    setImgUrl(result.url);
-  } catch (err: any) {
-    toast({
-      title: "Upload failed",
-      description: err?.message || "Unknown error",
-      variant: "destructive",
-    });
-  } finally {
-    setImgUploading(false);
+      setImgUrl(result.url);
+    } catch (err: any) {
+      toast({
+        title: "Upload failed",
+        description: err?.message || "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setImgUploading(false);
+    }
   }
-}
 
-useEffect(() => {
-  const handlePaste = (e: ClipboardEvent) => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
 
-    for (const item of items) {
-      if (item.type.startsWith("image/")) {
-        const file = item.getAsFile();
-        if (file) {
-          processImageFile(file);
-          setImgUploadOpen(true);
+      for (const item of items) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            processImageFile(file);
+            setImgUploadOpen(true);
+          }
         }
       }
-    }
-  };
+    };
 
-  window.addEventListener("paste", handlePaste);
-  return () => window.removeEventListener("paste", handlePaste);
-}, []);
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, []);
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -585,7 +644,11 @@ useEffect(() => {
       const result = await uploadToImageKit(file, file.name, "/question-bank", "question-bank");
       setImgUrl(result.url);
     } catch (err: any) {
-      toast({ title: "Upload failed", description: err?.message || "Unknown error", variant: "destructive" });
+      toast({
+        title: "Upload failed",
+        description: err?.message || "Unknown error",
+        variant: "destructive",
+      });
     } finally {
       setImgUploading(false);
       if (imgInputRef.current) imgInputRef.current.value = "";
@@ -699,9 +762,10 @@ useEffect(() => {
   // Admin questions are filtered to educator's allowed subjects only
   const allItems = useMemo(() => {
     if (!isEducatorScope) return items;
-    const visibleAdminItems = allowedSubjectIds === null
-      ? []
-      : adminItems.filter((q) => q.subjectId && allowedSubjectIds.includes(q.subjectId));
+    const visibleAdminItems =
+      allowedSubjectIds === null
+        ? []
+        : adminItems.filter((q) => q.subjectId && allowedSubjectIds.includes(q.subjectId));
     return [...items, ...visibleAdminItems];
   }, [items, adminItems, isEducatorScope, allowedSubjectIds]);
 
@@ -720,9 +784,11 @@ useEffect(() => {
       if (fCourseId !== "all") {
         const subIdsInCourse = allSubjects.filter((s) => s.courseId === fCourseId).map((s) => s.id);
         const courseNameMatch = allCourses.find((c) => c.id === fCourseId)?.name === x.course;
-        if (!courseNameMatch && !(x.subjectId && subIdsInCourse.includes(x.subjectId))) return false;
+        if (!courseNameMatch && !(x.subjectId && subIdsInCourse.includes(x.subjectId)))
+          return false;
       }
-      if (fSubjectIds.length > 0 && (!x.subjectId || !fSubjectIds.includes(x.subjectId))) return false;
+      if (fSubjectIds.length > 0 && (!x.subjectId || !fSubjectIds.includes(x.subjectId)))
+        return false;
       return true;
     });
   }, [allItems, fCourseId, fSubjectIds, allSubjects, allCourses]);
@@ -766,7 +832,9 @@ useEffect(() => {
   const qbPagedItems = filtered.slice((qbPage - 1) * QB_PAGE_SIZE, qbPage * QB_PAGE_SIZE);
 
   // Reset to page 1 on filter change
-  useEffect(() => { setQbPage(1); }, [qSearch, fCourseId, fSubjectIds, fTopics, fTags, fDifficulty]);
+  useEffect(() => {
+    setQbPage(1);
+  }, [qSearch, fCourseId, fSubjectIds, fTopics, fTags, fDifficulty]);
 
   const resetEditor = () => {
     setEditingId(null);
@@ -806,13 +874,19 @@ useEffect(() => {
   const openEdit = (x: QBQuestion) => {
     setEditingId(x.id);
     setCourse(x.course || "");
-    const matchedCourseId = allCourses.find((c) => c.name === x.course)?.id || (x as any).courseId || "";
+    const matchedCourseId =
+      allCourses.find((c) => c.name === x.course)?.id || (x as any).courseId || "";
     setQCourseId(matchedCourseId);
     setTopic(x.topic || "");
     setDifficulty(ensureDifficulty(x.difficulty));
     setTags((x.tags || []).join(", "));
     setQuestion(x.question || "");
-    setOptions((x.options?.length ? x.options : ["", "", "", ""]).slice(0, 4).concat(["", "", "", ""]).slice(0, 4));
+    setOptions(
+      (x.options?.length ? x.options : ["", "", "", ""])
+        .slice(0, 4)
+        .concat(["", "", "", ""])
+        .slice(0, 4)
+    );
     setCorrectOption(Number.isFinite(x.correctOption) ? x.correctOption : 0);
     setExplanation(x.explanation || "");
     setMarks(typeof x.marks === "number" ? x.marks : 5);
@@ -822,7 +896,9 @@ useEffect(() => {
     setTopicsInput((x.topics?.length ? x.topics : x.topic ? [x.topic] : []).join(", "));
     setMultiCorrects(x.correctOptions?.length ? x.correctOptions : [x.correctOption ?? 0]);
     setQImgUrl(x.questionImage || "");
-    setOImgUrls(x.optionImages?.length ? [...x.optionImages, "", "", "", ""].slice(0, 4) : ["", "", "", ""]);
+    setOImgUrls(
+      x.optionImages?.length ? [...x.optionImages, "", "", "", ""].slice(0, 4) : ["", "", "", ""]
+    );
     setEImgUrl(x.explanationImage || "");
     // Load group/passage state
     const xAny = x as any;
@@ -849,22 +925,41 @@ useEffect(() => {
 
   const validate = () => {
     if (!stripHtml(question).trim()) {
-      toast({ title: "Question required", description: "Please enter question text.", variant: "destructive" });
+      toast({
+        title: "Question required",
+        description: "Please enter question text.",
+        variant: "destructive",
+      });
       return false;
     }
     const isMcq = qFormat === "single_correct_mcq" || qFormat === "multicorrect_mcq";
     if (isMcq) {
       const optClean = options.map((o) => stripHtml(o).trim());
       if (optClean.filter(Boolean).length < 2) {
-        toast({ title: "Options required", description: "Please provide at least 2 options.", variant: "destructive" });
+        toast({
+          title: "Options required",
+          description: "Please provide at least 2 options.",
+          variant: "destructive",
+        });
         return false;
       }
-      if (qFormat === "single_correct_mcq" && (correctOption < 0 || correctOption >= options.length || !optClean[correctOption])) {
-        toast({ title: "Correct option invalid", description: "Select a valid correct option.", variant: "destructive" });
+      if (
+        qFormat === "single_correct_mcq" &&
+        (correctOption < 0 || correctOption >= options.length || !optClean[correctOption])
+      ) {
+        toast({
+          title: "Correct option invalid",
+          description: "Select a valid correct option.",
+          variant: "destructive",
+        });
         return false;
       }
       if (qFormat === "multicorrect_mcq" && multiCorrects.length === 0) {
-        toast({ title: "Correct options required", description: "Select at least one correct option.", variant: "destructive" });
+        toast({
+          title: "Correct options required",
+          description: "Select at least one correct option.",
+          variant: "destructive",
+        });
         return false;
       }
     }
@@ -877,7 +972,10 @@ useEffect(() => {
     setBusy(true);
     try {
       const isMcq = qFormat === "single_correct_mcq" || qFormat === "multicorrect_mcq";
-      const topicsArr = topicsInput.split(",").map((s) => s.trim()).filter(Boolean);
+      const topicsArr = topicsInput
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
       const matchedSubject = allSubjects.find((s) => s.id === qSubjectId);
       const matchedCourse = allCourses.find((c) => c.id === qCourseId);
 
@@ -889,8 +987,8 @@ useEffect(() => {
         options: isMcq ? options.map((o) => sanitizeHtml(o)) : [],
         correctOption: qFormat === "single_correct_mcq" ? correctOption : (multiCorrects[0] ?? 0),
         explanation: sanitizeHtml(explanation || ""),
-        marks: Number.isFinite(marks) ? marks : (isMcq ? 5 : 10),
-        negativeMarks: Number.isFinite(negativeMarks) ? negativeMarks : (isMcq ? -1 : 0),
+        marks: Number.isFinite(marks) ? marks : isMcq ? 5 : 10,
+        negativeMarks: Number.isFinite(negativeMarks) ? negativeMarks : isMcq ? -1 : 0,
         source: "manual",
         contentFormat: "html",
         updatedAt: serverTimestamp() as any,
@@ -914,7 +1012,13 @@ useEffect(() => {
       if (oImgUrls.some(Boolean)) base.optionImages = oImgUrls;
       if (eImgUrl.trim()) base.explanationImage = eImgUrl.trim();
 
-      base.searchText = [(matchedCourse?.name || course), topicsArr.join(" "), stripHtml(question), stripHtml(options.join(" ")), stripHtml(explanation)]
+      base.searchText = [
+        matchedCourse?.name || course,
+        topicsArr.join(" "),
+        stripHtml(question),
+        stripHtml(options.join(" ")),
+        stripHtml(explanation),
+      ]
         .join(" ")
         .toLowerCase()
         .slice(0, 5000);
@@ -942,7 +1046,9 @@ useEffect(() => {
 
         const groupRef = doc(db, "question_groups", effectiveGroupId);
         const groupSnap = await getDoc(groupRef);
-        const existingIds: string[] = groupSnap.exists() ? ((groupSnap.data() as any)?.questionIds ?? []) : [];
+        const existingIds: string[] = groupSnap.exists()
+          ? ((groupSnap.data() as any)?.questionIds ?? [])
+          : [];
         const isNewInGroup = !existingIds.includes(savedId);
         const questionOrder = isNewInGroup ? existingIds.length : existingIds.indexOf(savedId);
 
@@ -1015,13 +1121,17 @@ useEffect(() => {
   const loadExistingGroups = async () => {
     setLoadingExistingGroups(true);
     try {
-      const snap = await getDocs(query(collection(db, "question_groups"), orderBy("createdAt", "desc")));
-      setExistingGroupsList(snap.docs.map((d) => ({
-        id: d.id,
-        title: (d.data() as any).title || "",
-        type: (d.data() as any).type || "comprehension",
-        questionCount: (d.data() as any).questionCount || 0,
-      })));
+      const snap = await getDocs(
+        query(collection(db, "question_groups"), orderBy("createdAt", "desc"))
+      );
+      setExistingGroupsList(
+        snap.docs.map((d) => ({
+          id: d.id,
+          title: (d.data() as any).title || "",
+          type: (d.data() as any).type || "comprehension",
+          questionCount: (d.data() as any).questionCount || 0,
+        }))
+      );
     } catch {
       toast({ title: "Failed to load groups", variant: "destructive" });
     } finally {
@@ -1093,7 +1203,11 @@ useEffect(() => {
 
   const handleImport = async () => {
     if (!importFile) {
-      toast({ title: "Pick a zip file", description: "Upload the provided questions zip.", variant: "destructive" });
+      toast({
+        title: "Pick a zip file",
+        description: "Upload the provided questions zip.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -1123,13 +1237,19 @@ useEffect(() => {
         const marks = 5;
         const negativeMarks = -1;
 
-        const questionHtml = await replaceImagesInHtml(String(q.text || ""), imageMap, uploadedCache);
+        const questionHtml = await replaceImagesInHtml(
+          String(q.text || ""),
+          imageMap,
+          uploadedCache
+        );
 
         const opts = Array.isArray(q.options?.option) ? q.options!.option! : [];
         const optionsHtml = await Promise.all(
-          opts.slice(0, 4).map(async (o) =>
-            replaceImagesInHtml(String(o?.content || ""), imageMap, uploadedCache)
-          )
+          opts
+            .slice(0, 4)
+            .map(async (o) =>
+              replaceImagesInHtml(String(o?.content || ""), imageMap, uploadedCache)
+            )
         );
 
         const corr = q.answer?.correctOptions?.option?.[0];
@@ -1227,39 +1347,150 @@ useEffect(() => {
 
   function downloadCsvTemplate() {
     const headers = [
-      "ques","ques_img","opt_1","opt_1_img","opt_2","opt_2_img","opt_3","opt_3_img","opt_4","opt_4_img",
-      "correct_ans","soln","soln_img","topics","format","subject","difficulty","marks","negative_marks","course","tags",
-      "group_id","group_type","passage","passage_format","group_title","group_order",
+      "ques",
+      "ques_img",
+      "opt_1",
+      "opt_1_img",
+      "opt_2",
+      "opt_2_img",
+      "opt_3",
+      "opt_3_img",
+      "opt_4",
+      "opt_4_img",
+      "correct_ans",
+      "soln",
+      "soln_img",
+      "topics",
+      "format",
+      "subject",
+      "difficulty",
+      "marks",
+      "negative_marks",
+      "course",
+      "tags",
+      "group_id",
+      "group_type",
+      "passage",
+      "passage_format",
+      "group_title",
+      "group_order",
     ];
     const rows = [
       [
-        "Find the values of $x$ if $x^2 - 5x + 6 = 0$","",
-        "$x = 2$","","$x = 3$","","$x = 4$","","$x = 1$","",
+        "Find the values of $x$ if $x^2 - 5x + 6 = 0$",
+        "",
+        "$x = 2$",
+        "",
+        "$x = 3$",
+        "",
+        "$x = 4$",
+        "",
+        "$x = 1$",
+        "",
         "1,2",
-        "Factoring: $(x-2)(x-3)=0$ gives roots $x=2$ and $x=3$.","",
-        "Quadratic Equations","multicorrect_mcq","Mathematics","medium","5","-1","JEE","algebra",
-        "","","","","","",
+        "Factoring: $(x-2)(x-3)=0$ gives roots $x=2$ and $x=3$.",
+        "",
+        "Quadratic Equations",
+        "multicorrect_mcq",
+        "Mathematics",
+        "medium",
+        "5",
+        "-1",
+        "JEE",
+        "algebra",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
       ],
       [
-        "State Newton's second law of motion.","",
-        "","","","","","","","",
-        "","Net force equals $F = ma$ where $m$ is mass and $a$ is acceleration.","",
-        "Laws of Motion","subjective_long","Physics","easy","10","0","NEET","",
-        "","","","","","",
+        "State Newton's second law of motion.",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "Net force equals $F = ma$ where $m$ is mass and $a$ is acceleration.",
+        "",
+        "Laws of Motion",
+        "subjective_long",
+        "Physics",
+        "easy",
+        "10",
+        "0",
+        "NEET",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
       ],
       [
-        "Which of the following correctly describes photosynthesis?","",
-        "Glucose is produced","","CO2 is consumed","","O2 is released","","All of the above","",
-        "1,2,3,4","Photosynthesis: $6CO_2 + 6H_2O \\rightarrow C_6H_{12}O_6 + 6O_2$","",
-        "Photosynthesis","multicorrect_mcq","Biology","medium","5","-1","NEET","biology",
-        "grp_1","comprehension","Read the following passage about photosynthesis and answer the questions below.","html","Photosynthesis Passage","1",
+        "Which of the following correctly describes photosynthesis?",
+        "",
+        "Glucose is produced",
+        "",
+        "CO2 is consumed",
+        "",
+        "O2 is released",
+        "",
+        "All of the above",
+        "",
+        "1,2,3,4",
+        "Photosynthesis: $6CO_2 + 6H_2O \\rightarrow C_6H_{12}O_6 + 6O_2$",
+        "",
+        "Photosynthesis",
+        "multicorrect_mcq",
+        "Biology",
+        "medium",
+        "5",
+        "-1",
+        "NEET",
+        "biology",
+        "grp_1",
+        "comprehension",
+        "Read the following passage about photosynthesis and answer the questions below.",
+        "html",
+        "Photosynthesis Passage",
+        "1",
       ],
       [
-        "What is the primary raw material for photosynthesis?","",
-        "Water","","Glucose","","Oxygen","","Nitrogen","",
-        "1","Water ($H_2O$) and carbon dioxide ($CO_2$) are primary raw materials.","",
-        "Photosynthesis","single_correct_mcq","Biology","easy","5","-1","NEET","biology",
-        "grp_1","comprehension","","html","Photosynthesis Passage","2",
+        "What is the primary raw material for photosynthesis?",
+        "",
+        "Water",
+        "",
+        "Glucose",
+        "",
+        "Oxygen",
+        "",
+        "Nitrogen",
+        "",
+        "1",
+        "Water ($H_2O$) and carbon dioxide ($CO_2$) are primary raw materials.",
+        "",
+        "Photosynthesis",
+        "single_correct_mcq",
+        "Biology",
+        "easy",
+        "5",
+        "-1",
+        "NEET",
+        "biology",
+        "grp_1",
+        "comprehension",
+        "",
+        "html",
+        "Photosynthesis Passage",
+        "2",
       ],
     ];
     const csv = [headers, ...rows]
@@ -1296,16 +1527,23 @@ useEffect(() => {
       for (let i = 0; i < rows.length; i++) {
         const courseVal = (rows[i].course || "").trim();
         const subjectVal = (rows[i].subject || "").trim();
-        if (courseVal && !allCourses.some((c) => c.name.toLowerCase() === courseVal.toLowerCase())) {
+        if (
+          courseVal &&
+          !allCourses.some((c) => c.name.toLowerCase() === courseVal.toLowerCase())
+        ) {
           validationErrors.push(`Row ${i + 2}: invalid course "${courseVal}"`);
         }
-        if (subjectVal && !allSubjects.some((s) => s.name.toLowerCase() === subjectVal.toLowerCase())) {
+        if (
+          subjectVal &&
+          !allSubjects.some((s) => s.name.toLowerCase() === subjectVal.toLowerCase())
+        ) {
           validationErrors.push(`Row ${i + 2}: invalid subject "${subjectVal}"`);
         }
       }
       if (validationErrors.length > 0) {
         const preview = validationErrors.slice(0, 5).join("\n");
-        const more = validationErrors.length > 5 ? `\n...and ${validationErrors.length - 5} more` : "";
+        const more =
+          validationErrors.length > 5 ? `\n...and ${validationErrors.length - 5} more` : "";
         throw new Error(
           `CSV validation failed:\n${preview}${more}\n\nValid courses: ${allCourses.map((c) => c.name).join(", ") || "none"}\nValid subjects: ${allSubjects.map((s) => s.name).join(", ") || "none"}`
         );
@@ -1320,7 +1558,14 @@ useEffect(() => {
       if (!targetCol) throw new Error("Missing educator identity");
 
       // Pre-pass: collect group metadata keyed by CSV group_id
-      type GroupMeta = { type: string; passage: string; passageFormat: string; title: string; localIds: string[]; firestoreId: string };
+      type GroupMeta = {
+        type: string;
+        passage: string;
+        passageFormat: string;
+        title: string;
+        localIds: string[];
+        firestoreId: string;
+      };
       const groupMap = new Map<string, GroupMeta>();
       for (const row of rows) {
         const csvGroupId = (row.group_id || "").trim();
@@ -1346,7 +1591,11 @@ useEffect(() => {
       }
 
       // Pre-generate Firestore doc refs so we know question IDs before writing
-      type RowRef = { ref: ReturnType<typeof doc>; row: Record<string, string>; csvGroupId: string };
+      type RowRef = {
+        ref: ReturnType<typeof doc>;
+        row: Record<string, string>;
+        csvGroupId: string;
+      };
       const rowRefs: RowRef[] = rows.map((row) => ({
         ref: doc(targetCol),
         row,
@@ -1359,7 +1608,8 @@ useEffect(() => {
         const g = groupMap.get(csvGroupId);
         if (!g) continue;
         const groupOrder = parseInt((row.group_order || "").trim(), 10);
-        const insertIndex = Number.isFinite(groupOrder) && groupOrder > 0 ? groupOrder - 1 : g.localIds.length;
+        const insertIndex =
+          Number.isFinite(groupOrder) && groupOrder > 0 ? groupOrder - 1 : g.localIds.length;
         g.localIds.splice(insertIndex, 0, ref.id);
       }
 
@@ -1371,11 +1621,19 @@ useEffect(() => {
         const ques = (row.ques || "").trim();
         const fmt = (row.format || "").trim().toLowerCase() as QBQuestion["format"];
 
-        if (!ques || !fmt) { errors++; done++; continue; }
+        if (!ques || !fmt) {
+          errors++;
+          done++;
+          continue;
+        }
 
         const isMcq = fmt === "single_correct_mcq" || fmt === "multicorrect_mcq";
         const correctAnsRaw = (row.correct_ans || "").trim();
-        if (isMcq && !correctAnsRaw) { errors++; done++; continue; }
+        if (isMcq && !correctAnsRaw) {
+          errors++;
+          done++;
+          continue;
+        }
 
         const correctAnswers = correctAnsRaw
           .split(",")
@@ -1387,8 +1645,14 @@ useEffect(() => {
           (s) => s.name.toLowerCase() === subjectName.toLowerCase()
         );
 
-        const topicsArr = (row.topics || "").split(",").map((s) => s.trim()).filter(Boolean);
-        const tagsArr = (row.tags || "").split(",").map((s) => s.trim()).filter(Boolean);
+        const topicsArr = (row.topics || "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const tagsArr = (row.tags || "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
 
         const defaultMarks = isMcq ? 5 : 10;
         const defaultNeg = isMcq ? -1 : 0;
@@ -1397,12 +1661,24 @@ useEffect(() => {
 
         const opts = [row.opt_1 || "", row.opt_2 || "", row.opt_3 || "", row.opt_4 || ""];
         const optImgs = [
-          row.opt_1_img || "", row.opt_2_img || "", row.opt_3_img || "", row.opt_4_img || "",
+          row.opt_1_img || "",
+          row.opt_2_img || "",
+          row.opt_3_img || "",
+          row.opt_4_img || "",
         ];
 
         const courseVal = (row.course || "").trim();
-        const matchedCourse = allCourses.find((c) => c.name.toLowerCase() === courseVal.toLowerCase());
-        const searchText = [courseVal, subjectName, topicsArr.join(" "), ques, opts.join(" "), row.soln || ""]
+        const matchedCourse = allCourses.find(
+          (c) => c.name.toLowerCase() === courseVal.toLowerCase()
+        );
+        const searchText = [
+          courseVal,
+          subjectName,
+          topicsArr.join(" "),
+          ques,
+          opts.join(" "),
+          row.soln || "",
+        ]
           .join(" ")
           .toLowerCase()
           .slice(0, 5000);
@@ -1474,18 +1750,22 @@ useEffect(() => {
       for (const [, g] of groupMap) {
         if (g.localIds.length === 0) continue;
         const groupRef = doc(db, "question_groups", g.firestoreId);
-        await setDoc(groupRef, {
-          type: g.type,
-          title: g.title,
-          passageContent: g.passage,
-          passageContentFormat: g.passageFormat,
-          questionIds: g.localIds,
-          questionCount: g.localIds.length,
-          uploadedByRole: scope === "admin" ? "admin" : "educator",
-          source: "csv",
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
-        }, { merge: true });
+        await setDoc(
+          groupRef,
+          {
+            type: g.type,
+            title: g.title,
+            passageContent: g.passage,
+            passageContentFormat: g.passageFormat,
+            questionIds: g.localIds,
+            questionCount: g.localIds.length,
+            uploadedByRole: scope === "admin" ? "admin" : "educator",
+            source: "csv",
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+          },
+          { merge: true }
+        );
       }
 
       toast({
@@ -1510,7 +1790,7 @@ useEffect(() => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         Loading question bank...
       </div>
     );
@@ -1518,11 +1798,13 @@ useEffect(() => {
 
   if (!questionBankCollection) {
     return (
-      <div className="space-y-6 max-w-6xl mx-auto p-1">
+      <div className="mx-auto max-w-6xl space-y-6 p-1">
         <Card>
           <CardHeader>
             <CardTitle>Question Bank unavailable</CardTitle>
-            <CardDescription>Unable to resolve educator identity for question bank path.</CardDescription>
+            <CardDescription>
+              Unable to resolve educator identity for question bank path.
+            </CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -1530,24 +1812,39 @@ useEffect(() => {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto p-1">
+    <div className="mx-auto max-w-6xl space-y-6 p-1">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold">{questionBankLabel}</h1>
+          <h1 className="font-display text-2xl font-bold">{questionBankLabel}</h1>
           <p className="text-sm text-muted-foreground">{questionBankDescription}</p>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => { setImgUrl(""); setImgUploadOpen(true); }} disabled={busy}>
-            <ImageIcon className="h-4 w-4 mr-2" />
+          <Button
+            variant="outline"
+            onClick={() => {
+              setImgUrl("");
+              setImgUploadOpen(true);
+            }}
+            disabled={busy}
+          >
+            <ImageIcon className="mr-2 h-4 w-4" />
             Upload Image
           </Button>
-          <Button variant="outline" onClick={() => { setCsvFile(null); setCsvInfo(null); setCsvOpen(true); }} disabled={busy}>
-            <FileSpreadsheet className="h-4 w-4 mr-2" />
+          <Button
+            variant="outline"
+            onClick={() => {
+              setCsvFile(null);
+              setCsvInfo(null);
+              setCsvOpen(true);
+            }}
+            disabled={busy}
+          >
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
             Import CSV
           </Button>
           <Button onClick={openCreate} disabled={busy}>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             New Question
           </Button>
         </div>
@@ -1556,12 +1853,14 @@ useEffect(() => {
       <Card>
         <CardHeader className="space-y-1">
           <CardTitle className="text-base">Search & Filters</CardTitle>
-          <CardDescription>Filter by course → subject → topic/tags, then search inside question text.</CardDescription>
+          <CardDescription>
+            Filter by course → subject → topic/tags, then search inside question text.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
             <div className="relative">
-              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={qSearch}
                 onChange={(e) => setQSearch(e.target.value)}
@@ -1586,7 +1885,9 @@ useEffect(() => {
                 <SelectContent>
                   <SelectItem value="all">All Courses</SelectItem>
                   {courseOptions.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -1621,7 +1922,7 @@ useEffect(() => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <MultiSelect
               options={topicOptions}
               selected={fTopics}
@@ -1642,7 +1943,13 @@ useEffect(() => {
 
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
-              Showing <span className="font-medium text-foreground">{filtered.length === 0 ? 0 : (qbPage - 1) * QB_PAGE_SIZE + 1}–{Math.min(qbPage * QB_PAGE_SIZE, filtered.length)}</span> of {filtered.length} {filtered.length !== allItems.length && `(${allItems.length} total)`}
+              Showing{" "}
+              <span className="font-medium text-foreground">
+                {filtered.length === 0 ? 0 : (qbPage - 1) * QB_PAGE_SIZE + 1}–
+                {Math.min(qbPage * QB_PAGE_SIZE, filtered.length)}
+              </span>{" "}
+              of {filtered.length}{" "}
+              {filtered.length !== allItems.length && `(${allItems.length} total)`}
             </div>
             <Button
               variant="ghost"
@@ -1661,78 +1968,93 @@ useEffect(() => {
           </div>
 
           <div className="space-y-3">
-              {qbPagedItems.map((q) => (
-                <motion.div key={q.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
-                  <div className="rounded-xl border bg-card p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2 mb-2">
-                          {q.uploadedByRole === "admin" && isEducatorScope && (
-                            <Badge variant="default" className="text-xs">Admin</Badge>
-                          )}
-                          {q.course && <Badge variant="secondary">{q.course}</Badge>}
-                          {q.topic && <Badge variant="outline">{q.topic}</Badge>}
-                          <Badge className="capitalize" variant="outline">
-                            {q.difficulty || "medium"}
+            {qbPagedItems.map((q) => (
+              <motion.div key={q.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
+                <div className="rounded-xl border bg-card p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        {q.uploadedByRole === "admin" && isEducatorScope && (
+                          <Badge variant="default" className="text-xs">
+                            Admin
                           </Badge>
-                          {q.format && (
-                            <Badge variant="outline" className="text-xs capitalize">
-                              {q.format.replace(/_/g, " ")}
-                            </Badge>
-                          )}
-                        </div>
-
-                        <QuestionRenderer
-                          text={q.question || ""}
-                          contentFormat={q.contentFormat}
-                          className="line-clamp-3"
-                        />
-
-                        {q.questionImage && (
-                          <img src={q.questionImage} alt="" className="mt-1 h-10 w-auto rounded border object-contain" />
                         )}
-
-                        <div className="mt-2 text-xs text-muted-foreground">
-                          {q.marks ?? 5} marks • {q.negativeMarks ?? -1} negative • {q.options?.length ?? 0} options
-                        </div>
+                        {q.course && <Badge variant="secondary">{q.course}</Badge>}
+                        {q.topic && <Badge variant="outline">{q.topic}</Badge>}
+                        <Badge className="capitalize" variant="outline">
+                          {q.difficulty || "medium"}
+                        </Badge>
+                        {q.format && (
+                          <Badge variant="outline" className="text-xs capitalize">
+                            {q.format.replace(/_/g, " ")}
+                          </Badge>
+                        )}
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
-                        {!(isEducatorScope && q.uploadedByRole === "admin") && (
-                          <>
-                            <Button variant="outline" size="icon" onClick={() => openEdit(q)} disabled={busy}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="text-destructive"
-                              onClick={() => handleDelete(q.id)}
-                              disabled={busy}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
+                      <QuestionRenderer
+                        text={q.question || ""}
+                        contentFormat={q.contentFormat}
+                        className="line-clamp-3"
+                      />
+
+                      {q.questionImage && (
+                        <img
+                          src={q.questionImage}
+                          alt=""
+                          className="mt-1 h-10 w-auto rounded border object-contain"
+                        />
+                      )}
+
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        {q.marks ?? 5} marks • {q.negativeMarks ?? -1} negative •{" "}
+                        {q.options?.length ?? 0} options
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
 
-              {filtered.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  No questions found. Try changing filters.
+                    <div className="flex shrink-0 items-center gap-2">
+                      {!(isEducatorScope && q.uploadedByRole === "admin") && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => openEdit(q)}
+                            disabled={busy}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="text-destructive"
+                            onClick={() => handleDelete(q.id)}
+                            disabled={busy}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
+              </motion.div>
+            ))}
+
+            {filtered.length === 0 && (
+              <div className="py-12 text-center text-muted-foreground">
+                No questions found. Try changing filters.
+              </div>
+            )}
+          </div>
 
           <Paginator page={qbPage} totalPages={qbTotalPages} onPageChange={setQbPage} />
         </CardContent>
       </Card>
       {/* Editor Dialog */}
-      <Dialog open={editorOpen} onOpenChange={(v) => (v ? setEditorOpen(true) : (setEditorOpen(false), resetEditor()))}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <Dialog
+        open={editorOpen}
+        onOpenChange={(v) => (v ? setEditorOpen(true) : (setEditorOpen(false), resetEditor()))}
+      >
+        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingId ? "Edit Question" : "New Question"}</DialogTitle>
             <DialogDescription>
@@ -1741,11 +2063,13 @@ useEffect(() => {
           </DialogHeader>
 
           {/* Row 1: Format + Course + Subject + Difficulty */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
             <div className="space-y-2">
               <Label>Format</Label>
               <Select value={qFormat} onValueChange={(v) => setQFormat(v as QBQuestion["format"])}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="single_correct_mcq">Single Correct MCQ</SelectItem>
                   <SelectItem value="multicorrect_mcq">Multi-Correct MCQ</SelectItem>
@@ -1756,24 +2080,44 @@ useEffect(() => {
             </div>
             <div className="space-y-2">
               <Label>Course</Label>
-              <Select value={qCourseId || "__none"} onValueChange={(v) => { setQCourseId(v === "__none" ? "" : v); setQSubjectId(""); }}>
-                <SelectTrigger><SelectValue placeholder="Select course" /></SelectTrigger>
+              <Select
+                value={qCourseId || "__none"}
+                onValueChange={(v) => {
+                  setQCourseId(v === "__none" ? "" : v);
+                  setQSubjectId("");
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select course" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none">— None —</SelectItem>
                   {courseOptions.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
               <Label>Subject</Label>
-              <Select value={qSubjectId || "__none"} onValueChange={(v) => setQSubjectId(v === "__none" ? "" : v)}>
-                <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
+              <Select
+                value={qSubjectId || "__none"}
+                onValueChange={(v) => setQSubjectId(v === "__none" ? "" : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select subject" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none">— None —</SelectItem>
-                  {(qCourseId ? allSubjects.filter((s) => s.courseId === qCourseId) : allSubjects).map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  {(qCourseId
+                    ? allSubjects.filter((s) => s.courseId === qCourseId)
+                    : allSubjects
+                  ).map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -1781,7 +2125,9 @@ useEffect(() => {
             <div className="space-y-2">
               <Label>Difficulty</Label>
               <Select value={difficulty} onValueChange={(v) => setDifficulty(ensureDifficulty(v))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="easy">Easy</SelectItem>
                   <SelectItem value="medium">Medium</SelectItem>
@@ -1792,23 +2138,43 @@ useEffect(() => {
           </div>
 
           {/* Row 2: Topics + Tags + Marks */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <div className="space-y-2">
-              <Label>Topics <span className="text-muted-foreground text-xs">(comma-separated)</span></Label>
-              <Input value={topicsInput} onChange={(e) => setTopicsInput(e.target.value)} placeholder="e.g. Integral, Derivatives" />
+              <Label>
+                Topics <span className="text-xs text-muted-foreground">(comma-separated)</span>
+              </Label>
+              <Input
+                value={topicsInput}
+                onChange={(e) => setTopicsInput(e.target.value)}
+                placeholder="e.g. Integral, Derivatives"
+              />
             </div>
             <div className="space-y-2">
-              <Label>Tags <span className="text-muted-foreground text-xs">(comma-separated)</span></Label>
-              <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="e.g. jee, calculus, 2024" />
+              <Label>
+                Tags <span className="text-xs text-muted-foreground">(comma-separated)</span>
+              </Label>
+              <Input
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder="e.g. jee, calculus, 2024"
+              />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-2">
                 <Label>Marks</Label>
-                <Input type="number" value={marks} onChange={(e) => setMarks(Number(e.target.value))} />
+                <Input
+                  type="number"
+                  value={marks}
+                  onChange={(e) => setMarks(Number(e.target.value))}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Neg. Marks</Label>
-                <Input type="number" value={negativeMarks} onChange={(e) => setNegativeMarks(Number(e.target.value))} />
+                <Input
+                  type="number"
+                  value={negativeMarks}
+                  onChange={(e) => setNegativeMarks(Number(e.target.value))}
+                />
               </div>
             </div>
           </div>
@@ -1821,35 +2187,60 @@ useEffect(() => {
               checked={isGrouped}
               onCheckedChange={(v) => {
                 setIsGrouped(v);
-                if (!v) { setGroupMode("new"); setGroupId(""); }
+                if (!v) {
+                  setGroupMode("new");
+                  setGroupId("");
+                }
               }}
             />
             <div>
               <p className="text-sm font-medium">Comprehension / Case Study</p>
-              <p className="text-xs text-muted-foreground">Link this question to a shared passage</p>
+              <p className="text-xs text-muted-foreground">
+                Link this question to a shared passage
+              </p>
             </div>
           </div>
 
           {isGrouped && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50/50 dark:bg-amber-900/10 dark:border-amber-700/50 p-4 space-y-3">
+            <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50/50 p-4 dark:border-amber-700/50 dark:bg-amber-900/10">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs">Group Type</Label>
-                  <Select value={groupType} onValueChange={(v) => setGroupType(v as "comprehension" | "case_study")}>
-                    <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                  <Select
+                    value={groupType}
+                    onValueChange={(v) => setGroupType(v as "comprehension" | "case_study")}
+                  >
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="comprehension"><span className="flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5" />Comprehension</span></SelectItem>
-                      <SelectItem value="case_study"><span className="flex items-center gap-1.5"><FlaskConical className="h-3.5 w-3.5" />Case Study</span></SelectItem>
+                      <SelectItem value="comprehension">
+                        <span className="flex items-center gap-1.5">
+                          <BookOpen className="h-3.5 w-3.5" />
+                          Comprehension
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="case_study">
+                        <span className="flex items-center gap-1.5">
+                          <FlaskConical className="h-3.5 w-3.5" />
+                          Case Study
+                        </span>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Mode</Label>
-                  <Select value={groupMode} onValueChange={(v) => {
-                    setGroupMode(v as "new" | "existing");
-                    if (v === "existing" && existingGroupsList.length === 0) loadExistingGroups();
-                  }}>
-                    <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                  <Select
+                    value={groupMode}
+                    onValueChange={(v) => {
+                      setGroupMode(v as "new" | "existing");
+                      if (v === "existing" && existingGroupsList.length === 0) loadExistingGroups();
+                    }}
+                  >
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="new">New passage</SelectItem>
                       <SelectItem value="existing">Add to existing group</SelectItem>
@@ -1861,8 +2252,15 @@ useEffect(() => {
               {groupMode === "new" && (
                 <div className="space-y-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs">Passage Title <span className="text-muted-foreground">(optional)</span></Label>
-                    <Input value={passageTitle} onChange={(e) => setPassageTitle(e.target.value)} placeholder="e.g. Read the following passage..." className="rounded-xl" />
+                    <Label className="text-xs">
+                      Passage Title <span className="text-muted-foreground">(optional)</span>
+                    </Label>
+                    <Input
+                      value={passageTitle}
+                      onChange={(e) => setPassageTitle(e.target.value)}
+                      placeholder="e.g. Read the following passage..."
+                      className="rounded-xl"
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs">Passage Content</Label>
@@ -1876,8 +2274,13 @@ useEffect(() => {
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs">Content Format</Label>
-                    <Select value={passageFormat} onValueChange={(v) => setPassageFormat(v as "html" | "latex")}>
-                      <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                    <Select
+                      value={passageFormat}
+                      onValueChange={(v) => setPassageFormat(v as "html" | "latex")}
+                    >
+                      <SelectTrigger className="rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="html">HTML (rich text)</SelectItem>
                         <SelectItem value="latex">LaTeX ($...$)</SelectItem>
@@ -1886,7 +2289,7 @@ useEffect(() => {
                   </div>
                   {groupId && (
                     <p className="text-xs text-muted-foreground">
-                      Group ID: <code className="font-mono bg-muted px-1 rounded">{groupId}</code>
+                      Group ID: <code className="rounded bg-muted px-1 font-mono">{groupId}</code>
                     </p>
                   )}
                 </div>
@@ -1900,13 +2303,21 @@ useEffect(() => {
                       <Loader2 className="h-3 w-3 animate-spin" /> Loading groups...
                     </div>
                   ) : (
-                    <Select value={groupId || "__none"} onValueChange={(v) => setGroupId(v === "__none" ? "" : v)}>
-                      <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select a group" /></SelectTrigger>
+                    <Select
+                      value={groupId || "__none"}
+                      onValueChange={(v) => setGroupId(v === "__none" ? "" : v)}
+                    >
+                      <SelectTrigger className="rounded-xl">
+                        <SelectValue placeholder="Select a group" />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="__none">— Select —</SelectItem>
                         {existingGroupsList.map((g) => (
                           <SelectItem key={g.id} value={g.id}>
-                            {g.title || g.id} <span className="text-muted-foreground ml-1">({g.questionCount} Q)</span>
+                            {g.title || g.id}{" "}
+                            <span className="ml-1 text-muted-foreground">
+                              ({g.questionCount} Q)
+                            </span>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -1927,11 +2338,26 @@ useEffect(() => {
           <Separator />
 
           {/* Question */}
-          <RichHtmlEditor label="Question" value={question} onChange={setQuestion} placeholder="Type the question here..." />
+          <RichHtmlEditor
+            label="Question"
+            value={question}
+            onChange={setQuestion}
+            placeholder="Type the question here..."
+          />
           <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Question image URL <span className="text-muted-foreground">(optional — paste pre-uploaded URL)</span></Label>
-            <Input value={qImgUrl} onChange={(e) => setQImgUrl(e.target.value)} placeholder="https://ik.imagekit.io/..." className="text-xs font-mono" />
-            {qImgUrl && <img src={qImgUrl} alt="" className="h-16 w-auto rounded border object-contain" />}
+            <Label className="text-xs text-muted-foreground">
+              Question image URL{" "}
+              <span className="text-muted-foreground">(optional — paste pre-uploaded URL)</span>
+            </Label>
+            <Input
+              value={qImgUrl}
+              onChange={(e) => setQImgUrl(e.target.value)}
+              placeholder="https://ik.imagekit.io/..."
+              className="font-mono text-xs"
+            />
+            {qImgUrl && (
+              <img src={qImgUrl} alt="" className="h-16 w-auto rounded border object-contain" />
+            )}
           </div>
 
           <Separator />
@@ -1939,15 +2365,26 @@ useEffect(() => {
           {/* Options (MCQ only) */}
           {(qFormat === "single_correct_mcq" || qFormat === "multicorrect_mcq") && (
             <div className="space-y-3">
-              <Label>Options {qFormat === "multicorrect_mcq" && <span className="text-xs text-muted-foreground ml-1">(check all correct)</span>}</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Label>
+                Options{" "}
+                {qFormat === "multicorrect_mcq" && (
+                  <span className="ml-1 text-xs text-muted-foreground">(check all correct)</span>
+                )}
+              </Label>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {options.map((opt, idx) => (
-                  <div key={idx} className="rounded-xl border p-3 space-y-2">
+                  <div key={idx} className="space-y-2 rounded-xl border p-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Option {String.fromCharCode(65 + idx)}</span>
+                      <span className="text-sm font-medium">
+                        Option {String.fromCharCode(65 + idx)}
+                      </span>
                       <div className="flex items-center gap-2">
                         <Checkbox
-                          checked={qFormat === "multicorrect_mcq" ? multiCorrects.includes(idx) : correctOption === idx}
+                          checked={
+                            qFormat === "multicorrect_mcq"
+                              ? multiCorrects.includes(idx)
+                              : correctOption === idx
+                          }
                           onCheckedChange={(checked) => {
                             if (qFormat === "multicorrect_mcq") {
                               setMultiCorrects((prev) =>
@@ -1965,16 +2402,34 @@ useEffect(() => {
                       label=""
                       className="space-y-0"
                       value={opt}
-                      onChange={(v) => setOptions((prev) => { const c = [...prev]; c[idx] = v; return c; })}
+                      onChange={(v) =>
+                        setOptions((prev) => {
+                          const c = [...prev];
+                          c[idx] = v;
+                          return c;
+                        })
+                      }
                       placeholder={`Option ${String.fromCharCode(65 + idx)}...`}
                     />
                     <Input
                       value={oImgUrls[idx]}
-                      onChange={(e) => setOImgUrls((prev) => { const c = [...prev]; c[idx] = e.target.value; return c; })}
+                      onChange={(e) =>
+                        setOImgUrls((prev) => {
+                          const c = [...prev];
+                          c[idx] = e.target.value;
+                          return c;
+                        })
+                      }
                       placeholder="Image URL (optional)"
-                      className="text-xs font-mono"
+                      className="font-mono text-xs"
                     />
-                    {oImgUrls[idx] && <img src={oImgUrls[idx]} alt="" className="h-10 w-auto rounded border object-contain" />}
+                    {oImgUrls[idx] && (
+                      <img
+                        src={oImgUrls[idx]}
+                        alt=""
+                        className="h-10 w-auto rounded border object-contain"
+                      />
+                    )}
                   </div>
                 ))}
               </div>
@@ -1984,19 +2439,44 @@ useEffect(() => {
           <Separator />
 
           {/* Explanation */}
-          <RichHtmlEditor label="Explanation (optional)" value={explanation} onChange={setExplanation} placeholder="Explanation / solution..." />
+          <RichHtmlEditor
+            label="Explanation (optional)"
+            value={explanation}
+            onChange={setExplanation}
+            placeholder="Explanation / solution..."
+          />
           <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Explanation image URL <span className="text-muted-foreground">(optional)</span></Label>
-            <Input value={eImgUrl} onChange={(e) => setEImgUrl(e.target.value)} placeholder="https://ik.imagekit.io/..." className="text-xs font-mono" />
-            {eImgUrl && <img src={eImgUrl} alt="" className="h-16 w-auto rounded border object-contain" />}
+            <Label className="text-xs text-muted-foreground">
+              Explanation image URL <span className="text-muted-foreground">(optional)</span>
+            </Label>
+            <Input
+              value={eImgUrl}
+              onChange={(e) => setEImgUrl(e.target.value)}
+              placeholder="https://ik.imagekit.io/..."
+              className="font-mono text-xs"
+            />
+            {eImgUrl && (
+              <img src={eImgUrl} alt="" className="h-16 w-auto rounded border object-contain" />
+            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => { setEditorOpen(false); resetEditor(); }} disabled={busy}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditorOpen(false);
+                resetEditor();
+              }}
+              disabled={busy}
+            >
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={busy}>
-              {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
+              {busy ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="mr-2 h-4 w-4" />
+              )}
               Save
             </Button>
           </div>
@@ -2004,13 +2484,18 @@ useEffect(() => {
       </Dialog>
 
       {/* Import Dialog */}
-      <Dialog open={importOpen} onOpenChange={(v) => (v ? setImportOpen(true) : (setImportOpen(false), setImportFile(null)))}>
+      <Dialog
+        open={importOpen}
+        onOpenChange={(v) =>
+          v ? setImportOpen(true) : (setImportOpen(false), setImportFile(null))
+        }
+      >
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Bulk Import (Zip)</DialogTitle>
             <DialogDescription>
-              Upload your zip containing <span className="font-medium">questions.json</span> and images. We upload images and
-              store public URLs in Firestore.
+              Upload your zip containing <span className="font-medium">questions.json</span> and
+              images. We upload images and store public URLs in Firestore.
             </DialogDescription>
           </DialogHeader>
 
@@ -2034,7 +2519,7 @@ useEffect(() => {
                   <span className="text-muted-foreground">Importing…</span>
                   <span>{importProgress}%</span>
                 </div>
-                <div className="h-2 rounded bg-muted overflow-hidden">
+                <div className="h-2 overflow-hidden rounded bg-muted">
                   <div className="h-full bg-primary" style={{ width: `${importProgress}%` }} />
                 </div>
                 {importInfo && (
@@ -2050,7 +2535,11 @@ useEffect(() => {
                 Cancel
               </Button>
               <Button onClick={handleImport} disabled={!importFile || importing}>
-                {importing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+                {importing ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+                )}
                 Import
               </Button>
             </div>
@@ -2059,12 +2548,23 @@ useEffect(() => {
       </Dialog>
 
       {/* CSV Import Dialog */}
-      <Dialog open={csvOpen} onOpenChange={(v) => { if (!v) { setCsvOpen(false); setCsvFile(null); setCsvInfo(null); } else setCsvOpen(true); }}>
+      <Dialog
+        open={csvOpen}
+        onOpenChange={(v) => {
+          if (!v) {
+            setCsvOpen(false);
+            setCsvFile(null);
+            setCsvInfo(null);
+          } else setCsvOpen(true);
+        }}
+      >
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Import CSV</DialogTitle>
             <DialogDescription>
-              Upload a CSV with LaTeX-formatted questions. Use <span className="font-mono">$...$</span> for inline math and <span className="font-mono">$$...$$</span> for display math.
+              Upload a CSV with LaTeX-formatted questions. Use{" "}
+              <span className="font-mono">$...$</span> for inline math and{" "}
+              <span className="font-mono">$$...$$</span> for display math.
             </DialogDescription>
           </DialogHeader>
 
@@ -2082,12 +2582,22 @@ useEffect(() => {
                   if (csvInputRef.current) csvInputRef.current.value = "";
                 }}
               />
-              <Button variant="outline" className="flex-1" onClick={() => csvInputRef.current?.click()} disabled={csvImporting}>
-                <Upload className="h-4 w-4 mr-2" />
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => csvInputRef.current?.click()}
+                disabled={csvImporting}
+              >
+                <Upload className="mr-2 h-4 w-4" />
                 {csvFile ? csvFile.name : "Choose CSV file"}
               </Button>
-              <Button variant="ghost" size="sm" onClick={downloadCsvTemplate} disabled={csvImporting}>
-                <Download className="h-4 w-4 mr-1" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={downloadCsvTemplate}
+                disabled={csvImporting}
+              >
+                <Download className="mr-1 h-4 w-4" />
                 Template
               </Button>
             </div>
@@ -2104,8 +2614,11 @@ useEffect(() => {
                   <span className="text-muted-foreground">Importing…</span>
                   <span>{csvProgress}%</span>
                 </div>
-                <div className="h-2 rounded bg-muted overflow-hidden">
-                  <div className="h-full bg-primary transition-all" style={{ width: `${csvProgress}%` }} />
+                <div className="h-2 overflow-hidden rounded bg-muted">
+                  <div
+                    className="h-full bg-primary transition-all"
+                    style={{ width: `${csvProgress}%` }}
+                  />
                 </div>
                 {csvInfo && (
                   <div className="text-xs text-muted-foreground">
@@ -2115,19 +2628,27 @@ useEffect(() => {
               </div>
             )}
 
-            <div className="text-xs text-muted-foreground space-y-1">
+            <div className="space-y-1 text-xs text-muted-foreground">
               <p className="font-medium">Required columns:</p>
               <p className="font-mono">ques, format</p>
               <p className="font-medium">For MCQ also required:</p>
               <p className="font-mono">opt_1, opt_2, correct_ans</p>
               <p className="font-medium">Formats:</p>
-              <p className="font-mono">single_correct_mcq · multicorrect_mcq · subjective · subjective_long</p>
+              <p className="font-mono">
+                single_correct_mcq · multicorrect_mcq · subjective · subjective_long
+              </p>
             </div>
 
             <div className="flex justify-end gap-2 pt-1">
-              <Button variant="outline" onClick={() => setCsvOpen(false)} disabled={csvImporting}>Cancel</Button>
+              <Button variant="outline" onClick={() => setCsvOpen(false)} disabled={csvImporting}>
+                Cancel
+              </Button>
               <Button onClick={handleCsvImport} disabled={!csvFile || csvImporting}>
-                {csvImporting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileSpreadsheet className="h-4 w-4 mr-2" />}
+                {csvImporting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                )}
                 Import
               </Button>
             </div>
@@ -2136,29 +2657,60 @@ useEffect(() => {
       </Dialog>
 
       {/* Upload Image for CSV */}
-      <Dialog open={imgUploadOpen} onOpenChange={(v) => { setImgUploadOpen(v); if (!v) setImgUrl(""); }}>
+      <Dialog
+        open={imgUploadOpen}
+        onOpenChange={(v) => {
+          setImgUploadOpen(v);
+          if (!v) setImgUrl("");
+        }}
+      >
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Upload Image</DialogTitle>
-            <DialogDescription>Upload an image to ImageKit and copy the URL for use in bulk import CSVs.</DialogDescription>
+            <DialogDescription>
+              Upload an image to ImageKit and copy the URL for use in bulk import CSVs.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <input ref={imgInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-            <Button variant="outline" className="w-full" onClick={() => imgInputRef.current?.click()} disabled={imgUploading}>
-              {imgUploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ImageIcon className="h-4 w-4 mr-2" />}
+            <input
+              ref={imgInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageUpload}
+            />
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => imgInputRef.current?.click()}
+              disabled={imgUploading}
+            >
+              {imgUploading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <ImageIcon className="mr-2 h-4 w-4" />
+              )}
               {imgUploading ? "Uploading…" : "Choose Image"}
             </Button>
 
             {imgUrl && (
               <div className="space-y-2">
-                <img src={imgUrl} alt="uploaded" className="w-full rounded-md border object-contain max-h-48" />
+                <img
+                  src={imgUrl}
+                  alt="uploaded"
+                  className="max-h-48 w-full rounded-md border object-contain"
+                />
                 <div className="flex gap-2">
-                  <Input value={imgUrl} readOnly className="font-mono text-xs flex-1" />
+                  <Input value={imgUrl} readOnly className="flex-1 font-mono text-xs" />
                   <Button size="icon" variant="outline" onClick={copyImgUrl}>
-                    {imgCopied ? <Check className="h-4 w-4 text-green-600" /> : <ImageIcon className="h-4 w-4" />}
+                    {imgCopied ? (
+                      <Check className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <ImageIcon className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground text-center">
+                <p className="text-center text-xs text-muted-foreground">
                   {imgCopied ? "Copied!" : "Click icon to copy URL"}
                 </p>
               </div>

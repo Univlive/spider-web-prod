@@ -16,18 +16,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const admin = getAdmin();
     const db = admin.firestore();
 
-    // NEW SYSTEM: seatLimit is granted by ADMIN on educators/{educatorId}.seatLimit
     const educatorSnap = await db.doc(`educators/${educatorId}`).get();
-    const seatLimit = Math.max(0, Number(educatorSnap.data()?.seatLimit || 0));
+    const eduData = educatorSnap.data() || {};
+    const seatLimit = Math.max(
+      0,
+      Number(eduData.seatLimit || 0),
+      Number(eduData.purchasedSeatLimit || 0)
+    );
     if (seatLimit <= 0) {
       return res.status(403).json({
-        error: "No seats assigned to your coaching yet. Contact Univ.Live support/admin to get seats.",
+        error:
+          "No seats assigned to your coaching yet. Contact Univ.Live support/admin to get seats.",
       });
     }
 
     // must exist in learners list
     const studentSnap = await db.doc(`educators/${educatorId}/students/${studentId}`).get();
-    if (!studentSnap.exists) return res.status(400).json({ error: "Student not found in your learners list." });
+    if (!studentSnap.exists)
+      return res.status(400).json({ error: "Student not found in your learners list." });
 
     const seatRef = db.doc(`educators/${educatorId}/billingSeats/${studentId}`);
     const seatSnap = await seatRef.get();
@@ -52,7 +58,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (used >= seatLimit) {
-      return res.status(400).json({ error: "Seat limit reached. Contact sales/admin to increase seats." });
+      return res
+        .status(400)
+        .json({ error: "Seat limit reached. Contact sales/admin to increase seats." });
     }
 
     await seatRef.set(

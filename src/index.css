@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -40,29 +40,23 @@
     --indigo: 245 82% 67%;
     --indigo-light: 245 82% 96%;
     --indigo-dark: 245 82% 55%;
-    
+
     --violet: 263 70% 58%;
     --violet-light: 263 70% 96%;
-    
+
     --section-1: 0 0% 100%;
     --section-2: 240 5% 98%;
     --section-3: 245 40% 98%;
     --section-4: 263 40% 98%;
     --section-5: 200 40% 98%;
-    
+
     --gray-text: 240 5% 45%;
     --gray-light: 240 5% 96%;
-    
+
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, 
-      hsl(245 82% 67%) 0%, 
-      hsl(263 70% 58%) 100%
-    );
-    
-    --gradient-hero: linear-gradient(180deg,
-      hsl(0 0% 100%) 0%,
-      hsl(245 40% 99%) 100%
-    );
+    --gradient-primary: linear-gradient(135deg, hsl(245 82% 67%) 0%, hsl(263 70% 58%) 100%);
+
+    --gradient-hero: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(245 40% 99%) 100%);
 
     --shadow-soft: 0 4px 20px -4px hsl(240 10% 10% / 0.08);
     --shadow-card: 0 8px 40px -12px hsl(240 10% 10% / 0.1);
@@ -111,25 +105,19 @@
     --indigo-light: 245 50% 15%;
     --violet: 263 70% 65%;
     --violet-light: 263 50% 15%;
-    
+
     --section-1: 240 10% 6%;
     --section-2: 240 10% 8%;
     --section-3: 245 15% 10%;
     --section-4: 263 15% 10%;
     --section-5: 200 15% 10%;
-    
+
     --gray-text: 240 5% 60%;
     --gray-light: 240 10% 15%;
-    
-    --gradient-primary: linear-gradient(135deg, 
-      hsl(245 82% 70%) 0%, 
-      hsl(263 70% 65%) 100%
-    );
-    
-    --gradient-hero: linear-gradient(180deg,
-      hsl(240 10% 6%) 0%,
-      hsl(245 15% 8%) 100%
-    );
+
+    --gradient-primary: linear-gradient(135deg, hsl(245 82% 70%) 0%, hsl(263 70% 65%) 100%);
+
+    --gradient-hero: linear-gradient(180deg, hsl(240 10% 6%) 0%, hsl(245 15% 8%) 100%);
 
     --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.3);
     --shadow-card: 0 8px 40px -12px hsl(0 0% 0% / 0.4);
@@ -149,8 +137,8 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    @apply bg-background font-sans text-foreground antialiased;
+    font-family: "Plus Jakarta Sans", system-ui, sans-serif;
     overflow-x: hidden;
   }
 
@@ -168,7 +156,12 @@
     }
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-bold tracking-tight;
     line-height: 1.1;
   }
@@ -223,19 +216,19 @@
   .section-1 {
     background-color: hsl(var(--section-1));
   }
-  
+
   .section-2 {
     background-color: hsl(var(--section-2));
   }
-  
+
   .section-3 {
     background-color: hsl(var(--section-3));
   }
-  
+
   .section-4 {
     background-color: hsl(var(--section-4));
   }
-  
+
   .section-5 {
     background-color: hsl(var(--section-5));
   }
@@ -296,7 +289,8 @@
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) rotate(var(--rotation, 0deg));
   }
   50% {

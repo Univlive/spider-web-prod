@@ -31,7 +31,15 @@ import { Input } from "@shared/ui/input";
 import { Button } from "@shared/ui/button";
 import { Badge } from "@shared/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@shared/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@shared/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@shared/ui/tabs";
 import { Label } from "@shared/ui/label";
 import { Textarea } from "@shared/ui/textarea";
@@ -233,7 +241,9 @@ export default function TestSeries() {
   const [autoFillTestId, setAutoFillTestId] = useState<string | null>(null);
 
   // Course/subject filters
-  const { courses: accessibleCourses, subjects: accessibleSubjects } = useAccessibleCourses(currentUser?.uid ?? "");
+  const { courses: accessibleCourses, subjects: accessibleSubjects } = useAccessibleCourses(
+    currentUser?.uid ?? ""
+  );
   const [courseFilter, setCourseFilter] = useState("all");
   const [subjectFilter, setSubjectFilter] = useState("all");
 
@@ -256,9 +266,22 @@ export default function TestSeries() {
       getDocs(collection(db, "educators", user.uid, "branches")).then(async (branchSnap) => {
         const batchList: { id: string; label: string }[] = [];
         for (const branchDoc of branchSnap.docs) {
-          const courseSnap = await getDocs(collection(db, "educators", user.uid, "branches", branchDoc.id, "courses"));
+          const courseSnap = await getDocs(
+            collection(db, "educators", user.uid, "branches", branchDoc.id, "courses")
+          );
           for (const courseDoc of courseSnap.docs) {
-            const batchSnap = await getDocs(collection(db, "educators", user.uid, "branches", branchDoc.id, "courses", courseDoc.id, "batches"));
+            const batchSnap = await getDocs(
+              collection(
+                db,
+                "educators",
+                user.uid,
+                "branches",
+                branchDoc.id,
+                "courses",
+                courseDoc.id,
+                "batches"
+              )
+            );
             batchSnap.docs.forEach((b) =>
               batchList.push({
                 id: b.id,
@@ -280,13 +303,10 @@ export default function TestSeries() {
 
       // FOLDERS: educators/{uid}/folders
       const foldersQ = query(collection(db, "educators", user.uid, "folders"));
-      const unsubFolders = onSnapshot(
-        foldersQ,
-        (snap) => {
-          const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-          setFolders(rows);
-        },
-      );
+      const unsubFolders = onSnapshot(foldersQ, (snap) => {
+        const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setFolders(rows);
+      });
 
       const templatesQ = query(collection(db, "educators", user.uid, "templates"));
       const unsubTemplates = onSnapshot(
@@ -371,7 +391,9 @@ export default function TestSeries() {
     setSavingTemplate(true);
     try {
       await addDoc(collection(db, "educators", currentUser.uid, "templates"), {
-        templateName: String(templatePayload.templateName || templatePayload.title || "Custom template"),
+        templateName: String(
+          templatePayload.templateName || templatePayload.title || "Custom template"
+        ),
         ...templatePayload,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -398,7 +420,10 @@ export default function TestSeries() {
     }
 
     const exists = folders.some(
-      (f) => String(f?.name || "").trim().toLowerCase() === name.toLowerCase()
+      (f) =>
+        String(f?.name || "")
+          .trim()
+          .toLowerCase() === name.toLowerCase()
     );
     if (exists) {
       toast.error("A folder with this name already exists.");
@@ -442,9 +467,15 @@ export default function TestSeries() {
   const handleAutoFill = async (test: any) => {
     if (!currentUser) return;
     const sections: any[] = test.sections || [];
-    if (!sections.length) { toast.error("No sections configured"); return; }
+    if (!sections.length) {
+      toast.error("No sections configured");
+      return;
+    }
     const hasConfig = sections.some((s: any) => s.questionsCount > 0);
-    if (!hasConfig) { toast.error("Set question counts on sections first"); return; }
+    if (!hasConfig) {
+      toast.error("Set question counts on sections first");
+      return;
+    }
 
     setAutoFillTestId(test.id);
     try {
@@ -454,31 +485,41 @@ export default function TestSeries() {
 
       // Load own question bank
       const ownSnap = await getDocs(collection(db, "educators", currentUser.uid, "question_bank"));
-      const ownQs = ownSnap.docs.map(d => ({ id: d.id, _source: "educator", ...d.data() }));
+      const ownQs = ownSnap.docs.map((d) => ({ id: d.id, _source: "educator", ...d.data() }));
 
       // Load admin questions (filter by allowed subjects)
       const adminSnap = await getDocs(collection(db, "question_bank"));
       const adminQs = adminSnap.docs
-        .map(d => ({ id: d.id, _source: "admin", ...d.data() }))
-        .filter((q: any) => allowedSubjectIds.length === 0 || allowedSubjectIds.includes(q.subjectId));
+        .map((d) => ({ id: d.id, _source: "admin", ...d.data() }))
+        .filter(
+          (q: any) => allowedSubjectIds.length === 0 || allowedSubjectIds.includes(q.subjectId)
+        );
 
       const allQs: any[] = [...ownQs, ...adminQs];
 
       // Load question group manifests for group-aware selection
       const groupsSnap = await getDocs(collection(db, "question_groups"));
       const groupManifests = new Map(
-        groupsSnap.docs.map(d => [
+        groupsSnap.docs.map((d) => [
           d.id,
-          { groupId: d.id, type: d.data().type as "comprehension" | "case_study", questionCount: Number(d.data().questionCount || 0) },
+          {
+            groupId: d.id,
+            type: d.data().type as "comprehension" | "case_study",
+            questionCount: Number(d.data().questionCount || 0),
+          },
         ])
       );
 
       // Questions already in this test
-      const existingSnap = await getDocs(collection(db, "educators", currentUser.uid, "my_tests", test.id, "questions"));
-      const usedIds = new Set(existingSnap.docs.map(d => {
-        const data = d.data() as any;
-        return String(data.bankQuestionId || d.id);
-      }));
+      const existingSnap = await getDocs(
+        collection(db, "educators", currentUser.uid, "my_tests", test.id, "questions")
+      );
+      const usedIds = new Set(
+        existingSnap.docs.map((d) => {
+          const data = d.data() as any;
+          return String(data.bankQuestionId || d.id);
+        })
+      );
       let order = existingSnap.docs.length;
 
       // Build section constraints from template sections
@@ -496,14 +537,21 @@ export default function TestSeries() {
       }));
 
       // Run group-aware selection
-      const { chosen, coverage } = buildAutoFillSelection(allQs, groupManifests, sectionConstraints, {
-        excludeIds: usedIds,
-      });
+      const { chosen, coverage } = buildAutoFillSelection(
+        allQs,
+        groupManifests,
+        sectionConstraints,
+        {
+          excludeIds: usedIds,
+        }
+      );
 
       // Coverage diagnostics toast
-      const shortfalls = coverage.filter(c => c.shortfall > 0);
+      const shortfalls = coverage.filter((c) => c.shortfall > 0);
       if (shortfalls.length > 0) {
-        const msg = shortfalls.map(c => `${c.sectionName}: found ${c.found}/${c.needed}`).join(", ");
+        const msg = shortfalls
+          .map((c) => `${c.sectionName}: found ${c.found}/${c.needed}`)
+          .join(", ");
         toast.warning(`Partial fill — ${msg}. Add more matching questions to the bank.`);
       }
 
@@ -518,7 +566,9 @@ export default function TestSeries() {
       let ops = 0;
 
       for (const q of chosen) {
-        const qRef = doc(collection(db, "educators", currentUser.uid, "my_tests", test.id, "questions"));
+        const qRef = doc(
+          collection(db, "educators", currentUser.uid, "my_tests", test.id, "questions")
+        );
         const { id, _source, ...rest } = q as any;
         const qData: any = {
           ...rest,
@@ -556,12 +606,17 @@ export default function TestSeries() {
 
   const handleDeleteFolder = async (folderId: string) => {
     if (!currentUser) return;
-    if (!confirm("Delete this folder? Tests inside will be moved to their subject folders or Uncategorized.")) return;
+    if (
+      !confirm(
+        "Delete this folder? Tests inside will be moved to their subject folders or Uncategorized."
+      )
+    )
+      return;
     try {
       // 1. Reset folderId for tests in this folder
       const batch = writeBatch(db);
-      const testsInFolder = myTests.filter(t => t.folderId === folderId);
-      testsInFolder.forEach(t => {
+      const testsInFolder = myTests.filter((t) => t.folderId === folderId);
+      testsInFolder.forEach((t) => {
         batch.update(doc(db, "educators", currentUser.uid, "my_tests", t.id), { folderId: null });
       });
 
@@ -577,14 +632,15 @@ export default function TestSeries() {
   };
 
   const toggleFolder = (folderId: string) => {
-    setExpandedFolders(prev => ({ ...prev, [folderId]: !prev[folderId] }));
+    setExpandedFolders((prev) => ({ ...prev, [folderId]: !prev[folderId] }));
   };
 
   const normalizeSubjectName = (sub: string) => {
     const s = sub.trim().toLowerCase();
 
     // Exact mapping for requested subjects
-    if (s === "bst" || s === "business studies" || s === "business study") return "Business Studies";
+    if (s === "bst" || s === "business studies" || s === "business study")
+      return "Business Studies";
     if (s === "phy" || s === "physics") return "Physics";
     if (s === "chem" || s === "chemistry") return "Chemistry";
     if (s === "math" || s === "maths" || s === "mathematics") return "Maths";
@@ -593,24 +649,38 @@ export default function TestSeries() {
     if (s === "acc" || s === "accountancy" || s === "accounts") return "Accountancy";
     if (s === "eco" || s === "economics") return "Economics";
     if (s === "geo" || s === "geography") return "Geography";
-    if (s === "pol sc" || s === "political science" || s === "polscience" || s === "polity") return "Political Science";
+    if (s === "pol sc" || s === "political science" || s === "polscience" || s === "polity")
+      return "Political Science";
     if (s === "hist" || s === "history") return "History";
 
     // Default: Capitalize first letter of each word
-    return sub.trim().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+    return sub
+      .trim()
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
   };
 
   const SUGGESTED_SUBJECTS = [
-    "Physics", "Chemistry", "Maths", "English", "General Test",
-    "Accountancy", "Business Studies", "Economics", "Geography",
-    "Political Science", "History"
+    "Physics",
+    "Chemistry",
+    "Maths",
+    "English",
+    "General Test",
+    "Accountancy",
+    "Business Studies",
+    "Economics",
+    "Geography",
+    "Political Science",
+    "History",
   ];
 
   const groupedTests = useMemo(() => {
     const q = search.trim().toLowerCase();
     const filtered = myTests.filter((t) => {
       if (q) {
-        const hay = `${t.title || ""} ${t.description || ""} ${t.subject || ""} ${t.level || ""}`.toLowerCase();
+        const hay =
+          `${t.title || ""} ${t.description || ""} ${t.subject || ""} ${t.level || ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       if (batchFilter !== "all") {
@@ -622,10 +692,13 @@ export default function TestSeries() {
       return true;
     });
 
-    const groups: Record<string, { name: string; type: "custom" | "subject" | "uncategorized", tests: any[] }> = {};
+    const groups: Record<
+      string,
+      { name: string; type: "custom" | "subject" | "uncategorized"; tests: any[] }
+    > = {};
 
     // 1. Custom Folders (Preserve empty custom folders)
-    folders.forEach(f => {
+    folders.forEach((f) => {
       groups[f.id] = { name: f.name, type: "custom", tests: [] };
     });
 
@@ -633,7 +706,7 @@ export default function TestSeries() {
     // (Actually, let's only create them if tests exist or user has custom folder with same name)
 
     // 3. Distribute Tests
-    filtered.forEach(t => {
+    filtered.forEach((t) => {
       if (t.folderId && groups[t.folderId]) {
         groups[t.folderId].tests.push(t);
       } else if (t.subject) {
@@ -666,7 +739,8 @@ export default function TestSeries() {
     const q = search.trim().toLowerCase();
     const filtered = visibleBankTests.filter((t) => {
       if (q) {
-        const hay = `${t.title || ""} ${t.description || ""} ${t.subject || ""} ${t.level || ""}`.toLowerCase();
+        const hay =
+          `${t.title || ""} ${t.description || ""} ${t.subject || ""} ${t.level || ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       if (courseFilter !== "all" && t.courseId !== courseFilter) return false;
@@ -674,9 +748,12 @@ export default function TestSeries() {
       return true;
     });
 
-    const groups: Record<string, { name: string; type: "subject" | "uncategorized", tests: any[] }> = {};
+    const groups: Record<
+      string,
+      { name: string; type: "subject" | "uncategorized"; tests: any[] }
+    > = {};
 
-    filtered.forEach(t => {
+    filtered.forEach((t) => {
       if (t.subject) {
         const normalizedName = normalizeSubjectName(t.subject);
         const subKey = `bank_subject_${normalizedName.toLowerCase().replace(/\s+/g, "_")}`;
@@ -698,9 +775,10 @@ export default function TestSeries() {
 
   // Subjects available for current course filter (for filter dropdowns)
   const filterSubjectOptions = useMemo(() => {
-    const subjectsForCourse = courseFilter === "all"
-      ? accessibleSubjects
-      : accessibleSubjects.filter(s => s.courseId === courseFilter);
+    const subjectsForCourse =
+      courseFilter === "all"
+        ? accessibleSubjects
+        : accessibleSubjects.filter((s) => s.courseId === courseFilter);
     return subjectsForCourse;
   }, [accessibleSubjects, courseFilter]);
 
@@ -744,7 +822,7 @@ export default function TestSeries() {
     newFolderName,
     setNewFolderName,
     folderCreating,
-    handleCreateFolder
+    handleCreateFolder,
   };
 
   const handleSaveGlobalAttempts = async (val: number) => {
@@ -769,7 +847,7 @@ export default function TestSeries() {
           chunk.forEach((d) => {
             batch.update(d.ref, {
               attemptsAllowed: val,
-              updatedAt: serverTimestamp()
+              updatedAt: serverTimestamp(),
             });
           });
           await batch.commit();
@@ -810,7 +888,10 @@ export default function TestSeries() {
     setAcEditingId(null);
 
     const snap = await getDocs(
-      query(collection(db, "educators", currentUser.uid, "accessCodes"), where("testSeriesId", "==", test.id))
+      query(
+        collection(db, "educators", currentUser.uid, "accessCodes"),
+        where("testSeriesId", "==", test.id)
+      )
     );
     if (!snap.empty) {
       const d = snap.docs[0];
@@ -818,7 +899,9 @@ export default function TestSeries() {
       setAcEditingId(d.id);
       setAcCode(data.code || d.id);
       setAcMaxUses(String(data.maxUses || 100));
-      setAcExpiry(data.expiresAt ? (data.expiresAt as Timestamp).toDate().toISOString().slice(0, 10) : "");
+      setAcExpiry(
+        data.expiresAt ? (data.expiresAt as Timestamp).toDate().toISOString().slice(0, 10) : ""
+      );
       setAcWindowMinutes(String(data.windowMinutes ?? 0));
     } else {
       const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -833,15 +916,24 @@ export default function TestSeries() {
     if (!currentUser) return;
     const codeUpper = acCode.trim().toUpperCase();
     const max = Number(acMaxUses);
-    if (!codeUpper) { toast.error("Enter or generate an access code"); return; }
-    if (!Number.isFinite(max) || max <= 0) { toast.error("Max uses must be a positive number"); return; }
+    if (!codeUpper) {
+      toast.error("Enter or generate an access code");
+      return;
+    }
+    if (!Number.isFinite(max) || max <= 0) {
+      toast.error("Max uses must be a positive number");
+      return;
+    }
     const expiresAt = acExpiry ? toEndOfDayTs(acExpiry) : null;
     setAcSaving(true);
     try {
       if (!acEditingId) {
         const ref = doc(db, "educators", currentUser.uid, "accessCodes", codeUpper);
         const existing = await getDoc(ref);
-        if (existing.exists()) { toast.error("Code already exists, generate a different one"); return; }
+        if (existing.exists()) {
+          toast.error("Code already exists, generate a different one");
+          return;
+        }
         await setDoc(ref, {
           code: codeUpper,
           testSeriesId: acTestId,
@@ -897,10 +989,8 @@ export default function TestSeries() {
         attemptsAllowed: globalAttemptsAllowed,
         markingScheme: bankTest.markingScheme ?? undefined,
 
-        positiveMarks:
-          bankTest.positiveMarks != null ? Number(bankTest.positiveMarks) : undefined,
-        negativeMarks:
-          bankTest.negativeMarks != null ? Number(bankTest.negativeMarks) : undefined,
+        positiveMarks: bankTest.positiveMarks != null ? Number(bankTest.positiveMarks) : undefined,
+        negativeMarks: bankTest.negativeMarks != null ? Number(bankTest.negativeMarks) : undefined,
 
         source: "linked_admin",
         originSource: "admin",
@@ -934,8 +1024,12 @@ export default function TestSeries() {
     if (!currentUser) return;
 
     const [templateType, templateId] = String(selectedTemplateId || "none").split(":");
-    const adminTemplate = templateType === "admin" ? bankTests.find((test) => test.id === templateId) : null;
-    const educatorTemplate = templateType === "edu" ? educatorTemplates.find((template) => template.id === templateId) : null;
+    const adminTemplate =
+      templateType === "admin" ? bankTests.find((test) => test.id === templateId) : null;
+    const educatorTemplate =
+      templateType === "edu"
+        ? educatorTemplates.find((template) => template.id === templateId)
+        : null;
 
     // Start with the values exactly as submitted by the CreateCustomTest dialog.
     // The dialog has already pre-filled them from the template and allowed the user to edit.
@@ -959,7 +1053,10 @@ export default function TestSeries() {
 
     if (values.sections) {
       payload.sections = values.sections;
-      payload.questionsCount = values.sections.reduce((acc: number, s: any) => acc + (Number(s.questionsCount) || 0), 0);
+      payload.questionsCount = values.sections.reduce(
+        (acc: number, s: any) => acc + (Number(s.questionsCount) || 0),
+        0
+      );
     }
     if (values.markingScheme) {
       payload.markingScheme = values.markingScheme;
@@ -974,27 +1071,33 @@ export default function TestSeries() {
       payload.price = values.price;
     }
 
-
     // Add origin metadata (template reference only, NOT admin-linked)
     // Tests created from templates are fully editable custom tests.
     if (adminTemplate) {
       payload.templateRef = { source: "admin", id: adminTemplate.id };
-      if (payload.isPublished === undefined) payload.isPublished = adminTemplate.isPublished ?? false;
-      if (payload.requiresUnlock === undefined) payload.requiresUnlock = adminTemplate.requiresUnlock ?? true;
+      if (payload.isPublished === undefined)
+        payload.isPublished = adminTemplate.isPublished ?? false;
+      if (payload.requiresUnlock === undefined)
+        payload.requiresUnlock = adminTemplate.requiresUnlock ?? true;
       if (payload.price === undefined) payload.price = adminTemplate.price ?? 0;
     }
 
     if (educatorTemplate) {
       payload.originSource = "educator_template";
       payload.templateId = educatorTemplate.id;
-      if (payload.isPublished === undefined) payload.isPublished = educatorTemplate.isPublished ?? false;
-      if (payload.requiresUnlock === undefined) payload.requiresUnlock = educatorTemplate.requiresUnlock ?? true;
+      if (payload.isPublished === undefined)
+        payload.isPublished = educatorTemplate.isPublished ?? false;
+      if (payload.requiresUnlock === undefined)
+        payload.requiresUnlock = educatorTemplate.requiresUnlock ?? true;
       if (payload.price === undefined) payload.price = educatorTemplate.price ?? 0;
     }
 
     setCreating(true);
     try {
-      await addDoc(collection(db, "educators", currentUser.uid, "my_tests"), pruneUndefined(payload));
+      await addDoc(
+        collection(db, "educators", currentUser.uid, "my_tests"),
+        pruneUndefined(payload)
+      );
 
       toast.success("Test created");
       setCreateOpen(false);
@@ -1024,15 +1127,15 @@ export default function TestSeries() {
       setCreateOpen(false);
       setCreateTemplateOpen(true);
     },
-  }
+  };
 
   const moveTestState = {
     moveTestOpen,
     setMoveTestOpen,
     testToMove,
     handleMoveTest,
-    folders
-  }
+    folders,
+  };
 
   if (loading) {
     return (
@@ -1052,53 +1155,72 @@ export default function TestSeries() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 bg-white dark:bg-card border border-border/50 rounded-2xl px-4 py-2 shadow-sm hover:shadow-md transition-all group w-full sm:w-auto">
-          <div className="flex items-center gap-3 flex-1 sm:flex-none">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:scale-105 transition-transform shrink-0">
+        <div className="group flex w-full items-center gap-3 rounded-2xl border border-border/50 bg-white px-4 py-2 shadow-sm transition-all hover:shadow-md dark:bg-card sm:w-auto">
+          <div className="flex flex-1 items-center gap-3 sm:flex-none">
+            <div className="shrink-0 rounded-xl bg-primary/10 p-2 text-primary transition-transform group-hover:scale-105">
               <Award className="h-4 w-4" />
             </div>
-            <div className="flex flex-col min-w-[90px]">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider leading-tight">Default Limit</span>
-              <span className="text-xs font-semibold text-foreground truncate">Global Attempts</span>
+            <div className="flex min-w-[90px] flex-col">
+              <span className="text-[10px] font-bold uppercase leading-tight tracking-wider text-muted-foreground">
+                Default Limit
+              </span>
+              <span className="truncate text-xs font-semibold text-foreground">
+                Global Attempts
+              </span>
             </div>
           </div>
-          <div className="h-8 w-px bg-border/60 mx-1 shrink-0" />
+          <div className="mx-1 h-8 w-px shrink-0 bg-border/60" />
           <Select
             value={String(globalAttemptsAllowed)}
             onValueChange={(v) => handleSaveGlobalAttempts(Number(v))}
             disabled={savingGlobalAttempts}
           >
-            <SelectTrigger className="h-4 w-[65px] rounded-xl border-none bg-muted/50 hover:bg-muted transition-colors text-xs font-black focus:ring-0 shadow-none shrink-0">
-              {savingGlobalAttempts ? <Loader2 className="h-3 w-3 animate-spin text-primary" /> : <SelectValue />}
+            <SelectTrigger className="h-4 w-[65px] shrink-0 rounded-xl border-none bg-muted/50 text-xs font-black shadow-none transition-colors hover:bg-muted focus:ring-0">
+              {savingGlobalAttempts ? (
+                <Loader2 className="h-3 w-3 animate-spin text-primary" />
+              ) : (
+                <SelectValue />
+              )}
             </SelectTrigger>
-            <SelectContent className="rounded-xl border-none shadow-2xl overflow-hidden p-1">
-              <SelectItem value="1" className="rounded-lg text-xs font-bold py-2">1 Attempt</SelectItem>
-              <SelectItem value="2" className="rounded-lg text-xs font-bold py-2">2 Attempts</SelectItem>
-              <SelectItem value="3" className="rounded-lg text-xs font-bold py-2">3 Attempts</SelectItem>
+            <SelectContent className="overflow-hidden rounded-xl border-none p-1 shadow-2xl">
+              <SelectItem value="1" className="rounded-lg py-2 text-xs font-bold">
+                1 Attempt
+              </SelectItem>
+              <SelectItem value="2" className="rounded-lg py-2 text-xs font-bold">
+                2 Attempts
+              </SelectItem>
+              <SelectItem value="3" className="rounded-lg py-2 text-xs font-bold">
+                3 Attempts
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-
-        <div className="flex flex-col sm:flex-row gap-2 w-full">
+        <div className="flex w-full flex-col gap-2 sm:flex-row">
           <div className="relative w-full sm:w-[320px]">
-            <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search tests..."
-              className="pl-9 rounded-xl"
+              className="rounded-xl pl-9"
             />
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
             {/* CreateEducatorTemplate is opened programmatically from the template dropdown */}
-            <CreateEducatorTemplate open={createTemplateOpen} onOpenChange={(open) => {
-              setCreateTemplateOpen(open);
-              // Re-open create test dialog after template creation completes
-              if (!open) setCreateOpen(true);
-            }} />
-            <Button className="gradient-bg text-white shadow-lg w-full sm:w-auto" onClick={() => setCreateOpen(true)}>
+            <CreateEducatorTemplate
+              open={createTemplateOpen}
+              onOpenChange={(open) => {
+                setCreateTemplateOpen(open);
+                // Re-open create test dialog after template creation completes
+                if (!open) setCreateOpen(true);
+              }}
+            />
+            <Button
+              className="gradient-bg w-full text-white shadow-lg sm:w-auto"
+              onClick={() => setCreateOpen(true)}
+            >
               <Plus className="mr-2 h-4 w-4" /> Create Custom Test
             </Button>
           </div>
@@ -1107,38 +1229,54 @@ export default function TestSeries() {
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <CreateCustomTest {...creatCustomTestState} />
           </Dialog>
-
         </div>
       </div>
 
       {accessibleCourses.length > 0 && (
-        <div className="flex flex-wrap gap-3 items-center">
-          <Select value={courseFilter} onValueChange={(v) => { setCourseFilter(v); setSubjectFilter("all"); }}>
-            <SelectTrigger className="w-[180px] rounded-xl h-9 text-sm">
+        <div className="flex flex-wrap items-center gap-3">
+          <Select
+            value={courseFilter}
+            onValueChange={(v) => {
+              setCourseFilter(v);
+              setSubjectFilter("all");
+            }}
+          >
+            <SelectTrigger className="h-9 w-[180px] rounded-xl text-sm">
               <SelectValue placeholder="All Courses" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Courses</SelectItem>
               {accessibleCourses.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Select value={subjectFilter} onValueChange={setSubjectFilter} disabled={filterSubjectOptions.length === 0}>
-            <SelectTrigger className="w-[180px] rounded-xl h-9 text-sm">
+          <Select
+            value={subjectFilter}
+            onValueChange={setSubjectFilter}
+            disabled={filterSubjectOptions.length === 0}
+          >
+            <SelectTrigger className="h-9 w-[180px] rounded-xl text-sm">
               <SelectValue placeholder="All Subjects" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Subjects</SelectItem>
               {filterSubjectOptions.map((s) => (
-                <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                <SelectItem key={s.id} value={s.name}>
+                  {s.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {(courseFilter !== "all" || subjectFilter !== "all") && (
             <button
-              onClick={() => { setCourseFilter("all"); setSubjectFilter("all"); }}
-              className="text-xs text-muted-foreground hover:text-foreground underline"
+              onClick={() => {
+                setCourseFilter("all");
+                setSubjectFilter("all");
+              }}
+              className="text-xs text-muted-foreground underline hover:text-foreground"
             >
               Clear filters
             </button>
@@ -1147,16 +1285,16 @@ export default function TestSeries() {
       )}
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-        <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="w-full overflow-x-auto">
-          <TabsList className="rounded-xl inline-flex min-w-max">
-            <TabsTrigger value="library" className="rounded-xl">
-              Your Library
-            </TabsTrigger>
-            <TabsTrigger value="bank" className="rounded-xl">
-              Admin Bank
-            </TabsTrigger>
-          </TabsList>
+            <TabsList className="inline-flex min-w-max rounded-xl">
+              <TabsTrigger value="library" className="rounded-xl">
+                Your Library
+              </TabsTrigger>
+              <TabsTrigger value="bank" className="rounded-xl">
+                Admin Bank
+              </TabsTrigger>
+            </TabsList>
           </div>
 
           <NewFolderButton {...folderState} />
@@ -1165,28 +1303,37 @@ export default function TestSeries() {
         {/* Library */}
         <TabsContent value="library" className="mt-6">
           {allBatches.length > 0 && (
-            <div className="flex items-center gap-2 mb-4 flex-wrap">
-              <span className="text-sm text-muted-foreground shrink-0">Filter by Batch:</span>
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <span className="shrink-0 text-sm text-muted-foreground">Filter by Batch:</span>
               <Select value={batchFilter} onValueChange={setBatchFilter}>
-                <SelectTrigger className="w-[220px] rounded-xl h-8 text-sm">
+                <SelectTrigger className="h-8 w-[220px] rounded-xl text-sm">
                   <SelectValue placeholder="All Batches" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Batches</SelectItem>
                   {allBatches.map((b) => (
-                    <SelectItem key={b.id} value={b.id}>{b.label}</SelectItem>
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {batchFilter !== "all" && (
-                <button onClick={() => setBatchFilter("all")} className="text-xs text-muted-foreground hover:text-foreground underline">
+                <button
+                  onClick={() => setBatchFilter("all")}
+                  className="text-xs text-muted-foreground underline hover:text-foreground"
+                >
                   Clear
                 </button>
               )}
             </div>
           )}
           {Object.keys(groupedTests).length === 0 ? (
-            <EmptyState icon={FileText} title="No tests found" description="Create a custom test or import from the admin bank." />
+            <EmptyState
+              icon={FileText}
+              title="No tests found"
+              description="Create a custom test or import from the admin bank."
+            />
           ) : (
             <div className="space-y-8">
               {Object.entries(groupedTests).map(([groupId, group]) => {
@@ -1194,14 +1341,25 @@ export default function TestSeries() {
                 return (
                   <div key={groupId} className="space-y-4">
                     <div
-                      className="flex items-center justify-between group cursor-pointer bg-muted/20 p-2 rounded-xl"
+                      className="group flex cursor-pointer items-center justify-between rounded-xl bg-muted/20 p-2"
                       onClick={() => toggleFolder(groupId)}
                     >
                       <div className="flex items-center gap-2">
-                        {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-                        <Folder className={cn("h-5 w-5", group.type === "custom" ? "text-primary fill-primary/20" : "text-muted-foreground")} />
-                        <h3 className="font-semibold text-lg">{group.name}</h3>
-                        <Badge variant="secondary" className="rounded-full ml-2">
+                        {isExpanded ? (
+                          <ChevronDown className="h-5 w-5" />
+                        ) : (
+                          <ChevronRight className="h-5 w-5" />
+                        )}
+                        <Folder
+                          className={cn(
+                            "h-5 w-5",
+                            group.type === "custom"
+                              ? "fill-primary/20 text-primary"
+                              : "text-muted-foreground"
+                          )}
+                        />
+                        <h3 className="text-lg font-semibold">{group.name}</h3>
+                        <Badge variant="secondary" className="ml-2 rounded-full">
                           {group.tests.length}
                         </Badge>
                       </div>
@@ -1210,7 +1368,7 @@ export default function TestSeries() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="opacity-0 group-hover:opacity-100 rounded-xl text-destructive"
+                          className="rounded-xl text-destructive opacity-0 group-hover:opacity-100"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteFolder(groupId);
@@ -1222,12 +1380,19 @@ export default function TestSeries() {
                     </div>
 
                     {isExpanded && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pl-4">
+                      <div className="grid grid-cols-1 gap-6 pl-4 md:grid-cols-2 lg:grid-cols-3">
                         {group.tests.length === 0 ? (
-                          <p className="text-sm text-muted-foreground py-4 italic col-span-full">No tests in this folder.</p>
+                          <p className="col-span-full py-4 text-sm italic text-muted-foreground">
+                            No tests in this folder.
+                          </p>
                         ) : (
                           group.tests.map((test) => (
-                            <motion.div key={test.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                            <motion.div
+                              key={test.id}
+                              layout
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                            >
                               {(() => {
                                 const isAdminLinked =
                                   test.originSource === "admin" ||
@@ -1238,153 +1403,231 @@ export default function TestSeries() {
                                   !!test.originalTestId;
 
                                 return (
-                              <Card className="h-full flex flex-col hover:shadow-md transition-shadow relative">
-                                <CardHeader>
-                                  <CardTitle className="flex justify-between items-start gap-2">
-                                    <span className="truncate text-lg">{test.title}</span>
-                                    <div className="flex items-center gap-1">
-                                      <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl">
-                                            <MoreVertical className="h-4 w-4" />
-                                          </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="rounded-xl">
-                                          <DropdownMenuItem onClick={() => {
-                                            setTestToMove(test);
-                                            setMoveTestOpen(true);
-                                          }}>
-                                            <Move className="mr-2 h-4 w-4" /> Move to Folder
-                                          </DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => {
-                                            setBatchAssignTest(test);
-                                            setSelectedBatchIds(test.targetBatches || []);
-                                            setBatchAssignOpen(true);
-                                          }}>
-                                            <Award className="mr-2 h-4 w-4" /> Assign to Batches
-                                          </DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => openAccessCode(test)}>
-                                            <Key className="mr-2 h-4 w-4" /> Access Code
-                                          </DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => {
-                                            setTestToSchedule(test);
-                                            setScheduleOpen(true);
-                                          }}>
-                                            <Clock className="mr-2 h-4 w-4" /> Schedule
-                                          </DropdownMenuItem>
-                                          <DropdownMenuItem
-                                            className="text-destructive"
-                                            onClick={async () => {
-                                              if (!currentUser) return;
-                                              if (!confirm("Delete this test and all its questions?")) return;
-                                              try {
-                                                const qs = await getDocs(collection(db, "educators", currentUser.uid, "my_tests", test.id, "questions"));
-                                                const batch = writeBatch(db);
-                                                qs.forEach((d) => batch.delete(d.ref));
-                                                batch.delete(doc(db, "educators", currentUser.uid, "my_tests", test.id));
-                                                await batch.commit();
-                                                toast.success("Test deleted");
-                                              } catch (e) {
-                                                console.error(e);
-                                                toast.error("Delete failed");
-                                              }
-                                            }}
-                                          >
-                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                          </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                      </DropdownMenu>
-                                    </div>
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent className="flex-1 flex flex-col gap-4">
-                                  {/* Template drift banner */}
-                                  {driftTests.has(test.id) && (
-                                    <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs dark:border-amber-700 dark:bg-amber-950/40">
-                                      <span className="mt-0.5 text-amber-600 dark:text-amber-400">⚠</span>
-                                      <div className="flex-1">
-                                        <span className="font-semibold text-amber-700 dark:text-amber-400">Template updated</span>
-                                        <span className="ml-1 text-amber-600 dark:text-amber-500">
-                                          — section constraints may be outdated.
-                                        </span>
-                                        <button
-                                          className="ml-2 underline text-amber-700 dark:text-amber-400 hover:no-underline"
-                                          onClick={async () => {
-                                            if (!currentUser || !test.sourceTemplateId) return;
-                                            try {
-                                              const tmplSnap = await getDoc(doc(db, "templates", test.sourceTemplateId));
-                                              if (!tmplSnap.exists()) { toast.error("Template not found"); return; }
-                                              const tmpl = tmplSnap.data() as any;
-                                              await updateDoc(doc(db, "educators", currentUser.uid, "my_tests", test.id), {
-                                                sections: tmpl.sections ?? [],
-                                                markingScheme: tmpl.markingScheme ?? null,
-                                                durationMinutes: tmpl.durationMinutes ?? test.durationMinutes,
-                                                sourceTemplateVersion: Number(tmpl.version ?? 0),
-                                                updatedAt: serverTimestamp(),
-                                              });
-                                              setDriftTests(prev => { const s = new Set(prev); s.delete(test.id); return s; });
-                                              toast.success("Synced section structure from template");
-                                            } catch (e) {
-                                              console.error(e);
-                                              toast.error("Sync failed");
-                                            }
-                                          }}
-                                        >
-                                          Sync from template
-                                        </button>
-                                      </div>
-                                    </div>
-                                  )}
-                                  <p className="text-sm text-muted-foreground line-clamp-2">{test.description}</p>
-
-                                  <div className="flex flex-wrap items-center justify-between gap-y-3 mt-auto">
-                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-                                      <span className="flex items-center gap-1 shrink-0">
-                                        <BookOpen className="h-3 w-3" /> {test.subject || "—"}
-                                      </span>
-                                      <span className="flex items-center gap-1 shrink-0">
-                                        <Clock className="h-3 w-3" /> {Number(test.durationMinutes || 0)}m
-                                      </span>
-                                      {isAdminLinked ? (
-                                        <Badge variant="outline" className="text-[10px] py-0 px-2 h-5 shrink-0">
-                                          Admin Linked
-                                        </Badge>
-                                      ) : test.source === "imported" ? (
-                                        <Badge variant="secondary" className="text-[10px] py-0 px-2 h-5 shrink-0">
-                                          Imported
-                                        </Badge>
-                                      ) : (
-                                        <Badge className="text-[10px] py-0 px-2 h-5 shrink-0">Custom</Badge>
+                                  <Card className="relative flex h-full flex-col transition-shadow hover:shadow-md">
+                                    <CardHeader>
+                                      <CardTitle className="flex items-start justify-between gap-2">
+                                        <span className="truncate text-lg">{test.title}</span>
+                                        <div className="flex items-center gap-1">
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 rounded-xl"
+                                              >
+                                                <MoreVertical className="h-4 w-4" />
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="rounded-xl">
+                                              <DropdownMenuItem
+                                                onClick={() => {
+                                                  setTestToMove(test);
+                                                  setMoveTestOpen(true);
+                                                }}
+                                              >
+                                                <Move className="mr-2 h-4 w-4" /> Move to Folder
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem
+                                                onClick={() => {
+                                                  setBatchAssignTest(test);
+                                                  setSelectedBatchIds(test.targetBatches || []);
+                                                  setBatchAssignOpen(true);
+                                                }}
+                                              >
+                                                <Award className="mr-2 h-4 w-4" /> Assign to Batches
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem
+                                                onClick={() => openAccessCode(test)}
+                                              >
+                                                <Key className="mr-2 h-4 w-4" /> Access Code
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem
+                                                onClick={() => {
+                                                  setTestToSchedule(test);
+                                                  setScheduleOpen(true);
+                                                }}
+                                              >
+                                                <Clock className="mr-2 h-4 w-4" /> Schedule
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem
+                                                className="text-destructive"
+                                                onClick={async () => {
+                                                  if (!currentUser) return;
+                                                  if (
+                                                    !confirm(
+                                                      "Delete this test and all its questions?"
+                                                    )
+                                                  )
+                                                    return;
+                                                  try {
+                                                    const qs = await getDocs(
+                                                      collection(
+                                                        db,
+                                                        "educators",
+                                                        currentUser.uid,
+                                                        "my_tests",
+                                                        test.id,
+                                                        "questions"
+                                                      )
+                                                    );
+                                                    const batch = writeBatch(db);
+                                                    qs.forEach((d) => batch.delete(d.ref));
+                                                    batch.delete(
+                                                      doc(
+                                                        db,
+                                                        "educators",
+                                                        currentUser.uid,
+                                                        "my_tests",
+                                                        test.id
+                                                      )
+                                                    );
+                                                    await batch.commit();
+                                                    toast.success("Test deleted");
+                                                  } catch (e) {
+                                                    console.error(e);
+                                                    toast.error("Delete failed");
+                                                  }
+                                                }}
+                                              >
+                                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                              </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
+                                        </div>
+                                      </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="flex flex-1 flex-col gap-4">
+                                      {/* Template drift banner */}
+                                      {driftTests.has(test.id) && (
+                                        <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs dark:border-amber-700 dark:bg-amber-950/40">
+                                          <span className="mt-0.5 text-amber-600 dark:text-amber-400">
+                                            ⚠
+                                          </span>
+                                          <div className="flex-1">
+                                            <span className="font-semibold text-amber-700 dark:text-amber-400">
+                                              Template updated
+                                            </span>
+                                            <span className="ml-1 text-amber-600 dark:text-amber-500">
+                                              — section constraints may be outdated.
+                                            </span>
+                                            <button
+                                              className="ml-2 text-amber-700 underline hover:no-underline dark:text-amber-400"
+                                              onClick={async () => {
+                                                if (!currentUser || !test.sourceTemplateId) return;
+                                                try {
+                                                  const tmplSnap = await getDoc(
+                                                    doc(db, "templates", test.sourceTemplateId)
+                                                  );
+                                                  if (!tmplSnap.exists()) {
+                                                    toast.error("Template not found");
+                                                    return;
+                                                  }
+                                                  const tmpl = tmplSnap.data() as any;
+                                                  await updateDoc(
+                                                    doc(
+                                                      db,
+                                                      "educators",
+                                                      currentUser.uid,
+                                                      "my_tests",
+                                                      test.id
+                                                    ),
+                                                    {
+                                                      sections: tmpl.sections ?? [],
+                                                      markingScheme: tmpl.markingScheme ?? null,
+                                                      durationMinutes:
+                                                        tmpl.durationMinutes ??
+                                                        test.durationMinutes,
+                                                      sourceTemplateVersion: Number(
+                                                        tmpl.version ?? 0
+                                                      ),
+                                                      updatedAt: serverTimestamp(),
+                                                    }
+                                                  );
+                                                  setDriftTests((prev) => {
+                                                    const s = new Set(prev);
+                                                    s.delete(test.id);
+                                                    return s;
+                                                  });
+                                                  toast.success(
+                                                    "Synced section structure from template"
+                                                  );
+                                                } catch (e) {
+                                                  console.error(e);
+                                                  toast.error("Sync failed");
+                                                }
+                                              }}
+                                            >
+                                              Sync from template
+                                            </button>
+                                          </div>
+                                        </div>
                                       )}
-                                    </div>
+                                      <p className="line-clamp-2 text-sm text-muted-foreground">
+                                        {test.description}
+                                      </p>
 
-                                    <div className="flex items-center gap-1 bg-muted/30 px-2 py-1 rounded-lg shrink-0">
-                                      <span className="text-[9px] font-bold text-muted-foreground uppercase">Attempts:</span>
-                                      <Select
-                                        value={String(test.attemptsAllowed || 3)}
-                                        onValueChange={(v) => handleUpdateTestAttempts(test.id, Number(v))}
-                                      >
-                                        <SelectTrigger className="h-6 w-[45px] text-[10px] font-bold rounded-md bg-background border-none shadow-none focus:ring-0">
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-xl">
-                                          <SelectItem value="1">1</SelectItem>
-                                          <SelectItem value="2">2</SelectItem>
-                                          <SelectItem value="3">3</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                  </div>
+                                      <div className="mt-auto flex flex-wrap items-center justify-between gap-y-3">
+                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                                          <span className="flex shrink-0 items-center gap-1">
+                                            <BookOpen className="h-3 w-3" /> {test.subject || "—"}
+                                          </span>
+                                          <span className="flex shrink-0 items-center gap-1">
+                                            <Clock className="h-3 w-3" />{" "}
+                                            {Number(test.durationMinutes || 0)}m
+                                          </span>
+                                          {isAdminLinked ? (
+                                            <Badge
+                                              variant="outline"
+                                              className="h-5 shrink-0 px-2 py-0 text-[10px]"
+                                            >
+                                              Admin Linked
+                                            </Badge>
+                                          ) : test.source === "imported" ? (
+                                            <Badge
+                                              variant="secondary"
+                                              className="h-5 shrink-0 px-2 py-0 text-[10px]"
+                                            >
+                                              Imported
+                                            </Badge>
+                                          ) : (
+                                            <Badge className="h-5 shrink-0 px-2 py-0 text-[10px]">
+                                              Custom
+                                            </Badge>
+                                          )}
+                                        </div>
 
-                                      <div className="grid grid-cols-1 gap-2 mt-4 pt-4 border-t">
+                                        <div className="flex shrink-0 items-center gap-1 rounded-lg bg-muted/30 px-2 py-1">
+                                          <span className="text-[9px] font-bold uppercase text-muted-foreground">
+                                            Attempts:
+                                          </span>
+                                          <Select
+                                            value={String(test.attemptsAllowed || 3)}
+                                            onValueChange={(v) =>
+                                              handleUpdateTestAttempts(test.id, Number(v))
+                                            }
+                                          >
+                                            <SelectTrigger className="h-6 w-[45px] rounded-md border-none bg-background text-[10px] font-bold shadow-none focus:ring-0">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-xl">
+                                              <SelectItem value="1">1</SelectItem>
+                                              <SelectItem value="2">2</SelectItem>
+                                              <SelectItem value="3">3</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                      </div>
+
+                                      <div className="mt-4 grid grid-cols-1 gap-2 border-t pt-4">
                                         <Button
-                                          className="gradient-bg text-white rounded-xl shadow-sm"
+                                          className="gradient-bg rounded-xl text-white shadow-sm"
                                           size="sm"
                                           onClick={() => {
                                             navigate(`/educator/test-series/${test.id}/questions`);
                                           }}
                                         >
-                                          <Edit className="mr-2 h-3 w-3" /> {isAdminLinked ? "View Questions" : "Manage Questions"}
+                                          <Edit className="mr-2 h-3 w-3" />{" "}
+                                          {isAdminLinked ? "View Questions" : "Manage Questions"}
                                         </Button>
                                         {!isAdminLinked && (test.sections || []).length > 0 && (
                                           <Button
@@ -1420,13 +1663,16 @@ export default function TestSeries() {
 
           {/* Move Test Dialog */}
           <MoveTest {...moveTestState} />
-
         </TabsContent>
 
         {/* Admin Bank */}
         <TabsContent value="bank" className="mt-6">
           {Object.keys(groupedBankTests).length === 0 ? (
-            <EmptyState icon={FileText} title="No bank tests found" description="No admin tests are available for import yet." />
+            <EmptyState
+              icon={FileText}
+              title="No bank tests found"
+              description="No admin tests are available for import yet."
+            />
           ) : (
             <div className="space-y-8">
               {Object.entries(groupedBankTests).map(([groupId, group]) => {
@@ -1434,36 +1680,47 @@ export default function TestSeries() {
                 return (
                   <div key={groupId} className="space-y-4">
                     <div
-                      className="flex items-center justify-between group cursor-pointer bg-muted/20 p-2 rounded-xl"
+                      className="group flex cursor-pointer items-center justify-between rounded-xl bg-muted/20 p-2"
                       onClick={() => toggleFolder(groupId)}
                     >
                       <div className="flex items-center gap-2">
-                        {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                        {isExpanded ? (
+                          <ChevronDown className="h-5 w-5" />
+                        ) : (
+                          <ChevronRight className="h-5 w-5" />
+                        )}
                         <Folder className="h-5 w-5 text-muted-foreground" />
-                        <h3 className="font-semibold text-lg">{group.name}</h3>
-                        <Badge variant="secondary" className="rounded-full ml-2">
+                        <h3 className="text-lg font-semibold">{group.name}</h3>
+                        <Badge variant="secondary" className="ml-2 rounded-full">
                           {group.tests.length}
                         </Badge>
                       </div>
                     </div>
 
                     {isExpanded && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pl-4">
+                      <div className="grid grid-cols-1 gap-6 pl-4 md:grid-cols-2 lg:grid-cols-3">
                         {group.tests.map((test) => {
                           const alreadyLinked = importedAdminTestIds.has(test.id);
 
                           return (
-                            <Card key={test.id} className="bg-muted/30 border-dashed hover:border-primary transition-colors">
+                            <Card
+                              key={test.id}
+                              className="border-dashed bg-muted/30 transition-colors hover:border-primary"
+                            >
                               <CardHeader>
-                                <CardTitle className="flex justify-between items-start">
+                                <CardTitle className="flex items-start justify-between">
                                   <span className="truncate">{test.title}</span>
                                   <Badge variant="outline">Admin</Badge>
                                 </CardTitle>
                               </CardHeader>
                               <CardContent className="space-y-4">
-                                <p className="text-sm text-muted-foreground line-clamp-2">{test.description}</p>
+                                <p className="line-clamp-2 text-sm text-muted-foreground">
+                                  {test.description}
+                                </p>
                                 <div className="flex gap-2 text-xs text-muted-foreground">
-                                  <span className="flex items-center gap-1"><BookOpen className="h-3 w-3" /> {test.subject || "—"}</span>
+                                  <span className="flex items-center gap-1">
+                                    <BookOpen className="h-3 w-3" /> {test.subject || "—"}
+                                  </span>
                                   <span>•</span>
                                   <span>{test.level || "—"}</span>
                                 </div>
@@ -1477,7 +1734,7 @@ export default function TestSeries() {
                                       <CheckCircle2 className="mr-2 h-4 w-4" /> Added to Library
                                     </>
                                   ) : importingId === test.id ? (
-                                    <Loader2 className="animate-spin h-4 w-4" />
+                                    <Loader2 className="h-4 w-4 animate-spin" />
                                   ) : (
                                     <>
                                       <Download className="mr-2 h-4 w-4" /> Import to Library
@@ -1486,7 +1743,7 @@ export default function TestSeries() {
                                 </Button>
                               </CardContent>
                             </Card>
-                          )
+                          );
                         })}
                       </div>
                     )}
@@ -1500,32 +1757,40 @@ export default function TestSeries() {
 
       {/* Access Code Dialog */}
       {acOpen && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-xl border shadow-lg w-full max-w-md p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md space-y-4 rounded-xl border bg-card p-6 shadow-lg">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">{acEditingId ? "Edit Access Code" : "Create Access Code"}</h2>
-              <button onClick={() => setAcOpen(false)} className="text-muted-foreground hover:text-foreground">
+              <h2 className="text-lg font-semibold">
+                {acEditingId ? "Edit Access Code" : "Create Access Code"}
+              </h2>
+              <button
+                onClick={() => setAcOpen(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="text-sm text-muted-foreground">Test: <span className="font-medium text-foreground">{acTestTitle}</span></p>
+            <p className="text-sm text-muted-foreground">
+              Test: <span className="font-medium text-foreground">{acTestTitle}</span>
+            </p>
             <div className="space-y-4">
               <div className="space-y-1">
                 <label className="text-sm font-medium">Access Code</label>
                 <div className="flex gap-2">
                   <input
-                    className="flex-1 border rounded-lg px-3 py-2 text-sm font-mono uppercase bg-background"
+                    className="flex-1 rounded-lg border bg-background px-3 py-2 font-mono text-sm uppercase"
                     value={acCode}
                     onChange={(e) => setAcCode(e.target.value.toUpperCase())}
                     disabled={!!acEditingId}
                     placeholder="Enter or generate"
                   />
                   <button
-                    className="px-3 py-2 text-sm rounded-lg border hover:bg-muted disabled:opacity-50"
+                    className="rounded-lg border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50"
                     onClick={() => {
                       const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
                       let code = "";
-                      for (let i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+                      for (let i = 0; i < 8; i++)
+                        code += chars.charAt(Math.floor(Math.random() * chars.length));
                       setAcCode(code);
                     }}
                     disabled={!!acEditingId}
@@ -1534,14 +1799,18 @@ export default function TestSeries() {
                   </button>
                   {acCode && (
                     <button
-                      className="px-3 py-2 text-sm rounded-lg border hover:bg-muted"
+                      className="rounded-lg border px-3 py-2 text-sm hover:bg-muted"
                       onClick={() => {
                         navigator.clipboard.writeText(acCode);
                         setAcCopied(true);
                         setTimeout(() => setAcCopied(false), 2000);
                       }}
                     >
-                      {acCopied ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                      {acCopied ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
                     </button>
                   )}
                 </div>
@@ -1551,7 +1820,7 @@ export default function TestSeries() {
                   <label className="text-sm font-medium">Max Uses</label>
                   <input
                     type="number"
-                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
+                    className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
                     value={acMaxUses}
                     onChange={(e) => setAcMaxUses(e.target.value)}
                   />
@@ -1560,30 +1829,37 @@ export default function TestSeries() {
                   <label className="text-sm font-medium">Expiry Date</label>
                   <input
                     type="date"
-                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
+                    className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
                     value={acExpiry}
                     onChange={(e) => setAcExpiry(e.target.value)}
                   />
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium">Access Window (minutes, 0 = unlimited)</label>
+                <label className="text-sm font-medium">
+                  Access Window (minutes, 0 = unlimited)
+                </label>
                 <input
                   type="number"
                   min={0}
-                  className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
+                  className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
                   value={acWindowMinutes}
                   onChange={(e) => setAcWindowMinutes(e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">Students can unlock only within this many minutes of code creation.</p>
+                <p className="text-xs text-muted-foreground">
+                  Students can unlock only within this many minutes of code creation.
+                </p>
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <button className="px-4 py-2 text-sm rounded-lg border hover:bg-muted" onClick={() => setAcOpen(false)}>
+              <button
+                className="rounded-lg border px-4 py-2 text-sm hover:bg-muted"
+                onClick={() => setAcOpen(false)}
+              >
                 Cancel
               </button>
               <button
-                className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 disabled={acSaving}
                 onClick={handleSaveAc}
               >
@@ -1596,18 +1872,23 @@ export default function TestSeries() {
 
       {/* Batch Assignment Dialog */}
       {batchAssignOpen && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-xl border shadow-lg w-full max-w-md p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md space-y-4 rounded-xl border bg-card p-6 shadow-lg">
             <h2 className="text-lg font-semibold">Assign to Batches</h2>
             <p className="text-sm text-muted-foreground">
               Only students in the selected batches will see this test.
             </p>
             {allBatches.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No batches found. Create batches in Divisions first.</p>
+              <p className="text-sm text-muted-foreground">
+                No batches found. Create batches in Divisions first.
+              </p>
             ) : (
-              <div className="space-y-2 max-h-56 overflow-y-auto border rounded-lg p-2">
+              <div className="max-h-56 space-y-2 overflow-y-auto rounded-lg border p-2">
                 {allBatches.map((b) => (
-                  <label key={b.id} className="flex items-center gap-2 cursor-pointer hover:bg-muted px-2 py-1 rounded">
+                  <label
+                    key={b.id}
+                    className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-muted"
+                  >
                     <input
                       type="checkbox"
                       checked={selectedBatchIds.includes(b.id)}
@@ -1624,13 +1905,13 @@ export default function TestSeries() {
             )}
             <div className="flex justify-end gap-2 pt-2">
               <button
-                className="px-4 py-2 text-sm rounded border hover:bg-muted"
+                className="rounded border px-4 py-2 text-sm hover:bg-muted"
                 onClick={() => setBatchAssignOpen(false)}
               >
                 Cancel
               </button>
               <button
-                className="px-4 py-2 text-sm rounded bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                className="rounded bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 disabled={savingBatches || !currentUser}
                 onClick={async () => {
                   if (!currentUser || !batchAssignTest) return;
@@ -1660,13 +1941,14 @@ export default function TestSeries() {
       {currentUser && (
         <ScheduleTest
           open={scheduleOpen}
-          onOpenChange={(v) => { setScheduleOpen(v); if (!v) setTestToSchedule(null); }}
+          onOpenChange={(v) => {
+            setScheduleOpen(v);
+            if (!v) setTestToSchedule(null);
+          }}
           test={testToSchedule}
           userId={currentUser.uid}
         />
       )}
-
     </div>
   );
 }
-

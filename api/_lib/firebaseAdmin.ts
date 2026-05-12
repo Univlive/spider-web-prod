@@ -47,20 +47,22 @@ function parseServiceAccountJson(raw: string): ServiceAccountLike {
   const base = normalizeJsonTypography(raw).trim();
   const extracted = extractLikelyJsonObject(base).trim();
   const candidates = Array.from(
-    new Set([
-      base,
-      extracted,
-      stripOuterQuotes(base),
-      stripOuterQuotes(extracted),
-      base.replace(/\\"/g, '"'),
-      extracted.replace(/\\"/g, '"'),
-      stripOuterQuotes(base).replace(/\\"/g, '"'),
-      stripOuterQuotes(extracted).replace(/\\"/g, '"'),
-      normalizePrivateKeyNewlines(base),
-      normalizePrivateKeyNewlines(stripOuterQuotes(base)),
-      normalizePrivateKeyNewlines(extracted),
-      normalizePrivateKeyNewlines(stripOuterQuotes(extracted)),
-    ].filter(Boolean))
+    new Set(
+      [
+        base,
+        extracted,
+        stripOuterQuotes(base),
+        stripOuterQuotes(extracted),
+        base.replace(/\\"/g, '"'),
+        extracted.replace(/\\"/g, '"'),
+        stripOuterQuotes(base).replace(/\\"/g, '"'),
+        stripOuterQuotes(extracted).replace(/\\"/g, '"'),
+        normalizePrivateKeyNewlines(base),
+        normalizePrivateKeyNewlines(stripOuterQuotes(base)),
+        normalizePrivateKeyNewlines(extracted),
+        normalizePrivateKeyNewlines(stripOuterQuotes(extracted)),
+      ].filter(Boolean)
+    )
   );
 
   let lastError: unknown = null;

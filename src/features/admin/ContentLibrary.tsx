@@ -18,29 +18,22 @@ import { Input } from "@shared/ui/input";
 import { Card, CardContent } from "@shared/ui/card";
 import { Badge } from "@shared/ui/badge";
 import { Label } from "@shared/ui/label";
-import { Loader2, Plus, Trash2, ExternalLink, BookOpen, FileText, Brain, Network, ScrollText, RefreshCw } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  Trash2,
+  ExternalLink,
+  BookOpen,
+  FileText,
+  Brain,
+  Network,
+  ScrollText,
+  RefreshCw,
+} from "lucide-react";
 import { useContentTypes } from "@shared/hooks/useContentTypes";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@shared/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@shared/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@shared/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@shared/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/ui/table";
 import { uploadToImageKit, getContentUploadLimit } from "@shared/lib/imagekitUpload";
 
 type Course = { id: string; name: string };
@@ -111,7 +104,13 @@ export default function ContentLibrary() {
       setCourses(snap.docs.map((d) => ({ id: d.id, name: d.data().name as string })));
     });
     getDocs(query(collection(db, "subjects"), orderBy("name"))).then((snap) => {
-      setSubjects(snap.docs.map((d) => ({ id: d.id, name: d.data().name as string, courseId: d.data().courseId as string | undefined })));
+      setSubjects(
+        snap.docs.map((d) => ({
+          id: d.id,
+          name: d.data().name as string,
+          courseId: d.data().courseId as string | undefined,
+        }))
+      );
     });
 
     const unsub = onSnapshot(
@@ -213,9 +212,8 @@ export default function ContentLibrary() {
   }
 
   // Subjects visible in filter dropdown (scoped to selected course)
-  const visibleSubjects = filterCourse === "all"
-    ? subjects
-    : subjects.filter((s) => s.courseId === filterCourse);
+  const visibleSubjects =
+    filterCourse === "all" ? subjects : subjects.filter((s) => s.courseId === filterCourse);
 
   // Subjects available in upload dialog (scoped to selected upload course)
   const uploadSubjects = uploadCourseId
@@ -223,9 +221,10 @@ export default function ContentLibrary() {
     : subjects;
 
   // IDs of subjects under the selected filter course (for course-level filtering)
-  const courseSubjectIds = filterCourse === "all"
-    ? null
-    : new Set(subjects.filter((s) => s.courseId === filterCourse).map((s) => s.id));
+  const courseSubjectIds =
+    filterCourse === "all"
+      ? null
+      : new Set(subjects.filter((s) => s.courseId === filterCourse).map((s) => s.id));
 
   const filtered = items.filter((i) => {
     if (courseSubjectIds && !courseSubjectIds.has(i.subjectId)) return false;
@@ -235,15 +234,21 @@ export default function ContentLibrary() {
   });
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Content Library</h1>
-          <p className="text-sm text-muted-foreground">Books and notes visible to educators by subject</p>
+          <p className="text-sm text-muted-foreground">
+            Books and notes visible to educators by subject
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleSync} disabled={syncing}>
-            {syncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+            {syncing ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" />
+            )}
             Sync Library
           </Button>
           <Button onClick={openUploadDialog}>
@@ -253,15 +258,23 @@ export default function ContentLibrary() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3 flex-wrap">
-        <Select value={filterCourse} onValueChange={(v) => { setFilterCourse(v); setFilterSubject("all"); }}>
+      <div className="flex flex-wrap gap-3">
+        <Select
+          value={filterCourse}
+          onValueChange={(v) => {
+            setFilterCourse(v);
+            setFilterSubject("all");
+          }}
+        >
           <SelectTrigger className="w-44">
             <SelectValue placeholder="All Courses" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Courses</SelectItem>
             {courses.map((c) => (
-              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              <SelectItem key={c.id} value={c.id}>
+                {c.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -273,7 +286,9 @@ export default function ContentLibrary() {
           <SelectContent>
             <SelectItem value="all">All Subjects</SelectItem>
             {visibleSubjects.map((s) => (
-              <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+              <SelectItem key={s.id} value={s.id}>
+                {s.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -285,7 +300,9 @@ export default function ContentLibrary() {
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
             {activeTypes.map((t) => (
-              <SelectItem key={t.slug} value={t.slug}>{t.name}</SelectItem>
+              <SelectItem key={t.slug} value={t.slug}>
+                {t.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -295,10 +312,10 @@ export default function ContentLibrary() {
         <CardContent className="p-0">
           {loading ? (
             <div className="flex justify-center py-12">
-              <Loader2 className="animate-spin h-6 w-6 text-muted-foreground" />
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">No content found</div>
+            <div className="py-12 text-center text-muted-foreground">No content found</div>
           ) : (
             <Table>
               <TableHeader>
@@ -322,8 +339,10 @@ export default function ContentLibrary() {
                         {activeTypes.find((t) => t.slug === item.type)?.name ?? item.type}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{formatBytes(item.fileSize)}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
+                    <TableCell className="text-muted-foreground">
+                      {formatBytes(item.fileSize)}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
                       {item.createdAt?.toDate().toLocaleDateString()}
                     </TableCell>
                     <TableCell>
@@ -355,23 +374,39 @@ export default function ContentLibrary() {
           <div className="space-y-4">
             <div className="space-y-1">
               <Label>Title</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Class 11 Physics Notes" />
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Class 11 Physics Notes"
+              />
             </div>
 
             <div className="space-y-1">
               <Label>Description (optional)</Label>
-              <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description" />
+              <Input
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Brief description"
+              />
             </div>
 
             <div className="space-y-1">
               <Label>Course</Label>
-              <Select value={uploadCourseId} onValueChange={(v) => { setUploadCourseId(v); setSubjectId(""); }}>
+              <Select
+                value={uploadCourseId}
+                onValueChange={(v) => {
+                  setUploadCourseId(v);
+                  setSubjectId("");
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select course" />
                 </SelectTrigger>
                 <SelectContent>
                   {courses.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -379,13 +414,23 @@ export default function ContentLibrary() {
 
             <div className="space-y-1">
               <Label>Subject</Label>
-              <Select value={subjectId} onValueChange={setSubjectId} disabled={uploadSubjects.length === 0}>
+              <Select
+                value={subjectId}
+                onValueChange={setSubjectId}
+                disabled={uploadSubjects.length === 0}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder={uploadSubjects.length === 0 ? "Select a course first" : "Select subject"} />
+                  <SelectValue
+                    placeholder={
+                      uploadSubjects.length === 0 ? "Select a course first" : "Select subject"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {uploadSubjects.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -399,14 +444,18 @@ export default function ContentLibrary() {
                 </SelectTrigger>
                 <SelectContent>
                   {activeTypes.map((t) => (
-                    <SelectItem key={t.slug} value={t.slug}>{t.name}</SelectItem>
+                    <SelectItem key={t.slug} value={t.slug}>
+                      {t.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-1">
-              <Label>File <span className="text-muted-foreground text-xs">(max {uploadLimitMB} MB)</span></Label>
+              <Label>
+                File <span className="text-xs text-muted-foreground">(max {uploadLimitMB} MB)</span>
+              </Label>
               <input
                 ref={fileRef}
                 type="file"

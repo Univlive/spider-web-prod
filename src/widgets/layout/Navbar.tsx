@@ -16,7 +16,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
-  
+
   // Keep header transparent only on the public home page; use solid background for app routes
   const isHomeRoute = location.pathname === "/";
 
@@ -38,10 +38,10 @@ export default function Navbar() {
         "fixed left-0 right-0 z-50 transition-all duration-300",
         SHOW_ANNOUNCEMENT ? "top-[40px]" : "top-0",
         isScrolled
-          ? "bg-background/80 backdrop-blur-xl shadow-soft border-b border-border/50"
+          ? "border-b border-border/50 bg-background/80 shadow-soft backdrop-blur-xl"
           : isHomeRoute
-          ? "bg-transparent"
-          : "bg-background"
+            ? "bg-transparent"
+            : "bg-background"
       )}
     >
       <nav className="container-main flex items-center justify-between py-4">
@@ -51,16 +51,16 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Nav Links */}
-        <div className="hidden md:flex items-center gap-1 bg-muted/50 backdrop-blur-sm rounded-full px-2 py-1.5">
+        <div className="hidden items-center gap-1 rounded-full bg-muted/50 px-2 py-1.5 backdrop-blur-sm md:flex">
           {navLinks.map((link) => (
             <Link
               key={link.path}
               to={link.path}
               className={cn(
-                "px-4 py-2 text-sm font-medium rounded-full transition-all duration-200",
+                "rounded-full px-4 py-2 text-sm font-medium transition-all duration-200",
                 location.pathname === link.path
                   ? "bg-background text-primary shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                  : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
               )}
             >
               {link.name}
@@ -68,11 +68,10 @@ export default function Navbar() {
           ))}
         </div>
 
-
         {/* Mobile Menu Button */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="md:hidden p-2 text-foreground rounded-lg hover:bg-muted transition-colors"
+          className="rounded-lg p-2 text-foreground transition-colors hover:bg-muted md:hidden"
         >
           {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
@@ -85,19 +84,19 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-background/95 backdrop-blur-xl border-b border-border overflow-hidden"
+            className="overflow-hidden border-b border-border bg-background/95 backdrop-blur-xl md:hidden"
           >
-            <div className="container-main py-4 flex flex-col gap-2">
-              <img src="/logo-compact.png" alt="Univ.live" className="h-10 w-10 mb-2" />
+            <div className="container-main flex flex-col gap-2 py-4">
+              <img src="/logo-compact.png" alt="Univ.live" className="mb-2 h-10 w-10" />
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
                   className={cn(
-                    "px-4 py-3 text-sm font-medium rounded-xl transition-colors",
+                    "rounded-xl px-4 py-3 text-sm font-medium transition-colors",
                     location.pathname === link.path
-                      ? "text-primary bg-primary/5"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      ? "bg-primary/5 text-primary"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
                   {link.name}

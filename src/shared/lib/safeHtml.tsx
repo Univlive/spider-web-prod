@@ -7,13 +7,15 @@ import "katex/dist/katex.min.css";
 // Admin content is trusted, but this blocks obvious script injection.
 export function sanitizeHtmlBasic(html: string) {
   if (!html) return "";
-  return String(html)
-    // strip script tags
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-    // strip inline handlers (onclick=...)
-    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
-    // strip javascript: urls
-    .replace(/javascript:/gi, "");
+  return (
+    String(html)
+      // strip script tags
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+      // strip inline handlers (onclick=...)
+      .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+      // strip javascript: urls
+      .replace(/javascript:/gi, "")
+  );
 }
 
 export function stripHtml(html: string) {
@@ -39,13 +41,7 @@ export function extractImgUrlsFromParts(parts: string[]) {
   return Array.from(new Set(urls));
 }
 
-export function HtmlView({
-  html,
-  className,
-}: {
-  html: string;
-  className?: string;
-}) {
+export function HtmlView({ html, className }: { html: string; className?: string }) {
   const rendered = React.useMemo(() => {
     const safe = sanitizeHtmlBasic(html);
     if (!safe) return "";
@@ -111,8 +107,10 @@ export function HtmlView({
     );
 
     // Optional: support single-dollar inline math as fallback.
-    output = output.replace(/(^|[^\\])\$([^\n$]+?)\$/g, (_, prefix: string, expr: string) =>
-      `${prefix}${renderLatex(String(expr || "").trim(), false)}`
+    output = output.replace(
+      /(^|[^\\])\$([^\n$]+?)\$/g,
+      (_, prefix: string, expr: string) =>
+        `${prefix}${renderLatex(String(expr || "").trim(), false)}`
     );
 
     // Fallback: render bare LaTeX command fragments inside text nodes only.
@@ -128,12 +126,11 @@ export function HtmlView({
     <div
       className={cn(
         "leading-relaxed",
-        "[&>img]:max-w-full [&>img]:h-auto [&_img]:max-w-full [&_img]:h-auto",
-        "[&_p]:my-2 [&_ul]:my-2 [&_ol]:my-2",
+        "[&>img]:h-auto [&>img]:max-w-full [&_img]:h-auto [&_img]:max-w-full",
+        "[&_ol]:my-2 [&_p]:my-2 [&_ul]:my-2",
         className
       )}
       dangerouslySetInnerHTML={{ __html: rendered }}
     />
   );
 }
-

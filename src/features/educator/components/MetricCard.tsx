@@ -38,17 +38,24 @@ export default function MetricCard({
           blendWithGradient && "border-white/30 bg-white/10 text-white backdrop-blur-sm"
         )}
       >
-        <CardContent className="p-5 h-full">
+        <CardContent className="h-full p-5">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
-              <p className={cn("text-sm font-medium", blendWithGradient ? "text-white/85" : "text-muted-foreground")}>{title}</p>
-              <p className="text-2xl sm:text-3xl font-bold font-display">{value}</p>
+              <p
+                className={cn(
+                  "text-sm font-medium",
+                  blendWithGradient ? "text-white/85" : "text-muted-foreground"
+                )}
+              >
+                {title}
+              </p>
+              <p className="font-display text-2xl font-bold sm:text-3xl">{value}</p>
               {/* Kept prop for backward compatibility; hidden by request to remove percentage strip */}
               {change && null}
             </div>
             <div
               className={cn(
-                "p-3 rounded-xl",
+                "rounded-xl p-3",
                 blendWithGradient ? "bg-white/15" : "bg-muted",
                 iconColor
               )}

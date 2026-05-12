@@ -51,9 +51,11 @@ export function MultiSelect({
     <div ref={containerRef} className={cn("relative", className)}>
       <div
         className={cn(
-          "flex flex-wrap items-center gap-1.5 p-2 min-h-[2.5rem] border rounded-md bg-background transition-colors",
-          disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-muted-foreground/40",
-          open && !disabled ? "ring-1 ring-ring border-primary" : ""
+          "flex min-h-[2.5rem] flex-wrap items-center gap-1.5 rounded-md border bg-background p-2 transition-colors",
+          disabled
+            ? "cursor-not-allowed opacity-50"
+            : "cursor-pointer hover:border-muted-foreground/40",
+          open && !disabled ? "border-primary ring-1 ring-ring" : ""
         )}
         onClick={() => {
           if (disabled) return;
@@ -62,23 +64,35 @@ export function MultiSelect({
         }}
       >
         {selected.length === 0 && (
-          <span className="text-sm text-muted-foreground px-1 flex-1">{placeholder}</span>
+          <span className="flex-1 px-1 text-sm text-muted-foreground">{placeholder}</span>
         )}
         {selected.map((v) => (
-          <Badge key={v} variant="secondary" className="flex items-center gap-1 px-2 py-0.5 text-sm font-medium rounded-md">
+          <Badge
+            key={v}
+            variant="secondary"
+            className="flex items-center gap-1 rounded-md px-2 py-0.5 text-sm font-medium"
+          >
             {v}
             <X
               className="h-3 w-3 cursor-pointer hover:text-destructive"
-              onClick={(e) => { e.stopPropagation(); remove(v); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                remove(v);
+              }}
             />
           </Badge>
         ))}
-        <ChevronDown className={cn("h-4 w-4 text-muted-foreground ml-auto shrink-0 transition-transform", open && "rotate-180")} />
+        <ChevronDown
+          className={cn(
+            "ml-auto h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+            open && "rotate-180"
+          )}
+        />
       </div>
 
       {open && !disabled && (
-        <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden">
-          <div className="p-2 border-b">
+        <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-lg border border-border bg-popover shadow-lg">
+          <div className="border-b p-2">
             <Input
               ref={searchRef}
               value={search}
@@ -90,7 +104,7 @@ export function MultiSelect({
           </div>
           <div className="max-h-48 overflow-y-auto">
             {filteredOptions.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
+              <p className="py-4 text-center text-sm text-muted-foreground">
                 {search ? "No matches" : "No options available"}
               </p>
             ) : (
@@ -100,12 +114,17 @@ export function MultiSelect({
                   <div
                     key={opt}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-muted/50 transition-colors",
+                      "flex cursor-pointer items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-muted/50",
                       isSelected && "bg-primary/5 text-primary"
                     )}
                     onClick={() => toggle(opt)}
                   >
-                    <div className={cn("h-4 w-4 rounded border flex items-center justify-center shrink-0", isSelected ? "bg-primary border-primary" : "border-muted-foreground/40")}>
+                    <div
+                      className={cn(
+                        "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
+                        isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"
+                      )}
+                    >
                       {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
                     </div>
                     <span>{opt}</span>
@@ -115,9 +134,12 @@ export function MultiSelect({
             )}
           </div>
           {selected.length > 0 && (
-            <div className="p-2 border-t flex justify-between items-center bg-muted/20">
+            <div className="flex items-center justify-between border-t bg-muted/20 p-2">
               <span className="text-xs text-muted-foreground">{selected.length} selected</span>
-              <button className="text-xs text-destructive hover:underline" onClick={() => onChange([])}>
+              <button
+                className="text-xs text-destructive hover:underline"
+                onClick={() => onChange([])}
+              >
                 Clear all
               </button>
             </div>

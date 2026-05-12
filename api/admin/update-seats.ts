@@ -22,7 +22,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const adminUser = await requireUser(req, { roles: ["ADMIN"] });
 
     const educatorIdRaw = String(req.body?.educatorId || "").trim();
-    const tenantSlugRaw = String(req.body?.tenantSlug || "").trim().toLowerCase();
+    const tenantSlugRaw = String(req.body?.tenantSlug || "")
+      .trim()
+      .toLowerCase();
     const planIdRaw = String(req.body?.planId || "").trim();
 
     const newSeatLimitNum = Number(req.body?.newSeatLimit);

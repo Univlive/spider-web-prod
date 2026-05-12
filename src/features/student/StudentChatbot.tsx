@@ -10,16 +10,7 @@ import { Card, CardContent } from "@shared/ui/card";
 import { Badge } from "@shared/ui/badge";
 import { Input } from "@shared/ui/input";
 import { Checkbox } from "@shared/ui/checkbox";
-import {
-  Bot,
-  BookOpen,
-  ChevronLeft,
-  FileText,
-  Loader2,
-  Lock,
-  Send,
-  Sparkles,
-} from "lucide-react";
+import { Bot, BookOpen, ChevronLeft, FileText, Loader2, Lock, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@shared/lib/utils";
 import { useEducatorFeatures } from "@shared/hooks/useEducatorFeatures";
@@ -54,58 +45,55 @@ function ContentTypeIcon({ type }: { type: string }) {
 
 function MarkdownMessage({ content }: { content: string }) {
   return (
-    <div className="prose prose-sm max-w-none dark:prose-invert leading-relaxed">
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm, remarkMath]}
-      rehypePlugins={[rehypeKatex]}
-      components={{
-        code(props) {
-          const { children, className, ...rest } = props;
-          const isBlock = className?.includes("language-");
-          return isBlock ? (
-            <pre className="bg-black/10 dark:bg-white/10 rounded-lg p-3 overflow-x-auto text-xs my-2">
-              <code className={className} {...rest}>
+    <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+        components={{
+          code(props) {
+            const { children, className, ...rest } = props;
+            const isBlock = className?.includes("language-");
+            return isBlock ? (
+              <pre className="my-2 overflow-x-auto rounded-lg bg-black/10 p-3 text-xs dark:bg-white/10">
+                <code className={className} {...rest}>
+                  {children}
+                </code>
+              </pre>
+            ) : (
+              <code className="rounded bg-black/10 px-1 py-0.5 text-xs dark:bg-white/10" {...rest}>
                 {children}
               </code>
-            </pre>
-          ) : (
-            <code
-              className="bg-black/10 dark:bg-white/10 px-1 py-0.5 rounded text-xs"
-              {...rest}
-            >
-              {children}
-            </code>
-          );
-        },
-        p({ children }) {
-          return <p className="mb-2 last:mb-0">{children}</p>;
-        },
-        ul({ children }) {
-          return <ul className="list-disc pl-4 mb-2 space-y-1">{children}</ul>;
-        },
-        ol({ children }) {
-          return <ol className="list-decimal pl-4 mb-2 space-y-1">{children}</ol>;
-        },
-        h1({ children }) {
-          return <h1 className="text-base font-bold mb-2 mt-3 first:mt-0">{children}</h1>;
-        },
-        h2({ children }) {
-          return <h2 className="text-sm font-bold mb-1.5 mt-3 first:mt-0">{children}</h2>;
-        },
-        h3({ children }) {
-          return <h3 className="text-sm font-semibold mb-1 mt-2 first:mt-0">{children}</h3>;
-        },
-        blockquote({ children }) {
-          return (
-            <blockquote className="border-l-2 border-primary/40 pl-3 italic text-muted-foreground my-2">
-              {children}
-            </blockquote>
-          );
-        },
-      }}
-    >
-      {content}
-    </ReactMarkdown>
+            );
+          },
+          p({ children }) {
+            return <p className="mb-2 last:mb-0">{children}</p>;
+          },
+          ul({ children }) {
+            return <ul className="mb-2 list-disc space-y-1 pl-4">{children}</ul>;
+          },
+          ol({ children }) {
+            return <ol className="mb-2 list-decimal space-y-1 pl-4">{children}</ol>;
+          },
+          h1({ children }) {
+            return <h1 className="mb-2 mt-3 text-base font-bold first:mt-0">{children}</h1>;
+          },
+          h2({ children }) {
+            return <h2 className="mb-1.5 mt-3 text-sm font-bold first:mt-0">{children}</h2>;
+          },
+          h3({ children }) {
+            return <h3 className="mb-1 mt-2 text-sm font-semibold first:mt-0">{children}</h3>;
+          },
+          blockquote({ children }) {
+            return (
+              <blockquote className="my-2 border-l-2 border-primary/40 pl-3 italic text-muted-foreground">
+                {children}
+              </blockquote>
+            );
+          },
+        }}
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   );
 }
@@ -117,7 +105,7 @@ function SourceCitations({ sources }: { sources: Source[] }) {
     <div className="mt-1.5">
       <button
         onClick={() => setOpen((p) => !p)}
-        className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+        className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
         <BookOpen className="h-3 w-3" />
         {sources.length} source{sources.length > 1 ? "s" : ""}
@@ -126,9 +114,9 @@ function SourceCitations({ sources }: { sources: Source[] }) {
       {open && (
         <div className="mt-1.5 space-y-1.5">
           {sources.map((s, i) => (
-            <div key={i} className="text-xs bg-muted/60 rounded-md px-2.5 py-2">
+            <div key={i} className="rounded-md bg-muted/60 px-2.5 py-2 text-xs">
               <p className="font-medium text-foreground">{s.title}</p>
-              <p className="text-muted-foreground mt-0.5 line-clamp-2">{s.excerpt}</p>
+              <p className="mt-0.5 line-clamp-2 text-muted-foreground">{s.excerpt}</p>
             </div>
           ))}
         </div>
@@ -219,10 +207,10 @@ export default function StudentChatbot() {
 
   if (!featuresLoading && !features.chatbot) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 p-8 text-center">
         <Lock className="h-12 w-12 text-muted-foreground" />
         <h2 className="text-xl font-semibold">AI Tutor not available</h2>
-        <p className="text-muted-foreground max-w-sm">
+        <p className="max-w-sm text-muted-foreground">
           The AI Doubt Chatbot is not included in your institute's current plan. Contact your
           educator or admin to enable it.
         </p>
@@ -327,45 +315,45 @@ export default function StudentChatbot() {
   // ── Setup Screen ───────────────────────────────────────────────────────────
   if (screen === "setup") {
     return (
-      <div className="flex flex-col h-full p-4 gap-6 max-w-2xl mx-auto w-full">
-        <div className="text-center pt-4">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-3">
+      <div className="mx-auto flex h-full w-full max-w-2xl flex-col gap-6 p-4">
+        <div className="pt-4 text-center">
+          <div className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
             <Sparkles className="h-7 w-7 text-primary" />
           </div>
           <h1 className="text-2xl font-bold">AI Tutor</h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="mt-1 text-sm text-muted-foreground">
             Choose what to study, then ask anything
           </p>
         </div>
 
         <Card>
-          <CardContent className="pt-5 space-y-4">
+          <CardContent className="space-y-4 pt-5">
             <div>
-              <p className="text-sm font-semibold mb-2">Select content to study from</p>
+              <p className="mb-2 text-sm font-semibold">Select content to study from</p>
               {loadingContent ? (
                 <div className="flex justify-center py-6">
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
               ) : contentItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-6">
+                <p className="py-6 text-center text-sm text-muted-foreground">
                   No indexed content available yet. Ask your educator to upload course material.
                 </p>
               ) : (
-                <div className="space-y-1 max-h-60 overflow-y-auto">
+                <div className="max-h-60 space-y-1 overflow-y-auto">
                   {contentItems.map((item) => (
                     <label
                       key={item.id}
-                      className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                      className="flex cursor-pointer items-center gap-3 rounded-lg p-2.5 transition-colors hover:bg-muted"
                     >
                       <Checkbox
                         checked={selectedIds.has(item.id)}
                         onCheckedChange={() => toggleSelect(item.id)}
                       />
                       <ContentTypeIcon type={item.type} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{item.title}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{item.title}</p>
                       </div>
-                      <Badge variant="outline" className="text-xs capitalize shrink-0">
+                      <Badge variant="outline" className="shrink-0 text-xs capitalize">
                         {item.type}
                       </Badge>
                     </label>
@@ -395,7 +383,7 @@ export default function StudentChatbot() {
               onClick={startChat}
               disabled={selectedIds.size === 0 || contentItems.length === 0}
             >
-              <Sparkles className="h-4 w-4 mr-2" />
+              <Sparkles className="mr-2 h-4 w-4" />
               Start Asking
             </Button>
           </CardContent>
@@ -409,15 +397,11 @@ export default function StudentChatbot() {
               {tokensUsed.toLocaleString()} / {dailyLimit.toLocaleString()} tokens
             </span>
           </div>
-          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+          <div className="h-1.5 overflow-hidden rounded-full bg-muted">
             <div
               className={cn(
                 "h-full rounded-full transition-all",
-                usagePct >= 90
-                  ? "bg-destructive"
-                  : usagePct >= 70
-                  ? "bg-amber-500"
-                  : "bg-primary"
+                usagePct >= 90 ? "bg-destructive" : usagePct >= 70 ? "bg-amber-500" : "bg-primary"
               )}
               style={{ width: `${usagePct}%` }}
             />
@@ -429,32 +413,32 @@ export default function StudentChatbot() {
 
   // ── Chat Screen ────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-full max-w-3xl mx-auto w-full">
+    <div className="mx-auto flex h-full w-full max-w-3xl flex-col">
       {/* Chat header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b bg-background/95 backdrop-blur-sm sticky top-0 z-10">
+      <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background/95 px-4 py-3 backdrop-blur-sm">
         <button
           onClick={changeContext}
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ChevronLeft className="h-4 w-4" />
           Change
         </button>
-        <div className="flex-1 flex items-center gap-2 min-w-0 overflow-hidden">
-          <div className="flex flex-wrap gap-1.5 min-w-0">
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+          <div className="flex min-w-0 flex-wrap gap-1.5">
             {selectedContent.map((c) => (
-              <Badge key={c.id} variant="secondary" className="text-xs max-w-[180px] truncate">
+              <Badge key={c.id} variant="secondary" className="max-w-[180px] truncate text-xs">
                 <ContentTypeIcon type={c.type} />
                 <span className="ml-1 truncate">{c.title}</span>
               </Badge>
             ))}
             {topicContext && (
-              <Badge variant="outline" className="text-xs max-w-[160px] truncate">
+              <Badge variant="outline" className="max-w-[160px] truncate text-xs">
                 {topicContext}
               </Badge>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex shrink-0 items-center gap-2">
           <Label htmlFor="internet-toggle" className="text-xs text-muted-foreground">
             General search
           </Label>
@@ -474,9 +458,9 @@ export default function StudentChatbot() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+      <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground gap-3 py-12">
+          <div className="flex h-full flex-col items-center justify-center gap-3 py-12 text-center text-muted-foreground">
             <Bot className="h-10 w-10 opacity-25" />
             <p className="text-sm">
               Ask anything about{" "}
@@ -496,14 +480,11 @@ export default function StudentChatbot() {
         {messages.map((msg, i) => (
           <div
             key={i}
-            className={cn(
-              "flex gap-3 items-start",
-              msg.role === "user" && "flex-row-reverse"
-            )}
+            className={cn("flex items-start gap-3", msg.role === "user" && "flex-row-reverse")}
           >
             <div
               className={cn(
-                "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ring-1",
+                "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ring-1",
                 msg.role === "assistant"
                   ? "bg-primary text-primary-foreground ring-primary/20"
                   : "bg-muted ring-border"
@@ -517,10 +498,10 @@ export default function StudentChatbot() {
             </div>
             <div
               className={cn(
-                "rounded-2xl px-4 py-3 text-sm max-w-[82%]",
+                "max-w-[82%] rounded-2xl px-4 py-3 text-sm",
                 msg.role === "assistant"
-                  ? "bg-muted rounded-tl-sm"
-                  : "bg-primary text-primary-foreground rounded-tr-sm"
+                  ? "rounded-tl-sm bg-muted"
+                  : "rounded-tr-sm bg-primary text-primary-foreground"
               )}
             >
               {msg.role === "assistant" ? (
@@ -538,14 +519,14 @@ export default function StudentChatbot() {
         ))}
 
         {loading && (
-          <div className="flex gap-3 items-start">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center ring-1 ring-primary/20">
+          <div className="flex items-start gap-3">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-primary/20">
               <Bot className="h-4 w-4" />
             </div>
-            <div className="bg-muted rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:0ms]" />
-              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:150ms]" />
-              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:300ms]" />
+            <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm bg-muted px-4 py-3">
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:0ms]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:150ms]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:300ms]" />
             </div>
           </div>
         )}
@@ -554,20 +535,20 @@ export default function StudentChatbot() {
       </div>
 
       {/* Input area */}
-      <div className="px-4 py-3 border-t bg-background">
+      <div className="border-t bg-background px-4 py-3">
         {limitReached ? (
-          <p className="text-center text-sm text-destructive py-1">
+          <p className="py-1 text-center text-sm text-destructive">
             Daily limit reached for your institute. Access resets tomorrow.
           </p>
         ) : (
-          <div className="flex gap-2 items-end">
+          <div className="flex items-end gap-2">
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Ask a question… (Enter to send, Shift+Enter for newline)"
               disabled={loading}
-              className="flex-1 min-h-[40px] max-h-[120px] resize-none"
+              className="max-h-[120px] min-h-[40px] flex-1 resize-none"
               rows={1}
             />
             <Button
@@ -584,7 +565,7 @@ export default function StudentChatbot() {
             </Button>
           </div>
         )}
-        <p className="text-center text-xs text-muted-foreground mt-1.5">
+        <p className="mt-1.5 text-center text-xs text-muted-foreground">
           {tokensUsed.toLocaleString()} / {dailyLimit.toLocaleString()} tokens used today
         </p>
       </div>

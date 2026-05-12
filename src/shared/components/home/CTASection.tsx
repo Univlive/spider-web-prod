@@ -10,17 +10,17 @@ export default function CTASection() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section className="py-20 lg:py-32 relative overflow-hidden" ref={ref}>
+    <section className="relative overflow-hidden py-20 lg:py-32" ref={ref}>
       <div className="container mx-auto px-4 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="relative rounded-[2rem] lg:rounded-[3rem] overflow-hidden"
+          className="relative overflow-hidden rounded-[2rem] lg:rounded-[3rem]"
         >
           {/* Background Gradient */}
-          <div className="absolute inset-0 gradient-bg" />
-          
+          <div className="gradient-bg absolute inset-0" />
+
           {/* Pattern Overlay */}
           <div
             className="absolute inset-0 opacity-10"
@@ -31,29 +31,27 @@ export default function CTASection() {
           />
 
           {/* Decorative Elements */}
-          <div className="absolute top-8 left-8 w-20 h-20 rounded-full bg-white/10" />
-          <div className="absolute bottom-8 right-8 w-32 h-32 rounded-full bg-white/10" />
-          <div className="absolute top-1/2 left-1/4 w-16 h-16 rounded-full bg-white/5" />
+          <div className="absolute left-8 top-8 h-20 w-20 rounded-full bg-white/10" />
+          <div className="absolute bottom-8 right-8 h-32 w-32 rounded-full bg-white/10" />
+          <div className="absolute left-1/4 top-1/2 h-16 w-16 rounded-full bg-white/5" />
 
           {/* Content */}
-          <div className="relative px-8 py-16 lg:px-16 lg:py-24 text-center">
+          <div className="relative px-8 py-16 text-center lg:px-16 lg:py-24">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={isInView ? { opacity: 1, scale: 1 } : {}}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 backdrop-blur-sm mb-6"
+              className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-2 backdrop-blur-sm"
             >
-              <Sparkles className="w-4 h-4 text-white" />
-              <span className="text-sm font-medium text-white">
-                Start your 14-day free trial
-              </span>
+              <Sparkles className="h-4 w-4 text-white" />
+              <span className="text-sm font-medium text-white">Start your 14-day free trial</span>
             </motion.div>
 
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-white mb-6 max-w-3xl mx-auto"
+              className="mx-auto mb-6 max-w-3xl font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl"
             >
               Ready to Transform Your Coaching Institute?
             </motion.h2>
@@ -62,10 +60,10 @@ export default function CTASection() {
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="text-lg text-white/80 mb-10 max-w-2xl mx-auto"
+              className="mx-auto mb-10 max-w-2xl text-lg text-white/80"
             >
-              Join 500+ coaching institutes already using PREPAREKARO.IN. 
-              Get your AI-powered website in just 6 hours.
+              Join 500+ coaching institutes already using PREPAREKARO.IN. Get your AI-powered
+              website in just 6 hours.
             </motion.p>
 
             <motion.div
@@ -76,23 +74,27 @@ export default function CTASection() {
             >
               <Button
                 size="xl"
-                className="bg-white text-foreground hover:bg-white/90 hover:scale-105 transition-all shadow-xl rounded-full px-8"
+                className="rounded-full bg-white px-8 text-foreground shadow-xl transition-all hover:scale-105 hover:bg-white/90"
                 asChild
               >
                 <Link to="/signup" className="group">
                   Get Started Free
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
-              <a href="https://calendly.com/info-univlive" target="_blank" rel="noopener noreferrer">
-              <Button
-                size="xl"
-                variant="ghost"
-                className="text-white hover:bg-white/10 rounded-full"
-                asChild
+              <a
+                href="https://calendly.com/info-univlive"
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                Book a Demo
-              </Button>
+                <Button
+                  size="xl"
+                  variant="ghost"
+                  className="rounded-full text-white hover:bg-white/10"
+                  asChild
+                >
+                  Book a Demo
+                </Button>
               </a>
             </motion.div>
 
@@ -101,7 +103,7 @@ export default function CTASection() {
               initial={{ opacity: 0 }}
               animate={isInView ? { opacity: 1 } : {}}
               transition={{ duration: 0.6, delay: 0.6 }}
-              className="mt-12 flex flex-wrap items-center justify-center gap-6 text-white/60 text-sm"
+              className="mt-12 flex flex-wrap items-center justify-center gap-6 text-sm text-white/60"
             >
               <span>✓ No credit card required</span>
               <span>✓ 14-day free trial</span>

@@ -14,13 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
 import { Badge } from "@shared/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@shared/ui/avatar";
 import { Input } from "@shared/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
 import {
   Area,
   AreaChart,
@@ -248,12 +242,9 @@ function formatRelativeTime(ms?: number) {
   if (!ms) return "—";
   const diff = Date.now() - ms;
   if (diff < 60_000) return "just now";
-  if (diff < 3_600_000)
-    return `${Math.max(1, Math.round(diff / 60_000))} min ago`;
-  if (diff < 86_400_000)
-    return `${Math.max(1, Math.round(diff / 3_600_000))} hr ago`;
-  if (diff < 7 * 86_400_000)
-    return `${Math.max(1, Math.round(diff / 86_400_000))} day ago`;
+  if (diff < 3_600_000) return `${Math.max(1, Math.round(diff / 60_000))} min ago`;
+  if (diff < 86_400_000) return `${Math.max(1, Math.round(diff / 3_600_000))} hr ago`;
+  if (diff < 7 * 86_400_000) return `${Math.max(1, Math.round(diff / 86_400_000))} day ago`;
   return formatShortDate(ms);
 }
 
@@ -307,25 +298,17 @@ export default function Analytics() {
   const [avgTimeChange, setAvgTimeChange] = useState(0);
 
   const [studentGrowthData, setStudentGrowthData] = useState<GrowthPoint[]>([]);
-  const [attemptsTrendData, setAttemptsTrendData] = useState<
-    { date: string; attempts: number }[]
-  >([]);
-  const [attemptDistribution, setAttemptDistribution] = useState<PieSlice[]>(
-    [],
+  const [attemptsTrendData, setAttemptsTrendData] = useState<{ date: string; attempts: number }[]>(
+    []
   );
+  const [attemptDistribution, setAttemptDistribution] = useState<PieSlice[]>([]);
   const [topPerformers, setTopPerformers] = useState<TopPerformer[]>([]);
-  const [strugglingStudents, setStrugglingStudents] = useState<Struggling[]>(
-    [],
-  );
+  const [strugglingStudents, setStrugglingStudents] = useState<Struggling[]>([]);
   const [mostAttemptedTests, setMostAttemptedTests] = useState<TestAgg[]>([]);
-  const [batchComparisonData, setBatchComparisonData] = useState<BatchAgg[]>(
-    [],
-  );
+  const [batchComparisonData, setBatchComparisonData] = useState<BatchAgg[]>([]);
 
   const canLoad = useMemo(() => {
-    return (
-      !authLoading && !tenantLoading && !!firebaseUser?.uid && !!educatorId
-    );
+    return !authLoading && !tenantLoading && !!firebaseUser?.uid && !!educatorId;
   }, [authLoading, tenantLoading, firebaseUser?.uid, educatorId]);
 
   const getDateRanges = useCallback(() => {
@@ -364,7 +347,7 @@ export default function Analytics() {
         } catch {
           out[sid] = null;
         }
-      }),
+      })
     );
     return out;
   }, []);
@@ -392,18 +375,14 @@ export default function Analytics() {
       ] = await Promise.all([
         getCountFromServer(query(learnersCol)),
         getCountFromServer(
-          query(
-            learnersCol,
-            where("joinedAt", ">=", startTs),
-            where("joinedAt", "<=", endTs),
-          ),
+          query(learnersCol, where("joinedAt", ">=", startTs), where("joinedAt", "<=", endTs))
         ),
         getCountFromServer(
           query(
             learnersCol,
             where("joinedAt", ">=", prevStartTs),
-            where("joinedAt", "<=", prevEndTs),
-          ),
+            where("joinedAt", "<=", prevEndTs)
+          )
         ),
         getDocs(learnersCol),
         getDocs(
@@ -413,24 +392,24 @@ export default function Analytics() {
             where("createdAt", ">=", startTs),
             where("createdAt", "<=", endTs),
             orderBy("createdAt", "asc"),
-            limit(5000),
-          ),
+            limit(5000)
+          )
         ),
         getCountFromServer(
           query(
             collection(db, "attempts"),
             where("educatorId", "==", educatorId),
             where("createdAt", ">=", startTs),
-            where("createdAt", "<=", endTs),
-          ),
+            where("createdAt", "<=", endTs)
+          )
         ),
         getCountFromServer(
           query(
             collection(db, "attempts"),
             where("educatorId", "==", educatorId),
             where("createdAt", ">=", prevStartTs),
-            where("createdAt", "<=", prevEndTs),
-          ),
+            where("createdAt", "<=", prevEndTs)
+          )
         ),
         getDocs(
           query(
@@ -439,20 +418,18 @@ export default function Analytics() {
             where("createdAt", ">=", prevStartTs),
             where("createdAt", "<=", prevEndTs),
             orderBy("createdAt", "asc"),
-            limit(2000),
-          ),
+            limit(2000)
+          )
         ),
-        getCountFromServer(
-          query(learnersCol, where("joinedAt", "<", Timestamp.fromDate(start))),
-        ),
+        getCountFromServer(query(learnersCol, where("joinedAt", "<", Timestamp.fromDate(start)))),
         getDocs(
           query(
             learnersCol,
             where("joinedAt", ">=", startTs),
             where("joinedAt", "<=", endTs),
             orderBy("joinedAt", "asc"),
-            limit(5000),
-          ),
+            limit(5000)
+          )
         ),
       ]);
 
@@ -478,9 +455,7 @@ export default function Analytics() {
       setStudentsChange(pctChange(newStudentsCurr, newStudentsPrev));
 
       if (attemptsSnap.size >= 5000) {
-        toast.warning(
-          "Analytics is showing last 5000 attempts for this period.",
-        );
+        toast.warning("Analytics is showing last 5000 attempts for this period.");
       }
 
       const attempts: AttemptRow[] = attemptsSnap.docs.map((d) => ({
@@ -491,37 +466,25 @@ export default function Analytics() {
       setTotalAttempts(attemptsCurrCount);
       setAttemptsChange(pctChange(attemptsCurrCount, attemptsPrevCount));
 
-      const completed = attempts.filter((a) =>
-        isCompletedStatus(a.data.status),
-      );
+      const completed = attempts.filter((a) => isCompletedStatus(a.data.status));
       const completedCount = completed.length;
       const avgAcc =
-        completedCount > 0
-          ? average(completed.map((a) => safeNum(a.data.score, 0)))
-          : 0;
+        completedCount > 0 ? average(completed.map((a) => safeNum(a.data.score, 0))) : 0;
       const avgTimeSec =
-        completedCount > 0
-          ? average(completed.map((a) => getAttemptTimeSeconds(a.data)))
-          : 0;
+        completedCount > 0 ? average(completed.map((a) => getAttemptTimeSeconds(a.data))) : 0;
 
       setAvgScore(avgAcc);
       setAvgTime(avgTimeSec);
       setCompletionRate(
-        attemptsCurrCount > 0
-          ? Math.round((completedCount / attemptsCurrCount) * 100)
-          : 0,
+        attemptsCurrCount > 0 ? Math.round((completedCount / attemptsCurrCount) * 100) : 0
       );
 
       const prevDocs = prevAttemptsSnap.docs.map((d) => d.data() as AttemptDoc);
       const prevCompleted = prevDocs.filter((a) => isCompletedStatus(a.status));
       const prevAvgAcc =
-        prevCompleted.length > 0
-          ? average(prevCompleted.map((a) => safeNum(a.score, 0)))
-          : 0;
+        prevCompleted.length > 0 ? average(prevCompleted.map((a) => safeNum(a.score, 0))) : 0;
       const prevAvgTime =
-        prevCompleted.length > 0
-          ? average(prevCompleted.map((a) => getAttemptTimeSeconds(a)))
-          : 0;
+        prevCompleted.length > 0 ? average(prevCompleted.map((a) => getAttemptTimeSeconds(a))) : 0;
 
       setAvgScoreChange(pctChange(avgAcc, prevAvgAcc));
       setAvgTimeChange(Math.round((avgTimeSec - prevAvgTime) / 60));
@@ -535,13 +498,13 @@ export default function Analytics() {
       }
 
       const newLearnerTimes = newLearnersSnap.docs.map((d) =>
-        toMillis((d.data() as LearnerDoc).joinedAt),
+        toMillis((d.data() as LearnerDoc).joinedAt)
       );
       const weekNewCounts = new Array(totalWeeks).fill(0);
       for (const ms of newLearnerTimes) {
         const idx = Math.min(
           totalWeeks - 1,
-          Math.max(0, Math.floor((ms - weekStarts[0]) / (7 * 864e5))),
+          Math.max(0, Math.floor((ms - weekStarts[0]) / (7 * 864e5)))
         );
         weekNewCounts[idx] += 1;
       }
@@ -555,7 +518,7 @@ export default function Analytics() {
         const ms = toMillis(a.data.createdAt || a.data.submittedAt);
         const idx = Math.min(
           totalWeeks - 1,
-          Math.max(0, Math.floor((ms - weekStarts[0]) / (7 * 864e5))),
+          Math.max(0, Math.floor((ms - weekStarts[0]) / (7 * 864e5)))
         );
         weekActiveSets[idx].add(sid);
       }
@@ -633,32 +596,27 @@ export default function Analytics() {
         perStudent.set(sid, existing);
       }
 
-      const studentStats = Array.from(perStudent.entries()).map(
-        ([studentId, value]) => {
-          let weakness = "General";
-          let weaknessAvg = Infinity;
-          for (const [subject, subjAgg] of value.subject.entries()) {
-            const subjectAvg = subjAgg.cnt
-              ? subjAgg.sum / subjAgg.cnt
-              : Infinity;
-            if (subjectAvg < weaknessAvg) {
-              weaknessAvg = subjectAvg;
-              weakness = subject;
-            }
+      const studentStats = Array.from(perStudent.entries()).map(([studentId, value]) => {
+        let weakness = "General";
+        let weaknessAvg = Infinity;
+        for (const [subject, subjAgg] of value.subject.entries()) {
+          const subjectAvg = subjAgg.cnt ? subjAgg.sum / subjAgg.cnt : Infinity;
+          if (subjectAvg < weaknessAvg) {
+            weaknessAvg = subjectAvg;
+            weakness = subject;
           }
-          return {
-            studentId,
-            avg: value.attempts ? Math.round(value.sumAcc / value.attempts) : 0,
-            tests: value.attempts,
-            weakness,
-          };
-        },
-      );
+        }
+        return {
+          studentId,
+          avg: value.attempts ? Math.round(value.sumAcc / value.attempts) : 0,
+          tests: value.attempts,
+          weakness,
+        };
+      });
 
       studentStats.sort((a, b) => b.avg - a.avg);
       const top = studentStats.slice(0, 5).map((s) => {
-        const learner =
-          nextLearners.find((row) => row.id === s.studentId) || null;
+        const learner = nextLearners.find((row) => row.id === s.studentId) || null;
         return {
           studentId: s.studentId,
           name: getLearnerName(learner),
@@ -674,8 +632,7 @@ export default function Analytics() {
         .sort((a, b) => a.avg - b.avg)
         .slice(0, 3)
         .map((s) => {
-          const learner =
-            nextLearners.find((row) => row.id === s.studentId) || null;
+          const learner = nextLearners.find((row) => row.id === s.studentId) || null;
           return {
             studentId: s.studentId,
             name: getLearnerName(learner),
@@ -688,8 +645,7 @@ export default function Analytics() {
 
       const testMap = new Map<string, { cnt: number; sumAcc: number }>();
       for (const a of completed) {
-        const title =
-          String(a.data.testTitle || a.data.testId || "Test").trim() || "Test";
+        const title = String(a.data.testTitle || a.data.testId || "Test").trim() || "Test";
         const sc = safeNum(a.data.score, 0);
         const t = testMap.get(title) || { cnt: 0, sumAcc: 0 };
         t.cnt += 1;
@@ -706,10 +662,7 @@ export default function Analytics() {
         .slice(0, 8);
       setMostAttemptedTests(most);
 
-      const batchMap = new Map<
-        string,
-        { students: Set<string>; sumAcc: number; cnt: number }
-      >();
+      const batchMap = new Map<string, { students: Set<string>; sumAcc: number; cnt: number }>();
       for (const a of completed) {
         const sid = String(a.data.studentId || "");
         if (!sid) continue;
@@ -779,21 +732,13 @@ export default function Analytics() {
   const selectedStudentDive = useMemo<StudentDive | null>(() => {
     if (!selectedLearner) return null;
 
-    const attempts = periodAttempts.filter(
-      (row) => row.data.studentId === selectedLearner.id,
-    );
-    const completed = attempts.filter((row) =>
-      isCompletedStatus(row.data.status),
-    );
-    const classCompleted = periodAttempts.filter((row) =>
-      isCompletedStatus(row.data.status),
-    );
+    const attempts = periodAttempts.filter((row) => row.data.studentId === selectedLearner.id);
+    const completed = attempts.filter((row) => isCompletedStatus(row.data.status));
+    const classCompleted = periodAttempts.filter((row) => isCompletedStatus(row.data.status));
 
     const completedScores = completed.map((row) => safeNum(row.data.score, 0));
     // Svg Score calculator.....
-    const avgStudentScore = completedScores.length
-      ? average(completedScores)
-      : 0;
+    const avgStudentScore = completedScores.length ? average(completedScores) : 0;
     const bestScore = completedScores.length ? Math.max(...completedScores) : 0;
     const avgStudentTime = completed.length
       ? average(completed.map((row) => getAttemptTimeSeconds(row.data)))
@@ -805,19 +750,15 @@ export default function Analytics() {
     const sortedCompleted = [...completed].sort(
       (a, b) =>
         toMillis(a.data.submittedAt || a.data.createdAt) -
-        toMillis(b.data.submittedAt || b.data.createdAt),
+        toMillis(b.data.submittedAt || b.data.createdAt)
     );
-    const firstScore = sortedCompleted.length
-      ? safeNum(sortedCompleted[0].data.score, 0)
-      : 0;
+    const firstScore = sortedCompleted.length ? safeNum(sortedCompleted[0].data.score, 0) : 0;
     const lastScore = sortedCompleted.length
       ? safeNum(sortedCompleted[sortedCompleted.length - 1].data.score, 0)
       : 0;
 
     const scoreTrend = sortedCompleted.slice(-12).map((row) => ({
-      date: formatShortDate(
-        toMillis(row.data.submittedAt || row.data.createdAt),
-      ),
+      date: formatShortDate(toMillis(row.data.submittedAt || row.data.createdAt)),
       score: safeNum(row.data.score, 0),
     }));
 
@@ -847,7 +788,7 @@ export default function Analytics() {
       .sort(
         (a, b) =>
           toMillis(b.data.submittedAt || b.data.createdAt) -
-          toMillis(a.data.submittedAt || a.data.createdAt),
+          toMillis(a.data.submittedAt || a.data.createdAt)
       )
       .slice(0, 6)
       .map((row) => ({
@@ -861,17 +802,13 @@ export default function Analytics() {
         timeLabel: isCompletedStatus(row.data.status)
           ? formatMinutes(getAttemptTimeSeconds(row.data))
           : "—",
-        dateLabel: formatShortDateTime(
-          toMillis(row.data.submittedAt || row.data.createdAt),
-        ),
+        dateLabel: formatShortDateTime(toMillis(row.data.submittedAt || row.data.createdAt)),
       }));
 
     const activeDays = new Set(
       attempts.map((row) =>
-        new Date(
-          toMillis(row.data.submittedAt || row.data.createdAt),
-        ).toDateString(),
-      ),
+        new Date(toMillis(row.data.submittedAt || row.data.createdAt)).toDateString()
+      )
     ).size;
 
     return {
@@ -879,9 +816,7 @@ export default function Analytics() {
       completedAttempts: completed.length,
       avgScore: avgStudentScore,
       bestScore,
-      completionRate: attempts.length
-        ? Math.round((completed.length / attempts.length) * 100)
-        : 0,
+      completionRate: attempts.length ? Math.round((completed.length / attempts.length) * 100) : 0,
       avgTimeSec: avgStudentTime,
       firstLastDelta: lastScore - firstScore,
       classAvgDelta: avgStudentScore - classAvgScore,
@@ -937,9 +872,7 @@ export default function Analytics() {
   ]);
 
   if (!canLoad) {
-    return (
-      <div className="text-center py-12 text-muted-foreground">Loading...</div>
-    );
+    return <div className="py-12 text-center text-muted-foreground">Loading...</div>;
   }
 
   return (
@@ -953,19 +886,19 @@ export default function Analytics() {
           <CardHeader>
             <CardTitle className="text-base">Student Deep Dive</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Pick any learner to inspect their detailed performance inside the
-              currently selected time period.
+              Pick any learner to inspect their detailed performance inside the currently selected
+              time period.
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
               <Card className="border-dashed lg:col-span-1">
                 <CardHeader>
                   <CardTitle className="text-sm">Choose Student</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       value={studentSearch}
                       onChange={(e) => setStudentSearch(e.target.value)}
@@ -974,19 +907,17 @@ export default function Analytics() {
                     />
                   </div>
 
-                  <div className="space-y-2 max-h-72 overflow-auto pr-1">
+                  <div className="max-h-72 space-y-2 overflow-auto pr-1">
                     <button
                       type="button"
                       onClick={() => setSelectedStudentId("__all__")}
-                      className={`w-full text-left rounded-lg border px-3 py-2 transition-colors ${
+                      className={`w-full rounded-lg border px-3 py-2 text-left transition-colors ${
                         selectedStudentId === "__all__"
                           ? "border-primary bg-primary/5"
                           : "hover:bg-muted/50"
                       }`}
                     >
-                      <p className="font-medium text-sm">
-                        All students overview
-                      </p>
+                      <p className="text-sm font-medium">All students overview</p>
                       <p className="text-xs text-muted-foreground">
                         Keep the current class-level analytics view
                       </p>
@@ -999,7 +930,7 @@ export default function Analytics() {
                           key={student.id}
                           type="button"
                           onClick={() => setSelectedStudentId(student.id)}
-                          className={`w-full text-left rounded-lg border px-3 py-2 transition-colors ${
+                          className={`w-full rounded-lg border px-3 py-2 text-left transition-colors ${
                             selectedStudentId === student.id
                               ? "border-primary bg-primary/5"
                               : "hover:bg-muted/50"
@@ -1007,10 +938,10 @@ export default function Analytics() {
                         >
                           <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0">
-                              <p className="font-medium text-sm truncate">
+                              <p className="truncate text-sm font-medium">
                                 {getLearnerName(student)}
                               </p>
-                              <p className="text-xs text-muted-foreground truncate">
+                              <p className="truncate text-xs text-muted-foreground">
                                 {student.data.email || "No email"}
                               </p>
                             </div>
@@ -1022,9 +953,7 @@ export default function Analytics() {
                                   : ""
                               }
                             >
-                              {active
-                                ? "Active"
-                                : String(student.data.status || "Unknown")}
+                              {active ? "Active" : String(student.data.status || "Unknown")}
                             </Badge>
                           </div>
                         </button>
@@ -1032,7 +961,7 @@ export default function Analytics() {
                     })}
 
                     {filteredStudents.length === 0 && (
-                      <p className="text-sm text-muted-foreground py-3">
+                      <p className="py-3 text-sm text-muted-foreground">
                         No students match your search.
                       </p>
                     )}
@@ -1042,39 +971,31 @@ export default function Analytics() {
 
               <Card className="lg:col-span-2">
                 <CardHeader>
-                  <CardTitle className="text-sm">
-                    Selected Student Summary
-                  </CardTitle>
+                  <CardTitle className="text-sm">Selected Student Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {selectedStudentId === "__all__" ? (
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                    <div className="grid grid-cols-2 gap-3 text-sm lg:grid-cols-4">
                       <div className="rounded-lg bg-muted/40 p-3">
                         <p className="text-muted-foreground">Total Students</p>
-                        <p className="font-semibold text-lg">
-                          {formatCompactInt(totalStudents)}
-                        </p>
+                        <p className="text-lg font-semibold">{formatCompactInt(totalStudents)}</p>
                       </div>
                       <div className="rounded-lg bg-muted/40 p-3">
                         <p className="text-muted-foreground">Total Attempts</p>
-                        <p className="font-semibold text-lg">
-                          {formatCompactInt(totalAttempts)}
-                        </p>
+                        <p className="text-lg font-semibold">{formatCompactInt(totalAttempts)}</p>
                       </div>
                       <div className="rounded-lg bg-muted/40 p-3">
                         <p className="text-muted-foreground">Avg Score</p>
-                        <p className="font-semibold text-lg">{avgScore}</p>
+                        <p className="text-lg font-semibold">{avgScore}</p>
                       </div>
                       <div className="rounded-lg bg-muted/40 p-3">
                         <p className="text-muted-foreground">Completion Rate</p>
-                        <p className="font-semibold text-lg">
-                          {completionRate}%
-                        </p>
+                        <p className="text-lg font-semibold">{completionRate}%</p>
                       </div>
                     </div>
                   ) : selectedLearner ? (
-                    <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
-                      <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+                      <div className="flex min-w-0 items-center gap-3">
                         <Avatar className="h-12 w-12">
                           <AvatarImage
                             src={
@@ -1088,26 +1009,22 @@ export default function Analytics() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
-                          <p className="font-semibold truncate">
+                          <p className="truncate font-semibold">
                             {getLearnerName(selectedLearner)}
                           </p>
-                          <p className="text-sm text-muted-foreground truncate">
+                          <p className="truncate text-sm text-muted-foreground">
                             {selectedLearner.data.email || "No email"}
                           </p>
-                          <div className="flex flex-wrap items-center gap-2 mt-2">
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
                             <Badge variant="secondary">
-                              Joined{" "}
-                              {formatRelativeTime(
-                                toMillis(selectedLearner.data.joinedAt),
-                              )}
+                              Joined {formatRelativeTime(toMillis(selectedLearner.data.joinedAt))}
                             </Badge>
                             <Badge variant="outline">
                               Last seen{" "}
                               {formatRelativeTime(
                                 toMillis(
-                                  selectedLearner.data.lastSeenAt ||
-                                    selectedLearner.data.updatedAt,
-                                ),
+                                  selectedLearner.data.lastSeenAt || selectedLearner.data.updatedAt
+                                )
                               )}
                             </Badge>
                             <Badge variant="outline">
@@ -1118,46 +1035,42 @@ export default function Analytics() {
                       </div>
 
                       {selectedStudentDive ? (
-                        <div className="grid grid-cols-2 gap-3 text-sm min-w-[240px]">
+                        <div className="grid min-w-[240px] grid-cols-2 gap-3 text-sm">
                           <div className="rounded-lg bg-muted/40 p-3">
-                            <p className="text-muted-foreground">
-                              Total Attempts
-                            </p>
-                            <p className="font-semibold text-lg">
+                            <p className="text-muted-foreground">Total Attempts</p>
+                            <p className="text-lg font-semibold">
                               {selectedStudentDive.totalAttempts}
                             </p>
                           </div>
                           <div className="rounded-lg bg-muted/40 p-3">
                             <p className="text-muted-foreground">Completed</p>
-                            <p className="font-semibold text-lg">
+                            <p className="text-lg font-semibold">
                               {selectedStudentDive.completedAttempts}
                             </p>
                           </div>
                           <div className="rounded-lg bg-muted/40 p-3">
                             <p className="text-muted-foreground">Strongest</p>
-                            <p className="font-semibold text-sm">
+                            <p className="text-sm font-semibold">
                               {selectedStudentDive.strongestSubject}
                             </p>
                           </div>
                           <div className="rounded-lg bg-muted/40 p-3">
                             <p className="text-muted-foreground">Needs Work</p>
-                            <p className="font-semibold text-sm">
+                            <p className="text-sm font-semibold">
                               {selectedStudentDive.weakestSubject}
                             </p>
                           </div>
                         </div>
                       ) : (
                         <div className="text-sm text-muted-foreground">
-                          No activity found for this student in the selected
-                          period.
+                          No activity found for this student in the selected period.
                         </div>
                       )}
                     </div>
                   ) : (
                     <div className="rounded-xl border border-dashed p-6 text-center text-muted-foreground">
-                      Select a student to view individual score trend,
-                      subject-wise performance, recent attempts, and class
-                      comparison.
+                      Select a student to view individual score trend, subject-wise performance,
+                      recent attempts, and class comparison.
                     </div>
                   )}
                 </CardContent>
@@ -1169,7 +1082,7 @@ export default function Analytics() {
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <div>
                     <CardTitle className="text-base">Attempts Over Time</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {formatCompactInt(totalAttempts)} total attempts
                     </p>
                   </div>
@@ -1198,9 +1111,22 @@ export default function Analytics() {
                               <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                             </linearGradient>
                           </defs>
-                          <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-                          <XAxis dataKey="date" className="text-xs fill-muted-foreground" tickLine={false} axisLine={false} />
-                          <YAxis className="text-xs fill-muted-foreground" tickLine={false} axisLine={false} />
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            className="stroke-border"
+                            vertical={false}
+                          />
+                          <XAxis
+                            dataKey="date"
+                            className="fill-muted-foreground text-xs"
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <YAxis
+                            className="fill-muted-foreground text-xs"
+                            tickLine={false}
+                            axisLine={false}
+                          />
                           <Tooltip
                             contentStyle={{
                               backgroundColor: "hsl(var(--card))",
@@ -1219,7 +1145,7 @@ export default function Analytics() {
                       </ResponsiveContainer>
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground py-6 text-center">
+                    <p className="py-6 text-center text-sm text-muted-foreground">
                       Need submitted attempts to render trend.
                     </p>
                   )}
@@ -1232,66 +1158,49 @@ export default function Analytics() {
                 <div className="grid grid-cols-1 gap-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">
-                        Recent Attempts
-                      </CardTitle>
+                      <CardTitle className="text-base">Recent Attempts</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       {selectedStudentDive.recentAttempts.map((attempt) => (
                         <div
                           key={attempt.id}
-                          className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between rounded-lg border p-3"
+                          className="flex flex-col justify-between gap-3 rounded-lg border p-3 sm:flex-row sm:items-center"
                         >
                           <div className="min-w-0">
-                            <p className="font-medium truncate">
-                              {attempt.title}
-                            </p>
+                            <p className="truncate font-medium">{attempt.title}</p>
                             <p className="text-xs text-muted-foreground">
                               {attempt.subject} • {attempt.dateLabel}
                             </p>
                           </div>
-                          <div className="flex items-center gap-2 flex-wrap sm:justify-end">
+                          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                             <Badge variant="outline">{attempt.status}</Badge>
-                            <Badge variant="secondary">
-                              {attempt.scoreLabel}
-                            </Badge>
-                            <Badge variant="secondary">
-                              {attempt.timeLabel}
-                            </Badge>
+                            <Badge variant="secondary">{attempt.scoreLabel}</Badge>
+                            <Badge variant="secondary">{attempt.timeLabel}</Badge>
                           </div>
                         </div>
                       ))}
                       {selectedStudentDive.recentAttempts.length === 0 && (
                         <p className="text-sm text-muted-foreground">
-                          No attempts found for this student in the selected
-                          period.
+                          No attempts found for this student in the selected period.
                         </p>
                       )}
                     </CardContent>
                   </Card>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">
-                        Student Score Trend
-                      </CardTitle>
+                      <CardTitle className="text-base">Student Score Trend</CardTitle>
                     </CardHeader>
                     <CardContent>
                       {selectedStudentDive.scoreTrend.length > 0 ? (
                         <div className="h-72">
                           <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={selectedStudentDive.scoreTrend}>
-                              <CartesianGrid
-                                strokeDasharray="3 3"
-                                className="stroke-border"
-                              />
-                              <XAxis
-                                dataKey="date"
-                                className="text-xs fill-muted-foreground"
-                              />
-                              <YAxis className="text-xs fill-muted-foreground" />
+                              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                              <XAxis dataKey="date" className="fill-muted-foreground text-xs" />
+                              <YAxis className="fill-muted-foreground text-xs" />
                               <Tooltip
                                 contentStyle={{
                                   backgroundColor: "hsl(var(--card))",
@@ -1310,7 +1219,7 @@ export default function Analytics() {
                           </ResponsiveContainer>
                         </div>
                       ) : (
-                        <p className="text-sm text-muted-foreground py-6 text-center">
+                        <p className="py-6 text-center text-sm text-muted-foreground">
                           Need submitted attempts to render trend.
                         </p>
                       )}
@@ -1319,9 +1228,7 @@ export default function Analytics() {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">
-                        Subject-wise Performance
-                      </CardTitle>
+                      <CardTitle className="text-base">Subject-wise Performance</CardTitle>
                     </CardHeader>
                     <CardContent>
                       {selectedStudentDive.subjectPerformance.length > 0 ? (
@@ -1331,19 +1238,13 @@ export default function Analytics() {
                               data={selectedStudentDive.subjectPerformance}
                               layout="vertical"
                             >
-                              <CartesianGrid
-                                strokeDasharray="3 3"
-                                className="stroke-border"
-                              />
-                              <XAxis
-                                type="number"
-                                className="text-xs fill-muted-foreground"
-                              />
+                              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                              <XAxis type="number" className="fill-muted-foreground text-xs" />
                               <YAxis
                                 dataKey="subject"
                                 type="category"
                                 width={110}
-                                className="text-xs fill-muted-foreground"
+                                className="fill-muted-foreground text-xs"
                               />
                               <Tooltip
                                 contentStyle={{
@@ -1361,7 +1262,7 @@ export default function Analytics() {
                           </ResponsiveContainer>
                         </div>
                       ) : (
-                        <p className="text-sm text-muted-foreground py-6 text-center">
+                        <p className="py-6 text-center text-sm text-muted-foreground">
                           No completed subject data available in this period.
                         </p>
                       )}

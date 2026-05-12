@@ -8,7 +8,7 @@ export default function EducatorQuestionBank() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         Loading question bank...
       </div>
     );

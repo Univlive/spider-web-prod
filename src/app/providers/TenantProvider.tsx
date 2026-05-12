@@ -67,11 +67,7 @@ async function fetchTenantProfile(tenantSlug: string | null): Promise<TenantProf
         data?.contact?.email ||
         data?.email ||
         "",
-      address:
-        websiteConfig?.contact?.address ||
-        data?.contact?.address ||
-        data?.address ||
-        "",
+      address: websiteConfig?.contact?.address || data?.contact?.address || data?.address || "",
     },
     socials: websiteConfig?.socials || data?.socials,
     websiteConfig,
@@ -113,12 +109,14 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   });
 
   return (
-    <TenantContext.Provider value={{
-      tenant,
-      tenantSlug,
-      isTenantDomain,
-      loading: isLoading && tenantSlug !== null
-    }}>
+    <TenantContext.Provider
+      value={{
+        tenant,
+        tenantSlug,
+        isTenantDomain,
+        loading: isLoading && tenantSlug !== null,
+      }}
+    >
       {children}
     </TenantContext.Provider>
   );
@@ -129,4 +127,3 @@ export function useTenant() {
   if (!ctx) throw new Error("useTenant must be used within TenantProvider");
   return ctx;
 }
-

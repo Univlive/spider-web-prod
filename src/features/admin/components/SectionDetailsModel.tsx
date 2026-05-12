@@ -1,4 +1,10 @@
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@shared/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@shared/ui/dialog";
 import { Button } from "@shared/ui/button";
 import { Input } from "@shared/ui/input";
 import { Label } from "@shared/ui/label";
@@ -12,9 +18,14 @@ type SectionDetailsModelProps = {
   sectionId: string;
 };
 
-export const SectionDetailsModel: React.FC<SectionDetailsModelProps> = ({ isOpen, onClose, sectionId,isEditMode }) => {
-    // Fetch section details using sectionId and display them in the modal
-    // You can use useEffect to fetch data when the component mounts
+export const SectionDetailsModel: React.FC<SectionDetailsModelProps> = ({
+  isOpen,
+  onClose,
+  sectionId,
+  isEditMode,
+}) => {
+  // Fetch section details using sectionId and display them in the modal
+  // You can use useEffect to fetch data when the component mounts
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

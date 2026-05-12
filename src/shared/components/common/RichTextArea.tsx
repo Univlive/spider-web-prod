@@ -46,7 +46,7 @@ export function RichTextarea({
     if (!ref.current) return;
     setUploading(true);
     try {
-        const res = await uploadToImageKit(blob, fileName, `/${folder}`);
+      const res = await uploadToImageKit(blob, fileName, `/${folder}`);
 
       const tag = `\n<img src="${res.url}" alt="" />\n`;
       const next = insertAtCursor(ref.current, tag, value);
@@ -79,16 +79,17 @@ export function RichTextarea({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <div className="text-xs text-muted-foreground">
-          Tip: Ctrl+V to paste image
-        </div>
+        <div className="text-xs text-muted-foreground">Tip: Ctrl+V to paste image</div>
 
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
           className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAndInsert(f, f.name); }}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) uploadAndInsert(f, f.name);
+          }}
         />
 
         <Button
@@ -98,7 +99,11 @@ export function RichTextarea({
           disabled={disabled || uploading}
           onClick={() => fileInputRef.current?.click()}
         >
-          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+          {uploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ImagePlus className="h-4 w-4" />
+          )}
           <span className="ml-2">Attach image</span>
         </Button>
       </div>
@@ -116,4 +121,3 @@ export function RichTextarea({
     </div>
   );
 }
-

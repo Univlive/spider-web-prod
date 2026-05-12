@@ -39,20 +39,20 @@ export function StudentMetricCard({
           <div className="space-y-1">
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
             <p className="text-2xl font-bold text-foreground">{value}</p>
-            {subtitle && (
-              <p className="text-xs text-muted-foreground">{subtitle}</p>
-            )}
+            {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
             {trend && (
-              <p className={cn(
-                "text-xs font-medium flex items-center gap-1",
-                trend.isPositive ? "text-green-600" : "text-red-500"
-              )}>
+              <p
+                className={cn(
+                  "flex items-center gap-1 text-xs font-medium",
+                  trend.isPositive ? "text-green-600" : "text-red-500"
+                )}
+              >
                 <span>{trend.isPositive ? "↑" : "↓"}</span>
                 {Math.abs(trend.value)}% from last week
               </p>
             )}
           </div>
-          <div className="p-3 rounded-xl bg-background/60">
+          <div className="rounded-xl bg-background/60 p-3">
             <Icon className="h-5 w-5 text-primary" />
           </div>
         </div>

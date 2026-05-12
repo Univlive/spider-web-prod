@@ -22,13 +22,13 @@ export default function EmptyState({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4 }}
-      className="flex flex-col items-center justify-center py-16 px-4 text-center"
+      className="flex flex-col items-center justify-center px-4 py-16 text-center"
     >
-      <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mb-6">
+      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-muted">
         <Icon className="h-10 w-10 text-muted-foreground" />
       </div>
-      <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
-      <p className="text-sm text-muted-foreground max-w-sm mb-6">{description}</p>
+      <h3 className="mb-2 text-lg font-semibold text-foreground">{title}</h3>
+      <p className="mb-6 max-w-sm text-sm text-muted-foreground">{description}</p>
       {actionLabel && onAction && (
         <Button onClick={onAction} className="gradient-bg text-white">
           {actionLabel}

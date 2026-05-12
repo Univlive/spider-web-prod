@@ -90,7 +90,9 @@ function extractQuestionNumber(text: string): number | null {
   return null;
 }
 
-function extractAnswerKeyPairs(text: string): Array<{ questionNumber: number; correctOption: number }> {
+function extractAnswerKeyPairs(
+  text: string
+): Array<{ questionNumber: number; correctOption: number }> {
   const value = String(text || "");
   if (!value.trim()) return [];
 
@@ -124,7 +126,9 @@ function extractAnswerKeyPairs(text: string): Array<{ questionNumber: number; co
   return pairs;
 }
 
-function reconcileTrailingAnswerKey(items: Omit<AiImportPreviewItem, "include">[]): Omit<AiImportPreviewItem, "include">[] {
+function reconcileTrailingAnswerKey(
+  items: Omit<AiImportPreviewItem, "include">[]
+): Omit<AiImportPreviewItem, "include">[] {
   const answerMap = new Map<number, number>();
 
   for (const item of items) {
@@ -158,7 +162,10 @@ function reconcileTrailingAnswerKey(items: Omit<AiImportPreviewItem, "include">[
     if (mappedOption < 0 || mappedOption >= item.options.length) return item;
 
     const nextReasons = (item.reasons || []).filter(
-      (reason) => !String(reason || "").toLowerCase().includes("correct option")
+      (reason) =>
+        !String(reason || "")
+          .toLowerCase()
+          .includes("correct option")
     );
 
     const reconciledStatus: AiImportStatus = hasQuestion && hasEnoughOptions ? "ready" : "partial";
@@ -177,11 +184,9 @@ function reconcileTrailingAnswerKey(items: Omit<AiImportPreviewItem, "include">[
 // ---------------------------------------------------------------------------
 
 type PdfJsModule = {
-  getDocument: (src: {
-    data: Uint8Array;
-    useWorkerFetch?: boolean;
-    isEvalSupported?: boolean;
-  }) => { promise: Promise<any> };
+  getDocument: (src: { data: Uint8Array; useWorkerFetch?: boolean; isEvalSupported?: boolean }) => {
+    promise: Promise<any>;
+  };
   GlobalWorkerOptions: { workerSrc: string };
 };
 
@@ -190,9 +195,7 @@ const PDFJS_MODULE_URL = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSIO
 const PDFJS_WORKER_URL = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/build/pdf.worker.min.mjs`;
 
 async function loadPdfJs(): Promise<PdfJsModule> {
-  const pdfjs = (await import(
-    /* @vite-ignore */ PDFJS_MODULE_URL
-  )) as unknown as PdfJsModule;
+  const pdfjs = (await import(/* @vite-ignore */ PDFJS_MODULE_URL)) as unknown as PdfJsModule;
   if (pdfjs?.GlobalWorkerOptions) {
     pdfjs.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_URL;
   }
@@ -405,7 +408,7 @@ export async function importQuestionsFromPdf(
                 if (event.type === "complete" && event.data) {
                   pageData = event.data as AiImportResponse;
                   pageQuestionsDetected = pageData.items?.length ?? 0;
-                  
+
                   // Report: Questions detected
                   if (pageQuestionsDetected > 0) {
                     cumulativeDetected += pageQuestionsDetected;
@@ -488,7 +491,7 @@ export async function importQuestionsFromPdf(
         pageRetryCounts.delete(pageNum);
         const pageNewItems: AiImportPreviewItem[] = [];
         const pageItems = orderItemsAsPdfSequence(pageData.items || []);
-        
+
         for (const item of pageItems) {
           globalIndex += 1;
           allItems.push({
@@ -503,7 +506,7 @@ export async function importQuestionsFromPdf(
           pageNewItems.push({
             ...item,
             sourceIndex: globalIndex,
-              include: item.status !== "rejected",
+            include: item.status !== "rejected",
           });
         }
         cumulativeAccepted += pageQuestionsAccepted;
@@ -533,20 +536,23 @@ export async function importQuestionsFromPdf(
 
       // Check if it's a rate limit error (429 or "Too many requests")
       const errorMsg = pageErr instanceof Error ? pageErr.message : String(pageErr);
-      const isRateLimit = 
-        errorMsg.includes("Too many requests") || 
+      const isRateLimit =
+        errorMsg.includes("Too many requests") ||
         errorMsg.includes("429") ||
         errorMsg.includes("rate limit");
 
       if (isRateLimit) {
         // Increase backoff delay aggressively on rate limit
-        console.warn(`[importQuestionsFromPdf] Rate limit hit on page ${pageNum}. Increasing backoff delay from ${backoffDelay}ms.`);
+        console.warn(
+          `[importQuestionsFromPdf] Rate limit hit on page ${pageNum}. Increasing backoff delay from ${backoffDelay}ms.`
+        );
         rateLimitCount++;
-        
+
         // More aggressive backoff: triple the delay each time we hit rate limit
         backoffDelay = Math.min(backoffDelay * 3, MAX_BACKOFF);
-        console.warn(`[importQuestionsFromPdf] New backoff delay: ${backoffDelay}ms (rate limit count: ${rateLimitCount})`);
-        
+        console.warn(
+          `[importQuestionsFromPdf] New backoff delay: ${backoffDelay}ms (rate limit count: ${rateLimitCount})`
+        );
       }
 
       const retriesUsed = pageRetryCounts.get(pageNum) ?? 0;
@@ -616,7 +622,7 @@ export async function importQuestionsFromPdf(
   if (allItems.length === 0 && numPages > 0) {
     throw new Error(
       "No MCQ questions could be detected in this PDF. " +
-      "Please ensure you're uploading a clear PDF with visible MCQ questions."
+        "Please ensure you're uploading a clear PDF with visible MCQ questions."
     );
   }
 
@@ -644,7 +650,9 @@ export function formatNegativeMarksDisplay(value?: number | null) {
 }
 
 function cleanText(input: string) {
-  return String(input || "").replace(/\s+/g, " ").trim();
+  return String(input || "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /**
@@ -719,8 +727,7 @@ export function buildImportedQuestionPayload(item: AiImportPreviewItem) {
     ? options
     : (() => {
         const next = [...options];
-        while (next.length < 4)
-          next.push(buildPlaceholderOption(next.length));
+        while (next.length < 4) next.push(buildPlaceholderOption(next.length));
         return next.slice(0, 4);
       })();
 
@@ -747,13 +754,9 @@ export function buildImportedQuestionPayload(item: AiImportPreviewItem) {
     source: ready ? "ai_import" : "ai_import_partial",
     importStatus: ready ? "ready" : "partial",
     reviewRequired: !ready,
-    importIssues: Array.isArray(item.reasons)
-      ? item.reasons.filter(Boolean)
-      : [],
+    importIssues: Array.isArray(item.reasons) ? item.reasons.filter(Boolean) : [],
     importSourceIndex: item.sourceIndex,
     rawImportBlock: item.rawBlock || "",
-    ...(item.questionImageUrl
-      ? { questionImageUrl: item.questionImageUrl }
-      : {}),
+    ...(item.questionImageUrl ? { questionImageUrl: item.questionImageUrl } : {}),
   };
 }

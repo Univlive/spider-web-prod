@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  updateProfile,
+} from "firebase/auth";
 import { auth } from "@shared/lib/firebase";
 import { toast } from "sonner";
 import { Loader2, GraduationCap } from "lucide-react";
@@ -33,15 +38,23 @@ export default function Join() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!token) { setInviteError("Invalid invite link."); setLoadingInfo(false); return; }
+    if (!token) {
+      setInviteError("Invalid invite link.");
+      setLoadingInfo(false);
+      return;
+    }
     fetch(`${API}/api/invites/${token}`)
-      .then((r) => r.ok ? r.json() : r.json().then((d) => Promise.reject(d.detail || "Invalid link")))
+      .then((r) =>
+        r.ok ? r.json() : r.json().then((d) => Promise.reject(d.detail || "Invalid link"))
+      )
       .then((data: InviteInfo) => {
         setInfo(data);
         if (data.prefilled_email) setEmail(data.prefilled_email);
         if (data.prefilled_name) setName(data.prefilled_name);
       })
-      .catch((e) => setInviteError(typeof e === "string" ? e : "Invite link not found or has expired."))
+      .catch((e) =>
+        setInviteError(typeof e === "string" ? e : "Invite link not found or has expired.")
+      )
       .finally(() => setLoadingInfo(false));
   }, [token]);
 
@@ -57,10 +70,18 @@ export default function Join() {
         const res = await fetch(`${API}/api/invites/${token}/accept`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
-          body: JSON.stringify({ name: user.displayName || user.email || "", email: user.email || "" }),
+          body: JSON.stringify({
+            name: user.displayName || user.email || "",
+            email: user.email || "",
+          }),
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
+          if (res.status === 403 && (err.detail || "").includes("Educator")) {
+            toast.info("You're logged in as an educator. Share this link with your students.");
+            nav("/educator/dashboard");
+            return;
+          }
           throw new Error(err.detail || "Enrollment failed");
         }
         toast.success("You've been enrolled successfully.");
@@ -120,7 +141,7 @@ export default function Join() {
 
   if (loadingInfo) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -128,7 +149,7 @@ export default function Join() {
 
   if (inviteError) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-sm">
           <CardHeader>
             <CardTitle>Invite Unavailable</CardTitle>
@@ -140,7 +161,7 @@ export default function Join() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
@@ -156,7 +177,12 @@ export default function Join() {
             {mode === "signup" && (
               <div className="space-y-1">
                 <Label>Full Name</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" required />
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your name"
+                  required
+                />
               </div>
             )}
             <div className="space-y-1">
@@ -172,25 +198,39 @@ export default function Join() {
             </div>
             <div className="space-y-1">
               <Label>Password</Label>
-              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
             </div>
 
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {mode === "signup" ? "Create Account & Enroll" : "Sign In & Enroll"}
             </Button>
           </form>
 
           <p className="mt-4 text-center text-sm text-muted-foreground">
             {mode === "signup" ? (
-              <>Already have an account?{" "}
-                <button className="text-primary underline underline-offset-2" onClick={() => setMode("signin")}>
+              <>
+                Already have an account?{" "}
+                <button
+                  className="text-primary underline underline-offset-2"
+                  onClick={() => setMode("signin")}
+                >
                   Sign in instead
                 </button>
               </>
             ) : (
-              <>New here?{" "}
-                <button className="text-primary underline underline-offset-2" onClick={() => setMode("signup")}>
+              <>
+                New here?{" "}
+                <button
+                  className="text-primary underline underline-offset-2"
+                  onClick={() => setMode("signup")}
+                >
                   Create an account
                 </button>
               </>

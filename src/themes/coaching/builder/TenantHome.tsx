@@ -36,8 +36,8 @@ export default function BuilderThemeHome() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
-        <Loader2 className="h-6 w-6 animate-spin mr-3" />
+      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
+        <Loader2 className="mr-3 h-6 w-6 animate-spin" />
         <span className="font-medium">Loading...</span>
       </div>
     );
@@ -45,10 +45,10 @@ export default function BuilderThemeHome() {
 
   if (!tenant) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold">Coaching not found</h2>
-          <p className="text-muted-foreground mt-2">
+          <p className="mt-2 text-muted-foreground">
             This coaching website does not exist. Check the URL or contact support.
           </p>
         </div>
@@ -60,15 +60,15 @@ export default function BuilderThemeHome() {
 
   if (!builderConfig || !builderConfig.sections || builderConfig.sections.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center px-6">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
         <div style={{ fontSize: 48 }}>🏗️</div>
         <h2 className="text-2xl font-bold">{coachingName}</h2>
-        <p className="text-muted-foreground max-w-md">
+        <p className="max-w-md text-muted-foreground">
           This website is being set up. Check back soon!
         </p>
         <Link
           to="/login"
-          className="mt-4 inline-flex items-center gap-2 rounded-full bg-indigo-600 text-white px-6 py-2.5 text-sm font-semibold hover:bg-indigo-700 transition-colors"
+          className="mt-4 inline-flex items-center gap-2 rounded-full bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700"
         >
           Login
         </Link>

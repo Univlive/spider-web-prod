@@ -1,12 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  FileUp,
-  Loader2,
-  Pencil,
-  Trash2,
-  UploadCloud,
-  ExternalLink,
-} from "lucide-react";
+import { FileUp, Loader2, Pencil, Trash2, UploadCloud, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@shared/lib/firebase";
@@ -17,13 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
 import { Input } from "@shared/ui/input";
 import { Label } from "@shared/ui/label";
 import { Textarea } from "@shared/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@shared/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@shared/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,14 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@shared/ui/alert-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@shared/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/ui/table";
 
 const API = import.meta.env.VITE_MONKEY_KING_API_URL;
 const ACCEPTED = ".pdf,image/jpeg,image/png";
@@ -124,13 +104,13 @@ function MonthlyUsage({ requests, limit }: { requests: QPRequest[]; limit: numbe
   const full = used >= limit;
 
   return (
-    <div className="flex items-center gap-2 bg-muted/60 rounded-lg px-3 py-1.5 text-sm">
+    <div className="flex items-center gap-2 rounded-lg bg-muted/60 px-3 py-1.5 text-sm">
       <span className="text-muted-foreground">This month:</span>
       <span className={`font-semibold ${full ? "text-destructive" : "text-foreground"}`}>
         {used}
       </span>
       <span className="text-muted-foreground">/ {limit}</span>
-      <div className="w-20 h-1.5 bg-border rounded-full overflow-hidden">
+      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-border">
         <div
           className={`h-full rounded-full transition-all ${full ? "bg-destructive" : pct >= 80 ? "bg-yellow-500" : "bg-primary"}`}
           style={{ width: `${pct}%` }}
@@ -243,11 +223,7 @@ export default function QuestionPaperRequests() {
     try {
       const fd = new FormData();
       fd.append("file", reuploadFile);
-      const updated = await apiUpload(
-        `/api/question-paper/${reuploadTarget.id}/file`,
-        fd,
-        "PATCH"
-      );
+      const updated = await apiUpload(`/api/question-paper/${reuploadTarget.id}/file`, fd, "PATCH");
       setRequests((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
       setReuploadTarget(null);
       setReuploadFile(null);
@@ -287,14 +263,14 @@ export default function QuestionPaperRequests() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Question Paper Requests</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="mt-1 text-sm text-muted-foreground">
             Upload a question paper and request admin to add it to your panel.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <MonthlyUsage requests={requests} limit={monthlyLimit} />
           <Button onClick={() => setCreateOpen(true)}>
-            <FileUp className="h-4 w-4 mr-2" />
+            <FileUp className="mr-2 h-4 w-4" />
             New Request
           </Button>
         </div>
@@ -310,8 +286,8 @@ export default function QuestionPaperRequests() {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : requests.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <UploadCloud className="h-10 w-10 mx-auto mb-3 opacity-30" />
+            <div className="py-12 text-center text-muted-foreground">
+              <UploadCloud className="mx-auto mb-3 h-10 w-10 opacity-30" />
               <p className="text-sm">No requests yet. Click "New Request" to get started.</p>
             </div>
           ) : (
@@ -329,7 +305,7 @@ export default function QuestionPaperRequests() {
               <TableBody>
                 {requests.map((req) => (
                   <TableRow key={req.id}>
-                    <TableCell className="font-medium max-w-[200px] truncate">
+                    <TableCell className="max-w-[200px] truncate font-medium">
                       {req.title}
                     </TableCell>
                     <TableCell>
@@ -337,7 +313,7 @@ export default function QuestionPaperRequests() {
                         href={req.file_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center gap-1 text-xs text-primary hover:underline truncate max-w-[140px]"
+                        className="flex max-w-[140px] items-center gap-1 truncate text-xs text-primary hover:underline"
                       >
                         {req.file_name}
                         <ExternalLink className="h-3 w-3 flex-shrink-0" />
@@ -345,15 +321,15 @@ export default function QuestionPaperRequests() {
                     </TableCell>
                     <TableCell>
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${STATUS_CLASS[req.status]}`}
+                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[req.status]}`}
                       >
                         {STATUS_LABEL[req.status]}
                       </span>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[160px] truncate">
+                    <TableCell className="max-w-[160px] truncate text-sm text-muted-foreground">
                       {req.admin_note || "—"}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                    <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                       {fmtDate(req.created_at)}
                     </TableCell>
                     <TableCell className="text-right">
@@ -373,7 +349,10 @@ export default function QuestionPaperRequests() {
                             size="icon"
                             className="h-8 w-8"
                             title="Replace file"
-                            onClick={() => { setReuploadTarget(req); setReuploadFile(null); }}
+                            onClick={() => {
+                              setReuploadTarget(req);
+                              setReuploadFile(null);
+                            }}
                           >
                             <UploadCloud className="h-3.5 w-3.5" />
                           </Button>
@@ -433,11 +412,11 @@ export default function QuestionPaperRequests() {
               <button
                 type="button"
                 onClick={() => createFileRef.current?.click()}
-                className="w-full flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border rounded-lg py-6 text-sm text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-6 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
               >
                 <UploadCloud className="h-6 w-6" />
                 {createFile ? (
-                  <span className="text-foreground font-medium truncate max-w-[240px]">
+                  <span className="max-w-[240px] truncate font-medium text-foreground">
                     {createFile.name}
                   </span>
                 ) : (
@@ -451,7 +430,7 @@ export default function QuestionPaperRequests() {
               Cancel
             </Button>
             <Button onClick={handleCreate} disabled={createBusy}>
-              {createBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {createBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Submit Request
             </Button>
           </DialogFooter>
@@ -467,18 +446,11 @@ export default function QuestionPaperRequests() {
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label>Title</Label>
-              <Input
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-              />
+              <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Description</Label>
-              <Textarea
-                rows={3}
-                value={editDesc}
-                onChange={(e) => setEditDesc(e.target.value)}
-              />
+              <Textarea rows={3} value={editDesc} onChange={(e) => setEditDesc(e.target.value)} />
             </div>
           </div>
           <DialogFooter>
@@ -486,7 +458,7 @@ export default function QuestionPaperRequests() {
               Cancel
             </Button>
             <Button onClick={handleEdit} disabled={editBusy}>
-              {editBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {editBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save
             </Button>
           </DialogFooter>
@@ -510,11 +482,11 @@ export default function QuestionPaperRequests() {
             <button
               type="button"
               onClick={() => reuploadFileRef.current?.click()}
-              className="w-full flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border rounded-lg py-6 text-sm text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+              className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-6 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
             >
               <UploadCloud className="h-6 w-6" />
               {reuploadFile ? (
-                <span className="text-foreground font-medium truncate max-w-[220px]">
+                <span className="max-w-[220px] truncate font-medium text-foreground">
                   {reuploadFile.name}
                 </span>
               ) : (
@@ -527,7 +499,7 @@ export default function QuestionPaperRequests() {
               Cancel
             </Button>
             <Button onClick={handleReupload} disabled={reuploadBusy || !reuploadFile}>
-              {reuploadBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {reuploadBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Replace
             </Button>
           </DialogFooter>
@@ -540,8 +512,7 @@ export default function QuestionPaperRequests() {
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel this request?</AlertDialogTitle>
             <AlertDialogDescription>
-              "{cancelTarget?.title}" will be marked as cancelled and cannot be
-              reactivated.
+              "{cancelTarget?.title}" will be marked as cancelled and cannot be reactivated.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -551,7 +522,7 @@ export default function QuestionPaperRequests() {
               onClick={handleCancel}
               disabled={cancelBusy}
             >
-              {cancelBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {cancelBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Yes, cancel
             </AlertDialogAction>
           </AlertDialogFooter>

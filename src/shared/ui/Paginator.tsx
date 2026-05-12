@@ -34,7 +34,10 @@ export function Paginator({ page, totalPages, onPageChange }: Props) {
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious
-            onClick={(e) => { e.preventDefault(); if (page > 1) onPageChange(page - 1); }}
+            onClick={(e) => {
+              e.preventDefault();
+              if (page > 1) onPageChange(page - 1);
+            }}
             className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
           />
         </PaginationItem>
@@ -48,7 +51,10 @@ export function Paginator({ page, totalPages, onPageChange }: Props) {
             <PaginationItem key={p}>
               <PaginationLink
                 isActive={p === page}
-                onClick={(e) => { e.preventDefault(); onPageChange(p as number); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange(p as number);
+                }}
                 className="cursor-pointer"
               >
                 {p}
@@ -59,7 +65,10 @@ export function Paginator({ page, totalPages, onPageChange }: Props) {
 
         <PaginationItem>
           <PaginationNext
-            onClick={(e) => { e.preventDefault(); if (page < totalPages) onPageChange(page + 1); }}
+            onClick={(e) => {
+              e.preventDefault();
+              if (page < totalPages) onPageChange(page + 1);
+            }}
             className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
           />
         </PaginationItem>

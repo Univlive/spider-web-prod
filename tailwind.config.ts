@@ -1,8 +1,14 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
-  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  content: [
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+  ],
   prefix: "",
   theme: {
     container: {
@@ -14,8 +20,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Nunito', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ["Inter", "system-ui", "sans-serif"],
+        display: ["Nunito", "Inter", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -120,7 +126,7 @@ export default {
           from: { opacity: "0", transform: "scale(0.95)" },
           to: { opacity: "1", transform: "scale(1)" },
         },
-        "float": {
+        float: {
           "0%, 100%": { transform: "translateY(0px)" },
           "50%": { transform: "translateY(-12px)" },
         },
@@ -132,7 +138,7 @@ export default {
           "0%, 100%": { opacity: "1", transform: "scale(1)" },
           "50%": { opacity: "0.95", transform: "scale(1.01)" },
         },
-        "shimmer": {
+        shimmer: {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
@@ -146,22 +152,22 @@ export default {
         "slide-in-right": "slide-in-right 0.5s ease-out forwards",
         "slide-in-left": "slide-in-left 0.5s ease-out forwards",
         "scale-in": "scale-in 0.3s ease-out forwards",
-        "float": "float 6s ease-in-out infinite",
+        float: "float 6s ease-in-out infinite",
         "bounce-gentle": "bounce-gentle 2s ease-in-out infinite",
         "pulse-subtle": "pulse-subtle 3s ease-in-out infinite",
-        "shimmer": "shimmer 2s linear infinite",
+        shimmer: "shimmer 2s linear infinite",
       },
       boxShadow: {
-        "glow": "0 0 40px hsl(var(--brand-start) / 0.3)",
+        glow: "0 0 40px hsl(var(--brand-start) / 0.3)",
         "glow-lg": "0 0 60px hsl(var(--brand-start) / 0.4)",
-        "card": "0 4px 24px -4px hsl(220 47% 11% / 0.06)",
+        card: "0 4px 24px -4px hsl(220 47% 11% / 0.06)",
         "card-hover": "0 16px 40px -8px hsl(220 47% 11% / 0.1)",
-        "soft": "0 2px 12px -2px hsl(220 47% 11% / 0.04)",
+        soft: "0 2px 12px -2px hsl(220 47% 11% / 0.04)",
       },
       backgroundImage: {
         "gradient-bg": "linear-gradient(135deg, hsl(245 82% 67%) 0%, hsl(263 70% 58%) 100%)",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;

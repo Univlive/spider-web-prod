@@ -1,13 +1,13 @@
 import { motion } from "framer-motion";
-import { 
-  Cloud, 
-  Video, 
-  FileText, 
-  Calendar, 
-  MessageSquare, 
-  Shield, 
-  CreditCard, 
-  BarChart 
+import {
+  Cloud,
+  Video,
+  FileText,
+  Calendar,
+  MessageSquare,
+  Shield,
+  CreditCard,
+  BarChart,
 } from "lucide-react";
 
 const integrations = [
@@ -26,16 +26,16 @@ export function IntegrationsSection() {
     <section className="section-padding overflow-hidden">
       <div className="container-main">
         <motion.div
-          className="text-center max-w-2xl mx-auto mb-16"
+          className="mx-auto mb-16 max-w-2xl text-center"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+          <h2 className="mb-4 text-3xl font-bold sm:text-4xl lg:text-5xl">
             Powerful Integrations for Seamless Learning
           </h2>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-lg text-muted-foreground">
             Connect LearnFlow with your favorite tools and services for a unified experience.
           </p>
         </motion.div>
@@ -50,7 +50,7 @@ export function IntegrationsSection() {
         >
           {/* SVG Lines */}
           <svg
-            className="absolute inset-0 w-full h-full pointer-events-none"
+            className="pointer-events-none absolute inset-0 h-full w-full"
             viewBox="0 0 1200 200"
             preserveAspectRatio="xMidYMid meet"
           >
@@ -59,7 +59,7 @@ export function IntegrationsSection() {
               const startY = 100;
               const endX = 75 + index * 150;
               const endY = index % 2 === 0 ? 30 : 170;
-              
+
               return (
                 <motion.line
                   key={index}
@@ -80,9 +80,9 @@ export function IntegrationsSection() {
           </svg>
 
           {/* Center Logo */}
-          <div className="flex justify-center mb-8 relative z-10">
+          <div className="relative z-10 mb-8 flex justify-center">
             <motion.div
-              className="w-20 h-20 bg-primary rounded-2xl flex items-center justify-center shadow-elevated"
+              className="shadow-elevated flex h-20 w-20 items-center justify-center rounded-2xl bg-primary"
               initial={{ scale: 0 }}
               whileInView={{ scale: 1 }}
               viewport={{ once: true }}
@@ -90,7 +90,7 @@ export function IntegrationsSection() {
             >
               <svg
                 viewBox="0 0 24 24"
-                className="w-10 h-10 text-primary-foreground"
+                className="h-10 w-10 text-primary-foreground"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
@@ -103,7 +103,7 @@ export function IntegrationsSection() {
           </div>
 
           {/* Integration Icons */}
-          <div className="flex flex-wrap justify-center gap-4 lg:gap-8 relative z-10">
+          <div className="relative z-10 flex flex-wrap justify-center gap-4 lg:gap-8">
             {integrations.map((integration, index) => (
               <motion.div
                 key={integration.name}
@@ -113,10 +113,12 @@ export function IntegrationsSection() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
               >
-                <div className="w-14 h-14 lg:w-16 lg:h-16 bg-card rounded-2xl border border-border shadow-soft flex items-center justify-center hover:shadow-card hover:-translate-y-1 transition-all cursor-pointer">
-                  <integration.icon className="h-6 w-6 lg:h-7 lg:w-7 text-muted-foreground" />
+                <div className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-2xl border border-border bg-card shadow-soft transition-all hover:-translate-y-1 hover:shadow-card lg:h-16 lg:w-16">
+                  <integration.icon className="h-6 w-6 text-muted-foreground lg:h-7 lg:w-7" />
                 </div>
-                <span className="text-xs text-muted-foreground hidden sm:block">{integration.name}</span>
+                <span className="hidden text-xs text-muted-foreground sm:block">
+                  {integration.name}
+                </span>
               </motion.div>
             ))}
           </div>

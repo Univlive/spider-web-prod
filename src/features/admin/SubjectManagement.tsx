@@ -38,61 +38,98 @@ export default function SubjectManagement() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    let coursesReady = false, subjectsReady = false;
-    const check = () => { if (coursesReady && subjectsReady) setLoading(false); };
+    let coursesReady = false,
+      subjectsReady = false;
+    const check = () => {
+      if (coursesReady && subjectsReady) setLoading(false);
+    };
 
     const un1 = onSnapshot(query(collection(db, "courses"), orderBy("name")), (snap) => {
       setCourses(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Course, "id">) })));
-      coursesReady = true; check();
+      coursesReady = true;
+      check();
     });
     const un2 = onSnapshot(query(collection(db, "subjects"), orderBy("name")), (snap) => {
       setSubjects(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Subject, "id">) })));
-      subjectsReady = true; check();
+      subjectsReady = true;
+      check();
     });
-    return () => { un1(); un2(); };
+    return () => {
+      un1();
+      un2();
+    };
   }, []);
 
   function openCreateCourse() {
-    setDialogMode("course"); setEditingId(null); setName(""); setIsActive(true); setOpen(true);
+    setDialogMode("course");
+    setEditingId(null);
+    setName("");
+    setIsActive(true);
+    setOpen(true);
   }
 
   function openEditCourse(c: Course) {
-    setDialogMode("course"); setEditingId(c.id); setName(c.name); setIsActive(c.isActive); setOpen(true);
+    setDialogMode("course");
+    setEditingId(c.id);
+    setName(c.name);
+    setIsActive(c.isActive);
+    setOpen(true);
   }
 
   function openAddSubject(courseId: string) {
-    setDialogMode("subject"); setEditingId(null); setActiveCourseId(courseId);
-    setName(""); setIsActive(true); setOpen(true);
+    setDialogMode("subject");
+    setEditingId(null);
+    setActiveCourseId(courseId);
+    setName("");
+    setIsActive(true);
+    setOpen(true);
   }
 
   function openEditSubject(s: Subject) {
-    setDialogMode("subject"); setEditingId(s.id); setActiveCourseId(s.courseId);
-    setName(s.name); setIsActive(s.isActive); setOpen(true);
+    setDialogMode("subject");
+    setEditingId(s.id);
+    setActiveCourseId(s.courseId);
+    setName(s.name);
+    setIsActive(s.isActive);
+    setOpen(true);
   }
 
   async function handleSave() {
-    if (!name.trim()) { toast.error("Name required"); return; }
+    if (!name.trim()) {
+      toast.error("Name required");
+      return;
+    }
     setBusy(true);
     try {
       if (dialogMode === "course") {
         if (editingId) {
           await updateDoc(doc(db, "courses", editingId), { name: name.trim(), isActive });
         } else {
-          await addDoc(collection(db, "courses"), { name: name.trim(), isActive, createdAt: serverTimestamp() });
+          await addDoc(collection(db, "courses"), {
+            name: name.trim(),
+            isActive,
+            createdAt: serverTimestamp(),
+          });
         }
       } else {
         if (editingId) {
           await updateDoc(doc(db, "subjects", editingId), { name: name.trim(), isActive });
         } else {
           await addDoc(collection(db, "subjects"), {
-            name: name.trim(), courseId: activeCourseId, isActive, createdAt: serverTimestamp(),
+            name: name.trim(),
+            courseId: activeCourseId,
+            isActive,
+            createdAt: serverTimestamp(),
           });
         }
       }
       toast.success("Saved");
       setOpen(false);
-    } catch { toast.error("Save failed"); }
-    finally { setBusy(false); }
+    } catch {
+      toast.error("Save failed");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function toggleCourse(c: Course) {
@@ -112,22 +149,32 @@ export default function SubjectManagement() {
 
   const ungrouped = subjectsByCourse["__ungrouped__"] || [];
 
-  if (loading) return <div className="flex justify-center p-8"><Loader2 className="animate-spin h-6 w-6" /></div>;
+  if (loading)
+    return (
+      <div className="flex justify-center p-8">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Courses</h1>
-          <p className="text-muted-foreground text-sm">Manage exam courses and their subjects</p>
+          <p className="text-sm text-muted-foreground">Manage exam courses and their subjects</p>
         </div>
-        <Button onClick={openCreateCourse}><Plus className="h-4 w-4 mr-2" />Add Course</Button>
+        <Button onClick={openCreateCourse}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Course
+        </Button>
       </div>
 
       <Card>
         <CardContent className="p-0">
           {courses.length === 0 && ungrouped.length === 0 ? (
-            <div className="text-center text-muted-foreground py-10">No courses yet. Add one to get started.</div>
+            <div className="py-10 text-center text-muted-foreground">
+              No courses yet. Add one to get started.
+            </div>
           ) : (
             <div className="divide-y">
               {courses.map((c) => {
@@ -135,16 +182,18 @@ export default function SubjectManagement() {
                 const isExpanded = expanded[c.id] ?? false;
                 return (
                   <div key={c.id}>
-                    <div className="flex items-center gap-3 px-4 py-3 bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3 bg-muted/30 px-4 py-3 transition-colors hover:bg-muted/50">
                       <button
-                        className="flex items-center gap-2 flex-1 text-left min-w-0"
+                        className="flex min-w-0 flex-1 items-center gap-2 text-left"
                         onClick={() => setExpanded((p) => ({ ...p, [c.id]: !isExpanded }))}
                       >
-                        {isExpanded
-                          ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-                          : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
-                        <span className="font-semibold truncate">{c.name}</span>
-                        <span className="text-xs text-muted-foreground ml-1 shrink-0">
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        )}
+                        <span className="truncate font-semibold">{c.name}</span>
+                        <span className="ml-1 shrink-0 text-xs text-muted-foreground">
                           ({courseSubjects.length})
                         </span>
                       </button>
@@ -152,72 +201,87 @@ export default function SubjectManagement() {
                         {c.isActive ? "Active" : "Inactive"}
                       </Badge>
                       <Button size="sm" variant="ghost" onClick={() => openAddSubject(c.id)}>
-                        <Plus className="h-3 w-3 mr-1" /> Subject
+                        <Plus className="mr-1 h-3 w-3" /> Subject
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => openEditCourse(c)}>Edit</Button>
+                      <Button size="sm" variant="outline" onClick={() => openEditCourse(c)}>
+                        Edit
+                      </Button>
                       <Button size="sm" variant="ghost" onClick={() => toggleCourse(c)}>
                         {c.isActive ? "Hide" : "Show"}
                       </Button>
                     </div>
 
-                    {isExpanded && (
-                      courseSubjects.length === 0 ? (
-                        <div className="pl-12 py-3 text-sm text-muted-foreground border-t border-border/40">
+                    {isExpanded &&
+                      (courseSubjects.length === 0 ? (
+                        <div className="border-t border-border/40 py-3 pl-12 text-sm text-muted-foreground">
                           No subjects yet — click "+ Subject" to add one.
                         </div>
                       ) : (
                         courseSubjects.map((s) => (
                           <div
                             key={s.id}
-                            className="flex items-center gap-3 px-4 py-2.5 pl-10 border-t border-border/40 bg-background hover:bg-muted/20 transition-colors"
+                            className="flex items-center gap-3 border-t border-border/40 bg-background px-4 py-2.5 pl-10 transition-colors hover:bg-muted/20"
                           >
-                            <span className="text-muted-foreground text-xs w-4 shrink-0">└</span>
+                            <span className="w-4 shrink-0 text-xs text-muted-foreground">└</span>
                             <span className="flex-1 text-sm">{s.name}</span>
-                            <Badge variant={s.isActive ? "outline" : "secondary"} className="text-xs">
+                            <Badge
+                              variant={s.isActive ? "outline" : "secondary"}
+                              className="text-xs"
+                            >
                               {s.isActive ? "Active" : "Inactive"}
                             </Badge>
-                            <Button size="sm" variant="outline" onClick={() => openEditSubject(s)}>Edit</Button>
+                            <Button size="sm" variant="outline" onClick={() => openEditSubject(s)}>
+                              Edit
+                            </Button>
                             <Button size="sm" variant="ghost" onClick={() => toggleSubject(s)}>
                               {s.isActive ? "Hide" : "Show"}
                             </Button>
                           </div>
                         ))
-                      )
-                    )}
+                      ))}
                   </div>
                 );
               })}
 
               {ungrouped.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-3 px-4 py-3 bg-muted/10">
+                  <div className="flex items-center gap-3 bg-muted/10 px-4 py-3">
                     <button
-                      className="flex items-center gap-2 flex-1 text-left"
-                      onClick={() => setExpanded((p) => ({ ...p, __ungrouped__: !p["__ungrouped__"] }))}
+                      className="flex flex-1 items-center gap-2 text-left"
+                      onClick={() =>
+                        setExpanded((p) => ({ ...p, __ungrouped__: !p["__ungrouped__"] }))
+                      }
                     >
-                      {expanded["__ungrouped__"]
-                        ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                        : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                      {expanded["__ungrouped__"] ? (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      )}
                       <span className="font-medium text-muted-foreground">Ungrouped</span>
-                      <span className="text-xs text-muted-foreground ml-1">({ungrouped.length})</span>
+                      <span className="ml-1 text-xs text-muted-foreground">
+                        ({ungrouped.length})
+                      </span>
                     </button>
                   </div>
-                  {expanded["__ungrouped__"] && ungrouped.map((s) => (
-                    <div
-                      key={s.id}
-                      className="flex items-center gap-3 px-4 py-2.5 pl-10 border-t border-border/40 bg-background hover:bg-muted/20 transition-colors"
-                    >
-                      <span className="text-muted-foreground text-xs w-4 shrink-0">└</span>
-                      <span className="flex-1 text-sm">{s.name}</span>
-                      <Badge variant={s.isActive ? "outline" : "secondary"} className="text-xs">
-                        {s.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                      <Button size="sm" variant="outline" onClick={() => openEditSubject(s)}>Edit</Button>
-                      <Button size="sm" variant="ghost" onClick={() => toggleSubject(s)}>
-                        {s.isActive ? "Hide" : "Show"}
-                      </Button>
-                    </div>
-                  ))}
+                  {expanded["__ungrouped__"] &&
+                    ungrouped.map((s) => (
+                      <div
+                        key={s.id}
+                        className="flex items-center gap-3 border-t border-border/40 bg-background px-4 py-2.5 pl-10 transition-colors hover:bg-muted/20"
+                      >
+                        <span className="w-4 shrink-0 text-xs text-muted-foreground">└</span>
+                        <span className="flex-1 text-sm">{s.name}</span>
+                        <Badge variant={s.isActive ? "outline" : "secondary"} className="text-xs">
+                          {s.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                        <Button size="sm" variant="outline" onClick={() => openEditSubject(s)}>
+                          Edit
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => toggleSubject(s)}>
+                          {s.isActive ? "Hide" : "Show"}
+                        </Button>
+                      </div>
+                    ))}
                 </div>
               )}
             </div>
@@ -230,8 +294,12 @@ export default function SubjectManagement() {
           <DialogHeader>
             <DialogTitle>
               {editingId
-                ? (dialogMode === "course" ? "Edit Course" : "Edit Subject")
-                : (dialogMode === "course" ? "Add Course" : "Add Subject")}
+                ? dialogMode === "course"
+                  ? "Edit Course"
+                  : "Edit Subject"
+                : dialogMode === "course"
+                  ? "Add Course"
+                  : "Add Subject"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
@@ -240,7 +308,9 @@ export default function SubjectManagement() {
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={dialogMode === "course" ? "e.g. JEE, NEET, UPSC" : "e.g. Physics, Chemistry"}
+                placeholder={
+                  dialogMode === "course" ? "e.g. JEE, NEET, UPSC" : "e.g. Physics, Chemistry"
+                }
                 onKeyDown={(e) => e.key === "Enter" && handleSave()}
                 autoFocus
               />
@@ -250,9 +320,11 @@ export default function SubjectManagement() {
               <Label>Active</Label>
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
               <Button onClick={handleSave} disabled={busy}>
-                {busy && <Loader2 className="animate-spin h-4 w-4 mr-2" />}Save
+                {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save
               </Button>
             </div>
           </div>

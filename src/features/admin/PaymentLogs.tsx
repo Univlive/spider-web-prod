@@ -5,14 +5,7 @@ import { Button } from "@shared/ui/button";
 import { Input } from "@shared/ui/input";
 import { Card, CardContent } from "@shared/ui/card";
 import { Paginator } from "@shared/ui/Paginator";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@shared/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/ui/table";
 import { Badge } from "@shared/ui/badge";
 import { Loader2, RefreshCw } from "lucide-react";
 
@@ -65,11 +58,16 @@ export default function PaymentLogs() {
     try {
       const data = await fetchLogs();
       setLogs(data);
-    } catch (e: any) { toast.error(e.message || "Failed to load"); }
-    finally { setLoading(false); }
+    } catch (e: any) {
+      toast.error(e.message || "Failed to load");
+    } finally {
+      setLoading(false);
+    }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -85,7 +83,9 @@ export default function PaymentLogs() {
   }, [search, logs]);
 
   // Reset page when search changes
-  useEffect(() => { setPage(1); }, [search]);
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -95,10 +95,10 @@ export default function PaymentLogs() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Payment Logs</h1>
-          <p className="text-muted-foreground text-sm">All Cashfree payment transactions</p>
+          <p className="text-sm text-muted-foreground">All Cashfree payment transactions</p>
         </div>
         <Button variant="outline" onClick={load} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+          <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           Refresh
         </Button>
       </div>
@@ -113,9 +113,11 @@ export default function PaymentLogs() {
       </div>
 
       <Card>
-        <CardContent className="p-0 overflow-x-auto">
+        <CardContent className="overflow-x-auto p-0">
           {loading ? (
-            <div className="flex justify-center p-8"><Loader2 className="animate-spin h-6 w-6" /></div>
+            <div className="flex justify-center p-8">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -137,17 +139,21 @@ export default function PaymentLogs() {
                     <TableCell className="text-xs">{l.educator_id}</TableCell>
                     <TableCell>{l.seats_purchased}</TableCell>
                     <TableCell>{fmtAmount(l.amount)}</TableCell>
-                    <TableCell>{l.discount_amount > 0 ? fmtAmount(l.discount_amount) : "—"}</TableCell>
+                    <TableCell>
+                      {l.discount_amount > 0 ? fmtAmount(l.discount_amount) : "—"}
+                    </TableCell>
                     <TableCell className="font-mono text-xs">{l.coupon_code || "—"}</TableCell>
                     <TableCell>
                       <Badge variant={STATUS_COLORS[l.status] ?? "secondary"}>{l.status}</Badge>
                     </TableCell>
-                    <TableCell className="text-xs">{new Date(l.created_at).toLocaleString()}</TableCell>
+                    <TableCell className="text-xs">
+                      {new Date(l.created_at).toLocaleString()}
+                    </TableCell>
                   </TableRow>
                 ))}
                 {filtered.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                       No records found.
                     </TableCell>
                   </TableRow>
@@ -159,7 +165,10 @@ export default function PaymentLogs() {
       </Card>
 
       <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>Showing {filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}</span>
+        <span>
+          Showing {filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–
+          {Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
+        </span>
         <Paginator page={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
     </div>

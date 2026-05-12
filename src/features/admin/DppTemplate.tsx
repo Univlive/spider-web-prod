@@ -23,7 +23,8 @@ const DEFAULT_TEMPLATE = {
   positiveMarks: 4,
   negativeMarks: -1,
   durationMinutes: 30,
-  instructions: "Attempt all questions. Each correct MCQ answer carries +4 marks; incorrect answer carries -1 mark.",
+  instructions:
+    "Attempt all questions. Each correct MCQ answer carries +4 marks; incorrect answer carries -1 mark.",
 };
 
 export default function DppTemplate() {
@@ -56,7 +57,11 @@ export default function DppTemplate() {
   const addSection = () => {
     setSections((prev) => [
       ...prev,
-      { name: `Section ${String.fromCharCode(65 + prev.length)}`, questionCount: 5, format: "single_correct_mcq" },
+      {
+        name: `Section ${String.fromCharCode(65 + prev.length)}`,
+        questionCount: 5,
+        format: "single_correct_mcq",
+      },
     ]);
   };
 
@@ -107,10 +112,12 @@ export default function DppTemplate() {
   }
 
   return (
-    <div className="p-6 max-w-2xl space-y-6">
+    <div className="max-w-2xl space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold">DPP Template</h1>
-        <p className="text-sm text-muted-foreground">Global template used when Gemini generates Daily Practice Problems</p>
+        <p className="text-sm text-muted-foreground">
+          Global template used when Gemini generates Daily Practice Problems
+        </p>
       </div>
 
       <Card>
@@ -120,21 +127,39 @@ export default function DppTemplate() {
         <CardContent className="space-y-4">
           <div className="space-y-1">
             <Label>Template Title</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Standard DPP Format" />
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Standard DPP Format"
+            />
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1">
               <Label>Duration (min)</Label>
-              <Input type="number" min={5} value={durationMinutes} onChange={(e) => setDurationMinutes(Number(e.target.value))} />
+              <Input
+                type="number"
+                min={5}
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(Number(e.target.value))}
+              />
             </div>
             <div className="space-y-1">
               <Label>+Marks / Question</Label>
-              <Input type="number" min={0} value={positiveMarks} onChange={(e) => setPositiveMarks(Number(e.target.value))} />
+              <Input
+                type="number"
+                min={0}
+                value={positiveMarks}
+                onChange={(e) => setPositiveMarks(Number(e.target.value))}
+              />
             </div>
             <div className="space-y-1">
               <Label>−Marks / Wrong</Label>
-              <Input type="number" value={negativeMarks} onChange={(e) => setNegativeMarks(Number(e.target.value))} />
+              <Input
+                type="number"
+                value={negativeMarks}
+                onChange={(e) => setNegativeMarks(Number(e.target.value))}
+              />
             </div>
           </div>
 
@@ -153,20 +178,27 @@ export default function DppTemplate() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Sections <span className="text-sm font-normal text-muted-foreground">({totalQuestions} questions total)</span></CardTitle>
+            <CardTitle>
+              Sections{" "}
+              <span className="text-sm font-normal text-muted-foreground">
+                ({totalQuestions} questions total)
+              </span>
+            </CardTitle>
             <Button size="sm" variant="outline" onClick={addSection}>
-              <Plus className="h-4 w-4 mr-1" /> Add Section
+              <Plus className="mr-1 h-4 w-4" /> Add Section
             </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
           {sections.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">No sections yet. Add one above.</p>
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              No sections yet. Add one above.
+            </p>
           )}
           {sections.map((section, i) => (
-            <div key={i} className="flex items-start gap-3 p-3 border rounded-lg">
-              <GripVertical className="h-4 w-4 mt-2.5 text-muted-foreground shrink-0" />
-              <div className="flex-1 grid grid-cols-3 gap-3">
+            <div key={i} className="flex items-start gap-3 rounded-lg border p-3">
+              <GripVertical className="mt-2.5 h-4 w-4 shrink-0 text-muted-foreground" />
+              <div className="grid flex-1 grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">Section Name</Label>
                   <Input
@@ -182,13 +214,18 @@ export default function DppTemplate() {
                     type="number"
                     min={1}
                     value={section.questionCount}
-                    onChange={(e) => updateSection(i, "questionCount", Math.max(1, Number(e.target.value)))}
+                    onChange={(e) =>
+                      updateSection(i, "questionCount", Math.max(1, Number(e.target.value)))
+                    }
                     className="h-8 text-sm"
                   />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Format</Label>
-                  <Select value={section.format} onValueChange={(v) => updateSection(i, "format", v)}>
+                  <Select
+                    value={section.format}
+                    onValueChange={(v) => updateSection(i, "format", v)}
+                  >
                     <SelectTrigger className="h-8 text-sm">
                       <SelectValue />
                     </SelectTrigger>
@@ -201,7 +238,12 @@ export default function DppTemplate() {
                   </Select>
                 </div>
               </div>
-              <Button size="icon" variant="ghost" className="shrink-0 mt-1" onClick={() => removeSection(i)}>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="mt-1 shrink-0"
+                onClick={() => removeSection(i)}
+              >
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </div>
@@ -210,7 +252,7 @@ export default function DppTemplate() {
       </Card>
 
       <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
-        {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+        {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Save Template
       </Button>
     </div>

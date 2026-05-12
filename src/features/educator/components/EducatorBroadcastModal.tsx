@@ -32,7 +32,11 @@ type BatchItem = { id: string; name: string };
 
 const NONE = "__none";
 
-export default function EducatorBroadcastModal({ open, onOpenChange, educatorId }: EducatorBroadcastModalProps) {
+export default function EducatorBroadcastModal({
+  open,
+  onOpenChange,
+  educatorId,
+}: EducatorBroadcastModalProps) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
@@ -73,7 +77,9 @@ export default function EducatorBroadcastModal({ open, onOpenChange, educatorId 
 
         const courseLists = await Promise.all(
           branchSnap.docs.map(async (bd) => {
-            const cs = await getDocs(collection(db, "educators", educatorId, "branches", bd.id, "courses"));
+            const cs = await getDocs(
+              collection(db, "educators", educatorId, "branches", bd.id, "courses")
+            );
             return cs.docs.map((cd) => ({
               id: cd.id,
               name: (cd.data() as any)?.name ?? cd.id,
@@ -93,7 +99,8 @@ export default function EducatorBroadcastModal({ open, onOpenChange, educatorId 
 
   // Courses visible in dropdown — filtered by selected branch if one is chosen
   const visibleCourses = useMemo(
-    () => selectedBranchId ? allCourses.filter((c) => c.branchId === selectedBranchId) : allCourses,
+    () =>
+      selectedBranchId ? allCourses.filter((c) => c.branchId === selectedBranchId) : allCourses,
     [allCourses, selectedBranchId]
   );
 
@@ -108,7 +115,16 @@ export default function EducatorBroadcastModal({ open, onOpenChange, educatorId 
 
     setLoadingBatches(true);
     getDocs(
-      collection(db, "educators", educatorId, "branches", course.branchId, "courses", course.id, "batches")
+      collection(
+        db,
+        "educators",
+        educatorId,
+        "branches",
+        course.branchId,
+        "courses",
+        course.id,
+        "batches"
+      )
     )
       .then((snap) => {
         setBatches(snap.docs.map((d) => ({ id: d.id, name: (d.data() as any)?.name ?? d.id })));
@@ -135,16 +151,34 @@ export default function EducatorBroadcastModal({ open, onOpenChange, educatorId 
 
   // Summary chips shown above Send button
   const summaryChips = [
-    selectedBranchId && { label: "Branch", name: branches.find((b) => b.id === selectedBranchId)?.name ?? selectedBranchId, key: "branch" },
-    selectedCourseId && { label: "Course", name: visibleCourses.find((c) => c.id === selectedCourseId)?.name ?? selectedCourseId, key: "course" },
-    selectedBatchId && { label: "Batch", name: batches.find((b) => b.id === selectedBatchId)?.name ?? selectedBatchId, key: "batch" },
+    selectedBranchId && {
+      label: "Branch",
+      name: branches.find((b) => b.id === selectedBranchId)?.name ?? selectedBranchId,
+      key: "branch",
+    },
+    selectedCourseId && {
+      label: "Course",
+      name: visibleCourses.find((c) => c.id === selectedCourseId)?.name ?? selectedCourseId,
+      key: "course",
+    },
+    selectedBatchId && {
+      label: "Batch",
+      name: batches.find((b) => b.id === selectedBatchId)?.name ?? selectedBatchId,
+      key: "batch",
+    },
   ].filter(Boolean) as { label: string; name: string; key: string }[];
 
   const handleSend = async () => {
     const trimTitle = title.trim();
     const trimBody = body.trim();
-    if (!trimTitle) { toast({ title: "Title required", variant: "destructive" }); return; }
-    if (!trimBody) { toast({ title: "Message body required", variant: "destructive" }); return; }
+    if (!trimTitle) {
+      toast({ title: "Title required", variant: "destructive" });
+      return;
+    }
+    if (!trimBody) {
+      toast({ title: "Message body required", variant: "destructive" });
+      return;
+    }
 
     setSending(true);
     try {
@@ -165,7 +199,10 @@ export default function EducatorBroadcastModal({ open, onOpenChange, educatorId 
       const data = await res.json();
       if (!res.ok) throw new Error(data?.detail ?? data?.error ?? "Failed to send");
 
-      toast({ title: "Notification sent", description: `Delivered to ${data.recipientCount} student(s).` });
+      toast({
+        title: "Notification sent",
+        description: `Delivered to ${data.recipientCount} student(s).`,
+      });
       onOpenChange(false);
       reset();
     } catch (e: any) {
@@ -176,21 +213,30 @@ export default function EducatorBroadcastModal({ open, onOpenChange, educatorId 
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
-      <DialogContent className="sm:max-w-md rounded-2xl">
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        onOpenChange(v);
+        if (!v) reset();
+      }}
+    >
+      <DialogContent className="rounded-2xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Megaphone className="h-5 w-5 text-primary" />
             Notify Students
           </DialogTitle>
           <DialogDescription>
-            Filter by any combination of branch, course, and batch. Leave all blank to send to everyone.
+            Filter by any combination of branch, course, and batch. Leave all blank to send to
+            everyone.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label>Title <span className="text-muted-foreground text-xs">({title.length}/100)</span></Label>
+            <Label>
+              Title <span className="text-xs text-muted-foreground">({title.length}/100)</span>
+            </Label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value.slice(0, 100))}
@@ -200,19 +246,26 @@ export default function EducatorBroadcastModal({ open, onOpenChange, educatorId 
           </div>
 
           <div className="space-y-1.5">
-            <Label>Message <span className="text-muted-foreground text-xs">({body.length}/500)</span></Label>
+            <Label>
+              Message <span className="text-xs text-muted-foreground">({body.length}/500)</span>
+            </Label>
             <Textarea
               value={body}
               onChange={(e) => setBody(e.target.value.slice(0, 500))}
               placeholder="Write your notification message here…"
               rows={3}
-              className="rounded-xl resize-none"
+              className="resize-none rounded-xl"
             />
           </div>
 
           {/* Filters */}
           <div className="space-y-3">
-            <Label>Filters <span className="text-xs font-normal text-muted-foreground">(optional — combine freely)</span></Label>
+            <Label>
+              Filters{" "}
+              <span className="text-xs font-normal text-muted-foreground">
+                (optional — combine freely)
+              </span>
+            </Label>
 
             {loadingBase ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -221,17 +274,16 @@ export default function EducatorBroadcastModal({ open, onOpenChange, educatorId 
             ) : (
               <div className="grid grid-cols-1 gap-2">
                 {/* Branch */}
-                <Select
-                  value={selectedBranchId || NONE}
-                  onValueChange={handleBranchChange}
-                >
+                <Select value={selectedBranchId || NONE} onValueChange={handleBranchChange}>
                   <SelectTrigger className="rounded-xl">
                     <SelectValue placeholder="All branches" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={NONE}>All branches</SelectItem>
                     {branches.map((b) => (
-                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                      <SelectItem key={b.id} value={b.id}>
+                        {b.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -248,7 +300,9 @@ export default function EducatorBroadcastModal({ open, onOpenChange, educatorId 
                   <SelectContent>
                     <SelectItem value={NONE}>All courses</SelectItem>
                     {visibleCourses.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -261,15 +315,20 @@ export default function EducatorBroadcastModal({ open, onOpenChange, educatorId 
                     disabled={loadingBatches || batches.length === 0}
                   >
                     <SelectTrigger className="rounded-xl">
-                      {loadingBatches
-                        ? <span className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" /> Loading batches…</span>
-                        : <SelectValue placeholder="All batches" />
-                      }
+                      {loadingBatches ? (
+                        <span className="flex items-center gap-2 text-muted-foreground">
+                          <Loader2 className="h-3 w-3 animate-spin" /> Loading batches…
+                        </span>
+                      ) : (
+                        <SelectValue placeholder="All batches" />
+                      )}
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value={NONE}>All batches</SelectItem>
                       {batches.map((b) => (
-                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.name}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -279,14 +338,16 @@ export default function EducatorBroadcastModal({ open, onOpenChange, educatorId 
           </div>
 
           {/* Summary */}
-          <div className="flex flex-wrap items-center gap-1.5 min-h-[24px]">
+          <div className="flex min-h-[24px] flex-wrap items-center gap-1.5">
             {summaryChips.length === 0 ? (
-              <span className="text-xs text-muted-foreground">Sending to: all enrolled students</span>
+              <span className="text-xs text-muted-foreground">
+                Sending to: all enrolled students
+              </span>
             ) : (
               <>
                 <span className="text-xs text-muted-foreground">Sending to:</span>
                 {summaryChips.map((chip) => (
-                  <Badge key={chip.key} variant="secondary" className="text-[11px] gap-1">
+                  <Badge key={chip.key} variant="secondary" className="gap-1 text-[11px]">
                     <span className="text-muted-foreground">{chip.label}:</span> {chip.name}
                   </Badge>
                 ))}
@@ -296,15 +357,24 @@ export default function EducatorBroadcastModal({ open, onOpenChange, educatorId 
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl" disabled={sending}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="rounded-xl"
+            disabled={sending}
+          >
             Cancel
           </Button>
           <Button
             onClick={handleSend}
             disabled={sending || !title.trim() || !body.trim()}
-            className="rounded-xl gradient-bg text-white"
+            className="gradient-bg rounded-xl text-white"
           >
-            {sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Megaphone className="h-4 w-4 mr-2" />}
+            {sending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Megaphone className="mr-2 h-4 w-4" />
+            )}
             Send
           </Button>
         </DialogFooter>

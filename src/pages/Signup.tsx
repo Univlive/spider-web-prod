@@ -4,14 +4,22 @@ import { Eye, EyeOff, Loader2, Home } from "lucide-react";
 import { toast } from "sonner";
 import { useTenant } from "@app/providers/TenantProvider";
 
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+} from "firebase/auth";
 import { arrayUnion, doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "@shared/lib/firebase";
 import { Button } from "@shared/ui/button";
 import { Input } from "@shared/ui/input";
 import { Label } from "@shared/ui/label";
 import { registerStudentForTenant } from "@shared/lib/studentRegistration";
-import { generateSessionId, setLocalSessionId, syncSessionWithFirestore } from "@shared/lib/session";
+import {
+  generateSessionId,
+  setLocalSessionId,
+  syncSessionWithFirestore,
+} from "@shared/lib/session";
 
 type RoleUI = "student" | "educator";
 
@@ -95,6 +103,20 @@ export default function Signup() {
             { merge: true }
           );
 
+          // Add to educator's students subcollection so they appear in Learners page
+          await setDoc(
+            doc(db, "educators", tenant.educatorId, "students", cred.user.uid),
+            {
+              uid: cred.user.uid,
+              name,
+              email,
+              status: "ACTIVE",
+              tenantSlug,
+              joinedAt: serverTimestamp(),
+            },
+            { merge: true }
+          );
+
           const token = await cred.user.getIdToken();
           try {
             await registerStudentForTenant(token, tenantSlug);
@@ -117,7 +139,9 @@ export default function Signup() {
               const existingRole = String(snap.data()?.role || "").toUpperCase();
 
               if (existingRole && existingRole !== "STUDENT") {
-                toast.error(`This email is already registered as ${existingRole}. Please use a different email.`);
+                toast.error(
+                  `This email is already registered as ${existingRole}. Please use a different email.`
+                );
                 await auth.signOut();
                 return;
               }
@@ -128,6 +152,21 @@ export default function Signup() {
                   tenantSlug,
                   enrolledTenants: arrayUnion(tenantSlug),
                   updatedAt: serverTimestamp(),
+                },
+                { merge: true }
+              );
+
+              // Ensure they appear in educator's students subcollection
+              const displayName = snap.data()?.displayName || email;
+              await setDoc(
+                doc(db, "educators", tenant.educatorId, "students", cred2.user.uid),
+                {
+                  uid: cred2.user.uid,
+                  name: displayName,
+                  email,
+                  status: "ACTIVE",
+                  tenantSlug,
+                  joinedAt: serverTimestamp(),
                 },
                 { merge: true }
               );
@@ -232,27 +271,27 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen w-full lg:grid lg:grid-cols-2 bg-background">
+    <div className="min-h-screen w-full bg-background lg:grid lg:grid-cols-2">
       {/* LEFT COLUMN - FORM */}
-      <div className="flex flex-col min-h-screen p-6 lg:p-12 relative">
+      <div className="relative flex min-h-screen flex-col p-6 lg:p-12">
         {/* Header / Nav */}
-        <div className="flex justify-between items-center mb-6">
-           {effectiveRole === "educator" ? (
+        <div className="mb-6 flex items-center justify-between">
+          {effectiveRole === "educator" ? (
             <img src="/logo.png" className="w-25 h-10" alt="UNIV.LIVE Logo" />
           ) : (
             <div />
           )}
           <Link
             to="/"
-            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            <Home className="w-4 h-4" />
+            <Home className="h-4 w-4" />
             Return to Home
           </Link>
         </div>
 
         {/* Form Wrapper */}
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-md space-y-6">
             <div className="space-y-2">
               <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
@@ -262,7 +301,7 @@ export default function Signup() {
             </div>
 
             {!isTenantDomain && (
-              <div className="flex gap-2 p-1 bg-muted rounded-lg">
+              <div className="flex gap-2 rounded-lg bg-muted p-1">
                 <Button
                   type="button"
                   variant={effectiveRole === "student" ? "default" : "ghost"}
@@ -389,7 +428,7 @@ export default function Signup() {
                   <button
                     type="button"
                     onClick={() => setShow((s) => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                   >
                     {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -398,17 +437,22 @@ export default function Signup() {
 
               <Button
                 disabled={loading}
-                className="w-full h-11 text-base bg-[#4F46E5] hover:bg-[#4338CA] text-white transition-colors mt-2"
+                className="mt-2 h-11 w-full bg-[#4F46E5] text-base text-white transition-colors hover:bg-[#4338CA]"
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
               </Button>
             </form>
 
-            <div className="text-center text-sm text-muted-foreground pt-2">
+            <div className="pt-2 text-center text-sm text-muted-foreground">
               Already have an account?{" "}
               <Link
                 className="font-medium text-[#4F46E5] hover:underline"
-                to={`/login?role=${effectiveRole}`}
+                to={(() => {
+                  const tenant = searchParams.get("tenant");
+                  return tenant
+                    ? `/login?role=${effectiveRole}&tenant=${tenant}`
+                    : `/login?role=${effectiveRole}`;
+                })()}
               >
                 Login
               </Link>
@@ -418,16 +462,16 @@ export default function Signup() {
       </div>
 
       {/* RIGHT COLUMN - IMAGE (Hidden on Mobile) */}
-      <div className="hidden lg:flex flex-col bg-[#FFF5EE] p-12 justify-center items-center relative overflow-hidden">
+      <div className="relative hidden flex-col items-center justify-center overflow-hidden bg-[#FFF5EE] p-12 lg:flex">
         {/* Soft blur background blobs */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-200/50 rounded-full blur-[100px] translate-x-1/3 -translate-y-1/3" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-pink-200/40 rounded-full blur-[100px] -translate-x-1/3 translate-y-1/3" />
-        
-        <div className="relative w-full max-w-xl aspect-[4/5] rounded-[2rem] overflow-hidden shadow-2xl border-8 border-white/50">
+        <div className="absolute right-0 top-0 h-[500px] w-[500px] -translate-y-1/3 translate-x-1/3 rounded-full bg-orange-200/50 blur-[100px]" />
+        <div className="absolute bottom-0 left-0 h-[500px] w-[500px] -translate-x-1/3 translate-y-1/3 rounded-full bg-pink-200/40 blur-[100px]" />
+
+        <div className="relative aspect-[4/5] w-full max-w-xl overflow-hidden rounded-[2rem] border-8 border-white/50 shadow-2xl">
           <img
             src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1000&auto=format&fit=crop"
             alt="Educator Workspace"
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover"
           />
         </div>
       </div>

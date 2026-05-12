@@ -12,15 +12,7 @@ import {
   Radio,
   CreditCard,
 } from "lucide-react";
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, onSnapshot, query, where } from "firebase/firestore";
 
 import MetricCard from "@features/educator/components/MetricCard";
 import EmptyState from "@features/educator/components/EmptyState";
@@ -46,6 +38,7 @@ type EducatorProfileDoc = {
   name?: string;
   coachingName?: string;
   seatLimit?: number;
+  purchasedSeatLimit?: number;
   tenantSlug?: string;
   lastPlanId?: string;
   allowedCourseIds?: string[];
@@ -63,8 +56,8 @@ function accessCodeActive(code: AccessCodeDoc): boolean {
       typeof exp?.toMillis === "function"
         ? exp.toMillis()
         : typeof exp?.seconds === "number"
-        ? exp.seconds * 1000
-        : 0;
+          ? exp.seconds * 1000
+          : 0;
     if (ms && ms < Date.now()) return false;
   }
   return true;
@@ -103,64 +96,121 @@ export default function EducatorDashboard() {
 
     const u1 = onSnapshot(
       doc(db, "educators", educatorId),
-      (snap) => { setEducatorDoc(snap.exists() ? (snap.data() as EducatorProfileDoc) : null); markDone(); },
-      () => { setEducatorDoc(null); markDone(); }
+      (snap) => {
+        setEducatorDoc(snap.exists() ? (snap.data() as EducatorProfileDoc) : null);
+        markDone();
+      },
+      () => {
+        setEducatorDoc(null);
+        markDone();
+      }
     );
 
     const u2 = onSnapshot(
       collection(db, "educators", educatorId, "students"),
-      (snap) => { setStudents(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }))); markDone(); },
-      () => { setStudents([]); markDone(); }
+      (snap) => {
+        setStudents(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
+        markDone();
+      },
+      () => {
+        setStudents([]);
+        markDone();
+      }
     );
 
     const u3 = onSnapshot(
       collection(db, "educators", educatorId, "my_tests"),
-      (snap) => { setTests(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }))); markDone(); },
-      () => { setTests([]); markDone(); }
+      (snap) => {
+        setTests(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
+        markDone();
+      },
+      () => {
+        setTests([]);
+        markDone();
+      }
     );
 
     const u4 = onSnapshot(
       query(collection(db, "attempts"), where("educatorId", "==", educatorId)),
-      (snap) => { setAttempts(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }))); markDone(); },
-      () => { setAttempts([]); markDone(); }
+      (snap) => {
+        setAttempts(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
+        markDone();
+      },
+      () => {
+        setAttempts([]);
+        markDone();
+      }
     );
 
     const u5 = onSnapshot(
       collection(db, "educators", educatorId, "accessCodes"),
-      (snap) => { setAccessCodes(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }))); markDone(); },
-      () => { setAccessCodes([]); markDone(); }
+      (snap) => {
+        setAccessCodes(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
+        markDone();
+      },
+      () => {
+        setAccessCodes([]);
+        markDone();
+      }
     );
 
     const u6 = onSnapshot(
-      query(collection(db, "educators", educatorId, "billingSeats"), where("status", "==", "active")),
-      (snap) => { setUsedSeats(snap.size); markDone(); },
-      () => { setUsedSeats(0); markDone(); }
+      query(
+        collection(db, "educators", educatorId, "billingSeats"),
+        where("status", "==", "active")
+      ),
+      (snap) => {
+        setUsedSeats(snap.size);
+        markDone();
+      },
+      () => {
+        setUsedSeats(0);
+        markDone();
+      }
     );
 
-    return () => { u1(); u2(); u3(); u4(); u5(); u6(); };
+    return () => {
+      u1();
+      u2();
+      u3();
+      u4();
+      u5();
+      u6();
+    };
   }, [educatorId]);
 
   useEffect(() => {
     const lastPlanId = educatorDoc?.lastPlanId;
-    if (!lastPlanId) { setPlanName(null); return; }
-    getDoc(doc(db, "plans", lastPlanId)).then((snap) => {
-      setPlanName(snap.exists() ? ((snap.data() as any)?.name || lastPlanId) : lastPlanId);
-    }).catch(() => setPlanName(lastPlanId));
+    if (!lastPlanId) {
+      setPlanName(null);
+      return;
+    }
+    getDoc(doc(db, "plans", lastPlanId))
+      .then((snap) => {
+        setPlanName(snap.exists() ? (snap.data() as any)?.name || lastPlanId : lastPlanId);
+      })
+      .catch(() => setPlanName(lastPlanId));
   }, [educatorDoc?.lastPlanId]);
 
   useEffect(() => {
     const ids = educatorDoc?.allowedCourseIds;
-    if (!ids || ids.length === 0) { setAllowedCourseNames([]); return; }
-    getDocs(collection(db, "courses")).then((snap) => {
-      const names = snap.docs
-        .filter((d) => ids.includes(d.id))
-        .map((d) => (d.data() as any).name || d.id);
-      setAllowedCourseNames(names);
-    }).catch(() => setAllowedCourseNames([]));
+    if (!ids || ids.length === 0) {
+      setAllowedCourseNames([]);
+      return;
+    }
+    getDocs(collection(db, "courses"))
+      .then((snap) => {
+        const names = snap.docs
+          .filter((d) => ids.includes(d.id))
+          .map((d) => (d.data() as any).name || d.id);
+        setAllowedCourseNames(names);
+      })
+      .catch(() => setAllowedCourseNames([]));
   }, [educatorDoc?.allowedCourseIds]);
 
   const liveTests = useMemo(
-    () => attempts.filter((a) => LIVE_STATUSES.includes(String(a.status || "").toLowerCase())).length,
+    () =>
+      attempts.filter((a) => LIVE_STATUSES.includes(String(a.status || "").toLowerCase())).length,
     [attempts]
   );
 
@@ -179,16 +229,19 @@ export default function EducatorDashboard() {
     [accessCodes]
   );
 
-  const seatLimit = Math.max(0, Number(educatorDoc?.seatLimit || 0));
+  const trialSeats = Math.max(0, Number(educatorDoc?.seatLimit || 0));
+  const purchasedSeats = Math.max(0, Number(educatorDoc?.purchasedSeatLimit || 0));
+  const seatLimit = trialSeats + purchasedSeats;
   const vacantSeats = Math.max(0, seatLimit - usedSeats);
 
-  const coachingName = String(
-    educatorDoc?.coachingName ||
-    educatorDoc?.displayName ||
-    educatorDoc?.name ||
-    profile?.displayName ||
-    "Your Coaching"
-  ).trim() || "Your Coaching";
+  const coachingName =
+    String(
+      educatorDoc?.coachingName ||
+        educatorDoc?.displayName ||
+        educatorDoc?.name ||
+        profile?.displayName ||
+        "Your Coaching"
+    ).trim() || "Your Coaching";
 
   const coachingSlug = String(educatorDoc?.tenantSlug || profile?.tenantSlug || "").trim();
   const coachingUrl = coachingSlug ? buildTenantUrl(coachingSlug, "/") : "";
@@ -199,7 +252,9 @@ export default function EducatorDashboard() {
       await navigator.clipboard.writeText(coachingUrl);
       setCopiedUrl(true);
       setTimeout(() => setCopiedUrl(false), 1800);
-    } catch { /* clipboard may be blocked */ }
+    } catch {
+      /* clipboard may be blocked */
+    }
   }
 
   if (authLoading || (!loaded && !!educatorId)) {
@@ -218,45 +273,39 @@ export default function EducatorDashboard() {
     );
   }
 
-  if (loaded && tests.length === 0) {
-    return (
-      <EmptyState
-        icon={FileText}
-        title="Create your first test series"
-        description="Add a test or import from the test bank to unlock learner and performance analytics."
-        actionLabel="Open Test Series"
-        onAction={() => navigate("/educator/test-series")}
-      />
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="gradient-bg rounded-2xl p-5 md:p-6 text-white">
+      <div className="gradient-bg rounded-2xl p-5 text-white md:p-6">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold">Welcome back, {coachingName}!</h2>
-            <p className="text-sm text-white/80 mt-1">Here's your coaching at a glance.</p>
+            <h2 className="text-xl font-bold md:text-2xl">Welcome back, {coachingName}!</h2>
+            <p className="mt-1 text-sm text-white/80">Here's your coaching at a glance.</p>
           </div>
           <Button
             type="button"
             variant="secondary"
-            className="w-full md:w-auto bg-white/15 hover:bg-white/25 text-white border border-white/30 shrink-0"
+            className="w-full shrink-0 border border-white/30 bg-white/15 text-white hover:bg-white/25 md:w-auto"
             onClick={handleCopyUrl}
             disabled={!coachingUrl}
           >
             {copiedUrl ? (
-              <><Check className="h-4 w-4 mr-2" />Copied</>
+              <>
+                <Check className="mr-2 h-4 w-4" />
+                Copied
+              </>
             ) : (
-              <><Copy className="h-4 w-4 mr-2" />Copy Coaching URL</>
+              <>
+                <Copy className="mr-2 h-4 w-4" />
+                Copy Coaching URL
+              </>
             )}
           </Button>
         </div>
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <MetricCard
           title="My Students"
           value={students.length.toLocaleString()}
@@ -284,38 +333,43 @@ export default function EducatorDashboard() {
       {/* Seats & Plan */}
       <Card className="border-border/50">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
             <CreditCard className="h-4 w-4 text-muted-foreground" />
             Seats &amp; Plan
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
             <div>
               <p className="text-xs text-muted-foreground">Active Plan</p>
-              <p className="font-semibold mt-0.5">{planName || "No plan"}</p>
+              <p className="mt-0.5 font-semibold">{planName || "No plan"}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Total Seats</p>
-              <p className="font-semibold mt-0.5">{seatLimit}</p>
+              <p className="mt-0.5 font-semibold">{seatLimit}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Enrolled</p>
-              <p className="font-semibold mt-0.5">{usedSeats}</p>
+              <p className="mt-0.5 font-semibold">{usedSeats}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Vacant</p>
-              <p className={`font-semibold mt-0.5 ${vacantSeats === 0 ? "text-destructive" : "text-green-500"}`}>
+              <p
+                className={`mt-0.5 font-semibold ${vacantSeats === 0 ? "text-destructive" : "text-green-500"}`}
+              >
                 {vacantSeats}
               </p>
             </div>
           </div>
           {allowedCourseNames.length > 0 && (
-            <div className="mt-5 pt-4 border-t border-border/50">
-              <p className="text-xs text-muted-foreground mb-2">Allowed Courses</p>
+            <div className="mt-5 border-t border-border/50 pt-4">
+              <p className="mb-2 text-xs text-muted-foreground">Allowed Courses</p>
               <div className="flex flex-wrap gap-1.5">
                 {allowedCourseNames.map((name) => (
-                  <span key={name} className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium">
+                  <span
+                    key={name}
+                    className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium"
+                  >
                     {name}
                   </span>
                 ))}

@@ -158,7 +158,12 @@ export default function MathRichTextEditor({
       },
       placeholder,
       image: {
-        toolbar: ["imageTextAlternative", "imageStyle:inline", "imageStyle:block", "imageStyle:side"],
+        toolbar: [
+          "imageTextAlternative",
+          "imageStyle:inline",
+          "imageStyle:block",
+          "imageStyle:side",
+        ],
       },
     };
   }, [deps, placeholder]);

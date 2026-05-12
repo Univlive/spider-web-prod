@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, ShieldOff, ShieldCheck, Search, Folder, ChevronDown, ChevronRight, CalendarClock } from "lucide-react";
+import {
+  Loader2,
+  ShieldOff,
+  ShieldCheck,
+  Search,
+  Folder,
+  ChevronDown,
+  ChevronRight,
+  CalendarClock,
+} from "lucide-react";
 import { Input } from "@shared/ui/input";
 import { Button } from "@shared/ui/button";
 import { toast } from "sonner";
@@ -30,7 +39,7 @@ export default function StudentTests() {
   const { tenant, tenantSlug, isTenantDomain, loading: tenantLoading } = useTenant();
 
   const educatorId = tenant?.educatorId || "";
-    const [seatActive, setSeatActive] = useState(false);
+  const [seatActive, setSeatActive] = useState(false);
   const [billingLoading, setBillingLoading] = useState(true);
 
   const [unlockedIds, setUnlockedIds] = useState<Map<string, number | null>>(new Map());
@@ -71,11 +80,14 @@ export default function StudentTests() {
 
     setBillingLoading(true);
 
-    const unsubSeat = onSnapshot(doc(db, "educators", educatorId, "billingSeats", firebaseUser.uid), (snap) => {
-      const s = String((snap.data() as any)?.status || "").toLowerCase();
-      setSeatActive(s === "active");
-      setBillingLoading(false);
-    });
+    const unsubSeat = onSnapshot(
+      doc(db, "educators", educatorId, "billingSeats", firebaseUser.uid),
+      (snap) => {
+        const s = String((snap.data() as any)?.status || "").toLowerCase();
+        setSeatActive(s === "active");
+        setBillingLoading(false);
+      }
+    );
 
     return () => {
       unsubSeat();
@@ -89,7 +101,10 @@ export default function StudentTests() {
   const { data: tests = [] } = useQuery({
     queryKey: ["studentTests", educatorId],
     queryFn: async () => {
-      const qTests = query(collection(db, "educators", educatorId, "my_tests"), orderBy("createdAt", "desc"));
+      const qTests = query(
+        collection(db, "educators", educatorId, "my_tests"),
+        orderBy("createdAt", "desc")
+      );
       const snap = await getDocs(qTests);
       return snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
     },
@@ -114,9 +129,12 @@ export default function StudentTests() {
         const tid = String(data.testSeriesId || data.testId || "");
         if (!tid) return;
         const we = data?.windowExpiresAt;
-        const expMs = (data?.windowMinutes === 0 || !we)
-          ? null
-          : typeof we?.toMillis === "function" ? we.toMillis() : null;
+        const expMs =
+          data?.windowMinutes === 0 || !we
+            ? null
+            : typeof we?.toMillis === "function"
+              ? we.toMillis()
+              : null;
         const existing = m.get(tid);
         // Keep most permissive: null (no expiry) wins; otherwise take latest expiry
         if (existing === undefined) {
@@ -172,9 +190,10 @@ export default function StudentTests() {
 
   const normalizeSubjectName = (sub: string) => {
     const s = sub.trim().toLowerCase();
-    
+
     // Exact mapping for requested subjects
-    if (s === "bst" || s === "business studies" || s === "business study") return "Business Studies";
+    if (s === "bst" || s === "business studies" || s === "business study")
+      return "Business Studies";
     if (s === "phy" || s === "physics") return "Physics";
     if (s === "chem" || s === "chemistry") return "Chemistry";
     if (s === "math" || s === "maths" || s === "mathematics") return "Maths";
@@ -183,17 +202,25 @@ export default function StudentTests() {
     if (s === "acc" || s === "accountancy" || s === "accounts") return "Accountancy";
     if (s === "eco" || s === "economics") return "Economics";
     if (s === "geo" || s === "geography") return "Geography";
-    if (s === "pol sc" || s === "political science" || s === "polscience" || s === "polity") return "Political Science";
+    if (s === "pol sc" || s === "political science" || s === "polscience" || s === "polity")
+      return "Political Science";
     if (s === "hist" || s === "history") return "History";
 
     // Default: Capitalize first letter of each word
-    return sub.trim().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+    return sub
+      .trim()
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
   };
 
   const filteredTests = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return tests;
-    return tests.filter((t) => (t.title || "").toLowerCase().includes(q) || (t.subject || "").toLowerCase().includes(q));
+    return tests.filter(
+      (t) =>
+        (t.title || "").toLowerCase().includes(q) || (t.subject || "").toLowerCase().includes(q)
+    );
   }, [tests, search]);
 
   // Separate upcoming scheduled tests from available/past ones
@@ -202,7 +229,9 @@ export default function StudentTests() {
     const available: any[] = [];
     filteredTests.forEach((t) => {
       const startMs = t.startTime
-        ? typeof t.startTime.toMillis === "function" ? t.startTime.toMillis() : Number(t.startTime)
+        ? typeof t.startTime.toMillis === "function"
+          ? t.startTime.toMillis()
+          : Number(t.startTime)
         : null;
       if (startMs && startMs > now && t.isScheduleActive === true) {
         upcoming.push({ ...t, _startsAtMs: startMs });
@@ -216,9 +245,12 @@ export default function StudentTests() {
   }, [filteredTests, now]);
 
   const groupedTests = useMemo(() => {
-    const groups: Record<string, { name: string; type: "subject" | "uncategorized", tests: any[] }> = {};
+    const groups: Record<
+      string,
+      { name: string; type: "subject" | "uncategorized"; tests: any[] }
+    > = {};
 
-    availableTests.forEach(t => {
+    availableTests.forEach((t) => {
       if (t.subject) {
         const normalizedName = normalizeSubjectName(t.subject);
         const subKey = `subject_${normalizedName.toLowerCase().replace(/\s+/g, "_")}`;
@@ -242,7 +274,9 @@ export default function StudentTests() {
   // Accepts optional expectedTestId to ensure student is unlocking the intended test
   const unlockWithCode = async (code: string, expectedTestId?: string) => {
     if (!firebaseUser?.uid || !educatorId) return;
-    const c = String(code || "").trim().toUpperCase();
+    const c = String(code || "")
+      .trim()
+      .toUpperCase();
     if (!c) return;
 
     try {
@@ -256,7 +290,8 @@ export default function StudentTests() {
         if (!testId) throw new Error("Code not linked to any test");
 
         // If caller expected a specific test, ensure code maps to it
-        if (expectedTestId && expectedTestId !== testId) throw new Error("Code is not valid for this test");
+        if (expectedTestId && expectedTestId !== testId)
+          throw new Error("Code is not valid for this test");
 
         // Check expiry
         const expiresAt = data.expiresAt;
@@ -264,9 +299,10 @@ export default function StudentTests() {
           typeof expiresAt?.toMillis === "function"
             ? expiresAt.toMillis()
             : typeof expiresAt?.seconds === "number"
-            ? expiresAt.seconds * 1000
-            : null;
-        if (typeof expiresMs === "number" && Date.now() > expiresMs) throw new Error("Code has expired");
+              ? expiresAt.seconds * 1000
+              : null;
+        if (typeof expiresMs === "number" && Date.now() > expiresMs)
+          throw new Error("Code has expired");
 
         // Check max uses
         const max = Number(data.maxUses || 0);
@@ -281,9 +317,7 @@ export default function StudentTests() {
         let windowExpiresAt = null;
         if (windowMinutes > 0) {
           const codeCreatedMs =
-            typeof data.createdAt?.toMillis === "function"
-              ? data.createdAt.toMillis()
-              : Date.now();
+            typeof data.createdAt?.toMillis === "function" ? data.createdAt.toMillis() : Date.now();
           windowExpiresAt = new Date(codeCreatedMs + windowMinutes * 60 * 1000);
         }
 
@@ -307,7 +341,7 @@ export default function StudentTests() {
 
   if (authLoading || tenantLoading || billingLoading) {
     return (
-      <div className="p-6 flex items-center gap-2 text-muted-foreground">
+      <div className="flex items-center gap-2 p-6 text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" /> Checking access…
       </div>
     );
@@ -315,12 +349,14 @@ export default function StudentTests() {
 
   if (!isTenantDomain) {
     return (
-      <div className="p-6 space-y-3">
+      <div className="space-y-3 p-6">
         <div className="flex items-center gap-2">
           <ShieldOff className="h-5 w-5" />
           <h1 className="text-xl font-semibold">Open your coaching URL</h1>
         </div>
-        <p className="text-sm text-muted-foreground">Students must use their coaching website to access tests.</p>
+        <p className="text-sm text-muted-foreground">
+          Students must use their coaching website to access tests.
+        </p>
         <Button onClick={() => nav("/login?role=student")}>Go to Login</Button>
       </div>
     );
@@ -328,19 +364,21 @@ export default function StudentTests() {
 
   if (!tenantSlug || !educatorId) {
     return (
-      <div className="p-6 space-y-3">
+      <div className="space-y-3 p-6">
         <div className="flex items-center gap-2">
           <ShieldOff className="h-5 w-5" />
           <h1 className="text-xl font-semibold">Invalid coaching URL</h1>
         </div>
-        <p className="text-sm text-muted-foreground">This tenant domain is not linked to any educator.</p>
+        <p className="text-sm text-muted-foreground">
+          This tenant domain is not linked to any educator.
+        </p>
       </div>
     );
   }
 
   if (!enrolledHere) {
     return (
-      <div className="p-6 space-y-3">
+      <div className="space-y-3 p-6">
         <div className="flex items-center gap-2">
           <ShieldOff className="h-5 w-5" />
           <h1 className="text-xl font-semibold">Not enrolled</h1>
@@ -353,13 +391,14 @@ export default function StudentTests() {
 
   if (!seatActive) {
     return (
-      <div className="p-6 space-y-3">
+      <div className="space-y-3 p-6">
         <div className="flex items-center gap-2">
           <ShieldOff className="h-5 w-5" />
           <h1 className="text-xl font-semibold">Tests Locked</h1>
         </div>
         <p className="text-sm text-muted-foreground">
-          Your educator has not granted you a seat yet. Ask your educator to grant a seat from the Learners panel.
+          Your educator has not granted you a seat yet. Ask your educator to grant a seat from the
+          Learners panel.
         </p>
       </div>
     );
@@ -367,7 +406,7 @@ export default function StudentTests() {
 
   // Allowed
   return (
-    <div className="p-6 space-y-5">
+    <div className="space-y-5 p-6">
       <div className="flex items-center gap-2">
         <ShieldCheck className="h-5 w-5 text-green-600" />
         <h1 className="text-xl font-semibold">Available Tests</h1>
@@ -375,28 +414,36 @@ export default function StudentTests() {
 
       <div className="flex items-center gap-2">
         <Search className="h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search tests..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        <Input
+          placeholder="Search tests..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
       {/* Optional unlock UI (keep if you want) */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <Input placeholder="Enter access code to unlock..." className="max-w-sm" onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            const val = (e.target as HTMLInputElement).value;
-            unlockWithCode(val);
-            (e.target as HTMLInputElement).value = "";
-          }
-        }} />
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          placeholder="Enter access code to unlock..."
+          className="max-w-sm"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              const val = (e.target as HTMLInputElement).value;
+              unlockWithCode(val);
+              (e.target as HTMLInputElement).value = "";
+            }
+          }}
+        />
         <div className="text-sm text-muted-foreground">Press Enter to unlock</div>
       </div>
 
       {/* Upcoming scheduled tests */}
       {upcomingTests.length > 0 && (
         <div className="space-y-4">
-          <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl p-3">
+          <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-800/40 dark:bg-amber-900/10">
             <CalendarClock className="h-5 w-5 text-amber-600" />
             <h3 className="font-semibold text-amber-900 dark:text-amber-200">Upcoming Tests</h3>
-            <Badge variant="secondary" className="rounded-full ml-1 bg-amber-100 text-amber-700">
+            <Badge variant="secondary" className="ml-1 rounded-full bg-amber-100 text-amber-700">
               {upcomingTests.length}
             </Badge>
           </div>
@@ -404,7 +451,13 @@ export default function StudentTests() {
             {upcomingTests.map((t) => (
               <TestCard
                 key={t.id}
-                test={{ ...t, isLocked: false, isUpcoming: true, startsAtMs: t._startsAtMs, windowExpiresAt: null }}
+                test={{
+                  ...t,
+                  isLocked: false,
+                  isUpcoming: true,
+                  startsAtMs: t._startsAtMs,
+                  windowExpiresAt: null,
+                }}
                 attemptsUsed={attemptCounts[t.id] || 0}
                 onView={() => nav(`/student/tests/${t.id}`)}
                 onStart={() => nav(`/student/tests/${t.id}`)}
@@ -421,36 +474,53 @@ export default function StudentTests() {
           return (
             <div key={groupId} className="space-y-4">
               <div
-                className="flex items-center justify-between group cursor-pointer bg-muted/20 p-2 rounded-xl"
+                className="group flex cursor-pointer items-center justify-between rounded-xl bg-muted/20 p-2"
                 onClick={() => toggleFolder(groupId)}
               >
                 <div className="flex items-center gap-2">
-                  {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                  {isExpanded ? (
+                    <ChevronDown className="h-5 w-5" />
+                  ) : (
+                    <ChevronRight className="h-5 w-5" />
+                  )}
                   <Folder className="h-5 w-5 text-muted-foreground" />
-                  <h3 className="font-semibold text-lg">{group.name}</h3>
-                  <Badge variant="secondary" className="rounded-full ml-2">
+                  <h3 className="text-lg font-semibold">{group.name}</h3>
+                  <Badge variant="secondary" className="ml-2 rounded-full">
                     {group.tests.length}
                   </Badge>
                 </div>
               </div>
 
               {isExpanded && (
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 pl-4">
+                <div className="grid gap-4 pl-4 md:grid-cols-2 xl:grid-cols-3">
                   {group.tests.map((t) => {
                     const unlockEntry = unlockedIds.get(t.id);
-                    const windowValid = unlockEntry !== undefined &&
-                      (unlockEntry === null || unlockEntry > now);
+                    const windowValid =
+                      unlockEntry !== undefined && (unlockEntry === null || unlockEntry > now);
 
                     // Check if test is currently live via schedule
-                    const startTime = t.startTime ? (typeof t.startTime.toMillis === "function" ? t.startTime.toMillis() : t.startTime) : null;
-                    const endTime = t.endTime ? (typeof t.endTime.toMillis === "function" ? t.endTime.toMillis() : t.endTime) : null;
+                    const startTime = t.startTime
+                      ? typeof t.startTime.toMillis === "function"
+                        ? t.startTime.toMillis()
+                        : t.startTime
+                      : null;
+                    const endTime = t.endTime
+                      ? typeof t.endTime.toMillis === "function"
+                        ? t.endTime.toMillis()
+                        : t.endTime
+                      : null;
                     const isLive = startTime && endTime && now >= startTime && now <= endTime;
 
                     const locked = !(t.isPublic === true || windowValid || isLive);
                     return (
                       <TestCard
                         key={t.id}
-                        test={{ ...t, isLocked: locked, windowExpiresAt: unlockEntry ?? null, isLive }}
+                        test={{
+                          ...t,
+                          isLocked: locked,
+                          windowExpiresAt: unlockEntry ?? null,
+                          isLive,
+                        }}
                         attemptsUsed={attemptCounts[t.id] || 0}
                         onView={() => nav(`/student/tests/${t.id}`)}
                         onStart={() => nav(`/student/tests/${t.id}`)}

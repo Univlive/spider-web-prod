@@ -58,7 +58,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!educatorId) {
       stage = "educator-fallback-query";
-      const q = await db.collection("educators").where("tenantSlug", "==", tenantSlug).limit(1).get();
+      const q = await db
+        .collection("educators")
+        .where("tenantSlug", "==", tenantSlug)
+        .limit(1)
+        .get();
       if (!q.empty) educatorId = q.docs[0].id;
     }
 
@@ -83,8 +87,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const userData = userSnap.exists ? userSnap.data() || {} : {};
 
       const displayName =
-        String(userData.displayName || user.decoded?.name || req.body?.displayName || "").trim() || "Student";
-      const email = String(userData.email || user.email || user.decoded?.email || req.body?.email || "").trim();
+        String(userData.displayName || user.decoded?.name || req.body?.displayName || "").trim() ||
+        "Student";
+      const email = String(
+        userData.email || user.email || user.decoded?.email || req.body?.email || ""
+      ).trim();
 
       // --- WRITES (after all reads) ---
 

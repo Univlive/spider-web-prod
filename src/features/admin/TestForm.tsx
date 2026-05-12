@@ -40,13 +40,7 @@ import { Textarea } from "@shared/ui/textarea";
 import { Label } from "@shared/ui/label";
 import { Badge } from "@shared/ui/badge";
 import { Switch } from "@shared/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
 
 import EmptyState from "@features/admin/components/EmptyState";
 import { toast } from "sonner";
@@ -87,7 +81,9 @@ function getDifficultyColor(level: number): string {
 
 function normalizeLegacyDifficulty(level?: string | number): number {
   if (typeof level === "number") return Math.max(0, Math.min(1, level));
-  const s = String(level || "").toLowerCase().trim();
+  const s = String(level || "")
+    .toLowerCase()
+    .trim();
   if (s === "easy") return 0.15;
   if (s === "medium" || s === "general") return 0.5;
   if (s === "hard") return 0.85;
@@ -101,7 +97,10 @@ function clampDifficulty(level?: number) {
 
 function getAverageDifficulty(sections: Array<{ difficultyLevel?: number }>, fallback = 0.5) {
   if (sections.length === 0) return fallback;
-  const total = sections.reduce((acc, s) => acc + clampDifficulty(s.difficultyLevel ?? fallback), 0);
+  const total = sections.reduce(
+    (acc, s) => acc + clampDifficulty(s.difficultyLevel ?? fallback),
+    0
+  );
   return total / sections.length;
 }
 
@@ -190,7 +189,9 @@ function safeNum(v: any, fallback: number) {
 }
 
 function normalizeDifficulty(v: any): Difficulty {
-  const s = String(v || "").toLowerCase().trim();
+  const s = String(v || "")
+    .toLowerCase()
+    .trim();
   if (s === "easy") return "Easy";
   if (s === "medium") return "Medium";
   if (s === "hard") return "Hard";
@@ -218,7 +219,6 @@ function difficultyBadgeFromLevel(level: number) {
   return difficultyBadge(getDifficultyLabel(level) as Difficulty);
 }
 
-
 const SUBJECTS = [
   "Accountancy",
   "Business Studies",
@@ -235,7 +235,10 @@ const SUBJECTS = [
   "Economics",
 ];
 
-function validateSections(inputSections: Section[], testDurationValue: string): SectionsValidationResult {
+function validateSections(
+  inputSections: Section[],
+  testDurationValue: string
+): SectionsValidationResult {
   const sectionMap: Record<string, SectionValidation> = {};
   const blockingErrors: string[] = [];
   const warnings: string[] = [];
@@ -314,15 +317,13 @@ function QuestionInlineEditor({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold">
-          {question.id ? "Edit Question" : "New Question"}
-        </h4>
+        <h4 className="text-sm font-semibold">{question.id ? "Edit Question" : "New Question"}</h4>
         <Button variant="ghost" size="icon" onClick={onCancel} disabled={saving}>
           <X className="h-4 w-4" />
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="space-y-4">
           <div className="space-y-2">
             <Label className="text-sm">Question</Label>
@@ -437,7 +438,7 @@ function QuestionInlineEditor({
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/40">
+          <div className="flex items-center justify-between rounded-lg bg-muted/40 p-3">
             <div>
               <p className="text-sm font-medium">Published</p>
               <p className="text-xs text-muted-foreground">Available to students</p>
@@ -454,11 +455,13 @@ function QuestionInlineEditor({
         <Button onClick={onSave} disabled={saving} className="gradient-bg text-white">
           {saving ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Saving...
             </>
+          ) : question.id ? (
+            "Update"
           ) : (
-            question.id ? "Update" : "Create"
+            "Create"
           )}
         </Button>
       </div>
@@ -500,7 +503,7 @@ function SortableSectionCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`p-4 rounded-2xl border border-border bg-muted/20 ${isDragging ? "opacity-70" : ""}`}
+      className={`rounded-2xl border border-border bg-muted/20 p-4 ${isDragging ? "opacity-70" : ""}`}
     >
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -522,7 +525,7 @@ function SortableSectionCard({
               type="button"
               variant="ghost"
               size="icon"
-              className="rounded-lg text-muted-foreground cursor-grab active:cursor-grabbing"
+              className="cursor-grab rounded-lg text-muted-foreground active:cursor-grabbing"
               onClick={(e) => e.stopPropagation()}
               title="Drag to reorder"
               aria-label="Drag to reorder"
@@ -547,7 +550,11 @@ function SortableSectionCard({
               onClick={() => onToggleCollapse(section.id)}
               title={collapsed ? "Expand section" : "Collapse section"}
             >
-              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              {collapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
             </Button>
             <Button
               variant="ghost"
@@ -556,7 +563,7 @@ function SortableSectionCard({
               disabled={totalSections <= 1}
               title={totalSections <= 1 ? "At least 1 section required" : "Remove section"}
             >
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Trash2 className="mr-2 h-4 w-4" />
               Remove
             </Button>
           </div>
@@ -579,7 +586,9 @@ function SortableSectionCard({
               <Input
                 type="number"
                 value={String(section.questionsCount)}
-                onChange={(e) => onUpdate(section.id, { questionsCount: safeNum(e.target.value, 0) })}
+                onChange={(e) =>
+                  onUpdate(section.id, { questionsCount: safeNum(e.target.value, 0) })
+                }
                 className="rounded-xl"
                 min={0}
               />
@@ -605,33 +614,37 @@ function SortableSectionCard({
         )}
 
         {!collapsed && (
-          <div className="flex flex-col gap-2 p-3 bg-muted/10 rounded-xl border text-xs">
+          <div className="flex flex-col gap-2 rounded-xl border bg-muted/10 p-3 text-xs">
             <div className="flex items-center gap-2">
               <Switch
                 checked={!!section.attemptConstraints}
                 onCheckedChange={(checked) => {
                   onUpdate(section.id, {
-                    attemptConstraints: checked ? { min: 0, max: safeNum(section.questionsCount, 0) } : null,
-                    selectionRule: checked ? (section.selectionRule || 'UPTO') : null,
+                    attemptConstraints: checked
+                      ? { min: 0, max: safeNum(section.questionsCount, 0) }
+                      : null,
+                    selectionRule: checked ? section.selectionRule || "UPTO" : null,
                   } as any);
                 }}
               />
               <Label className="text-xs font-medium">Attempt Constraints</Label>
             </div>
             {section.attemptConstraints && (
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-1.5">
                   <Label className="text-[10px]">Min</Label>
                   <Input
                     type="number"
-                    className="h-7 w-16 text-xs rounded-lg"
+                    className="h-7 w-16 rounded-lg text-xs"
                     value={section.attemptConstraints.min}
-                    onChange={(e) => onUpdate(section.id, {
-                      attemptConstraints: {
-                        ...section.attemptConstraints!,
-                        min: Math.max(0, safeNum(e.target.value, 0)),
-                      },
-                    } as any)}
+                    onChange={(e) =>
+                      onUpdate(section.id, {
+                        attemptConstraints: {
+                          ...section.attemptConstraints!,
+                          min: Math.max(0, safeNum(e.target.value, 0)),
+                        },
+                      } as any)
+                    }
                     min={0}
                     max={section.attemptConstraints.max}
                   />
@@ -640,22 +653,30 @@ function SortableSectionCard({
                   <Label className="text-[10px]">Max</Label>
                   <Input
                     type="number"
-                    className="h-7 w-16 text-xs rounded-lg"
+                    className="h-7 w-16 rounded-lg text-xs"
                     value={section.attemptConstraints.max}
-                    onChange={(e) => onUpdate(section.id, {
-                      attemptConstraints: {
-                        ...section.attemptConstraints!,
-                        max: Math.min(safeNum(section.questionsCount, 0), Math.max(section.attemptConstraints!.min, safeNum(e.target.value, 0))),
-                      },
-                    } as any)}
+                    onChange={(e) =>
+                      onUpdate(section.id, {
+                        attemptConstraints: {
+                          ...section.attemptConstraints!,
+                          max: Math.min(
+                            safeNum(section.questionsCount, 0),
+                            Math.max(section.attemptConstraints!.min, safeNum(e.target.value, 0))
+                          ),
+                        },
+                      } as any)
+                    }
                     min={section.attemptConstraints.min}
                     max={safeNum(section.questionsCount, 0)}
                   />
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Label className="text-[10px]">Rule</Label>
-                  <Select value={section.selectionRule || 'UPTO'} onValueChange={(v) => onUpdate(section.id, { selectionRule: v } as any)}>
-                    <SelectTrigger className="h-7 w-24 text-xs rounded-lg">
+                  <Select
+                    value={section.selectionRule || "UPTO"}
+                    onValueChange={(v) => onUpdate(section.id, { selectionRule: v } as any)}
+                  >
+                    <SelectTrigger className="h-7 w-24 rounded-lg text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -664,9 +685,12 @@ function SortableSectionCard({
                     </SelectContent>
                   </Select>
                 </div>
-                <p className="text-[10px] text-muted-foreground w-full">
-                  Students must attempt {section.selectionRule === 'EXACT' ? 'exactly' : 'up to'} {section.attemptConstraints.max} of {safeNum(section.questionsCount, 0)} questions
-                  {section.attemptConstraints.min > 0 ? ` (minimum ${section.attemptConstraints.min})` : ''}
+                <p className="w-full text-[10px] text-muted-foreground">
+                  Students must attempt {section.selectionRule === "EXACT" ? "exactly" : "up to"}{" "}
+                  {section.attemptConstraints.max} of {safeNum(section.questionsCount, 0)} questions
+                  {section.attemptConstraints.min > 0
+                    ? ` (minimum ${section.attemptConstraints.min})`
+                    : ""}
                 </p>
               </div>
             )}
@@ -680,13 +704,17 @@ function SortableSectionCard({
               <div className="flex items-center gap-3">
                 <Slider
                   value={[sectionDifficulty]}
-                  onValueChange={(v) => onUpdate(section.id, { difficultyLevel: clampDifficulty(v[0]) })}
+                  onValueChange={(v) =>
+                    onUpdate(section.id, { difficultyLevel: clampDifficulty(v[0]) })
+                  }
                   min={0}
                   max={1}
                   step={0.05}
                   className="flex-1"
                 />
-                <span className={`text-xs font-semibold min-w-[70px] text-right ${getDifficultyColor(sectionDifficulty)}`}>
+                <span
+                  className={`min-w-[70px] text-right text-xs font-semibold ${getDifficultyColor(sectionDifficulty)}`}
+                >
                   {sectionDifficulty.toFixed(2)} — {getDifficultyLabel(sectionDifficulty)}
                 </span>
               </div>
@@ -714,20 +742,20 @@ function SortableSectionCard({
                   className="rounded-xl"
                   onClick={() => onCreateQuestion(section.id)}
                 >
-                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  <Plus className="mr-1.5 h-3.5 w-3.5" />
                   Add Question
                 </Button>
               </div>
 
               {questions.length === 0 ? (
-                <div className="p-6 text-center text-muted-foreground border border-dashed rounded-xl">
+                <div className="rounded-xl border border-dashed p-6 text-center text-muted-foreground">
                   <p className="text-sm">No questions in this section yet.</p>
                   <Button
-                    className="rounded-xl gradient-bg text-white mt-2"
+                    className="gradient-bg mt-2 rounded-xl text-white"
                     size="sm"
                     onClick={() => onCreateQuestion(section.id)}
                   >
-                    <Plus className="h-3.5 w-3.5 mr-1.5" />
+                    <Plus className="mr-1.5 h-3.5 w-3.5" />
                     Add first question
                   </Button>
                 </div>
@@ -735,12 +763,13 @@ function SortableSectionCard({
                 <div className="space-y-2">
                   {questions.map((q, qIndex) => {
                     const isEditing = editingQuestionId === q.id;
-                    const isHtml = q.contentFormat === "html" || /<\w+[\s\S]*>/i.test(q.question || "");
+                    const isHtml =
+                      q.contentFormat === "html" || /<\w+[\s\S]*>/i.test(q.question || "");
 
                     return (
                       <div
                         key={q.id}
-                        className={`p-3 rounded-xl border ${
+                        className={`rounded-xl border p-3 ${
                           isEditing ? "border-primary bg-primary/5" : "border-border bg-background"
                         }`}
                       >
@@ -754,9 +783,14 @@ function SortableSectionCard({
                         ) : (
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center gap-2 mb-2">
-                                <span className="text-xs font-mono text-muted-foreground">Q{qIndex + 1}</span>
-                                <Badge variant="secondary" className={`rounded-full text-xs ${difficultyBadge(q.difficulty)}`}>
+                              <div className="mb-2 flex flex-wrap items-center gap-2">
+                                <span className="font-mono text-xs text-muted-foreground">
+                                  Q{qIndex + 1}
+                                </span>
+                                <Badge
+                                  variant="secondary"
+                                  className={`rounded-full text-xs ${difficultyBadge(q.difficulty)}`}
+                                >
                                   {q.difficulty}
                                 </Badge>
                                 {q.subject && (
@@ -765,12 +799,18 @@ function SortableSectionCard({
                                   </Badge>
                                 )}
                                 {q.isActive !== false ? (
-                                  <Badge variant="secondary" className="rounded-full text-xs bg-green-100 text-green-700">
-                                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                                  <Badge
+                                    variant="secondary"
+                                    className="rounded-full bg-green-100 text-xs text-green-700"
+                                  >
+                                    <CheckCircle2 className="mr-1 h-3 w-3" />
                                     published
                                   </Badge>
                                 ) : (
-                                  <Badge variant="secondary" className="rounded-full text-xs bg-gray-100 text-gray-700">
+                                  <Badge
+                                    variant="secondary"
+                                    className="rounded-full bg-gray-100 text-xs text-gray-700"
+                                  >
                                     draft
                                   </Badge>
                                 )}
@@ -778,14 +818,14 @@ function SortableSectionCard({
 
                               {isHtml ? (
                                 <div
-                                  className="prose prose-sm max-w-none text-sm line-clamp-2"
+                                  className="prose prose-sm line-clamp-2 max-w-none text-sm"
                                   dangerouslySetInnerHTML={{ __html: q.question }}
                                 />
                               ) : (
-                                <p className="text-sm line-clamp-2">{q.question}</p>
+                                <p className="line-clamp-2 text-sm">{q.question}</p>
                               )}
 
-                              <div className="flex items-center gap-2 mt-2">
+                              <div className="mt-2 flex items-center gap-2">
                                 <span className="text-xs text-muted-foreground">
                                   Options: {q.options?.length || 0}
                                 </span>
@@ -899,7 +939,16 @@ export default function TestForm() {
 
   // sections editor
   const [sections, setSections] = useState<Section[]>([
-    { id: uid("sec"), name: "Section 1", questionsCount: 0, durationMinutes: undefined, attemptConstraints: null, selectionRule: null, difficultyLevel: 0.5, topics: [] },
+    {
+      id: uid("sec"),
+      name: "Section 1",
+      questionsCount: 0,
+      durationMinutes: undefined,
+      attemptConstraints: null,
+      selectionRule: null,
+      difficultyLevel: 0.5,
+      topics: [],
+    },
   ]);
   const [collapsedSectionIds, setCollapsedSectionIds] = useState<string[]>([]);
   const [sectionValidationMap, setSectionValidationMap] = useState<
@@ -942,7 +991,8 @@ export default function TestForm() {
   }, [sections]);
 
   const testDurationValue = Math.max(0, safeNum(durationMinutes, 0));
-  const sectionDurationMismatch = testDurationValue > 0 && computedSectionDuration > testDurationValue;
+  const sectionDurationMismatch =
+    testDurationValue > 0 && computedSectionDuration > testDurationValue;
   const sectionSensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 6 },
@@ -984,7 +1034,9 @@ export default function TestForm() {
 
         setTitle(String(d?.title || ""));
         setSubject(String(d?.subject || "General Test"));
-        const baseDifficulty = normalizeLegacyDifficulty(d?.difficultyLevel ?? d?.level ?? d?.difficulty);
+        const baseDifficulty = normalizeLegacyDifficulty(
+          d?.difficultyLevel ?? d?.level ?? d?.difficulty
+        );
         setDescription(String(d?.description || ""));
 
         setDurationMinutes(String(safeNum(d?.durationMinutes ?? d?.duration, 60)));
@@ -1024,14 +1076,25 @@ export default function TestForm() {
                   s?.durationMinutes != null
                     ? safeNum(s.durationMinutes, undefined as any)
                     : s?.duration != null
-                    ? safeNum(s.duration, undefined as any)
-                    : undefined,
+                      ? safeNum(s.duration, undefined as any)
+                      : undefined,
                 difficultyLevel: clampDifficulty(
-                  s?.difficultyLevel ?? normalizeLegacyDifficulty(s?.difficulty ?? s?.level ?? baseDifficulty)
+                  s?.difficultyLevel ??
+                    normalizeLegacyDifficulty(s?.difficulty ?? s?.level ?? baseDifficulty)
                 ),
                 topics: Array.isArray(s?.topics) ? s.topics.map(String) : [],
               }))
-            : [{ id: uid("sec"), name: "Section 1", questionsCount: 0, attemptConstraints: null, selectionRule: null, difficultyLevel: baseDifficulty, topics: [] }];
+            : [
+                {
+                  id: uid("sec"),
+                  name: "Section 1",
+                  questionsCount: 0,
+                  attemptConstraints: null,
+                  selectionRule: null,
+                  difficultyLevel: baseDifficulty,
+                  topics: [],
+                },
+              ];
 
         setSections(parsed);
         setCollapsedSectionIds([]);
@@ -1074,7 +1137,8 @@ export default function TestForm() {
             subject: String(data?.subject || ""),
             topic: String(data?.topic || ""),
             marks: data?.marks != null ? safeNum(data?.marks, 0) : undefined,
-            negativeMarks: data?.negativeMarks != null ? safeNum(data?.negativeMarks, 0) : undefined,
+            negativeMarks:
+              data?.negativeMarks != null ? safeNum(data?.negativeMarks, 0) : undefined,
             isActive: data?.isActive !== false,
             usageCount: safeNum(data?.usageCount, 0),
             source: String(data?.source || "manual"),
@@ -1108,7 +1172,15 @@ export default function TestForm() {
   function addSection() {
     setSections((prev) => [
       ...prev,
-      { id: uid("sec"), name: `Section ${prev.length + 1}`, questionsCount: 0, attemptConstraints: null, selectionRule: null, difficultyLevel: computedDifficultyLevel, topics: [] },
+      {
+        id: uid("sec"),
+        name: `Section ${prev.length + 1}`,
+        questionsCount: 0,
+        attemptConstraints: null,
+        selectionRule: null,
+        difficultyLevel: computedDifficultyLevel,
+        topics: [],
+      },
     ]);
   }
 
@@ -1226,7 +1298,8 @@ export default function TestForm() {
     }
 
     const marks = formMarks.trim() === "" ? undefined : safeNum(formMarks, undefined as any);
-    const negativeMarks = formNegMarks.trim() === "" ? undefined : safeNum(formNegMarks, undefined as any);
+    const negativeMarks =
+      formNegMarks.trim() === "" ? undefined : safeNum(formNegMarks, undefined as any);
 
     setSavingQuestion(true);
     try {
@@ -1247,14 +1320,18 @@ export default function TestForm() {
       };
 
       if (marks != null && Number.isFinite(marks)) basePayload.marks = marks;
-      if (negativeMarks != null && Number.isFinite(negativeMarks)) basePayload.negativeMarks = negativeMarks;
+      if (negativeMarks != null && Number.isFinite(negativeMarks))
+        basePayload.negativeMarks = negativeMarks;
 
       if (!editingQuestionId || editingQuestionId === "new") {
         basePayload.createdAt = serverTimestamp();
         await addDoc(collection(db, "test_series", testId, "questions"), basePayload);
         toast.success("Question added");
       } else {
-        await updateDoc(doc(db, "test_series", testId, "questions", editingQuestionId), basePayload);
+        await updateDoc(
+          doc(db, "test_series", testId, "questions", editingQuestionId),
+          basePayload
+        );
         toast.success("Question updated");
       }
 
@@ -1383,7 +1460,10 @@ export default function TestForm() {
       })),
 
       // this is only “declared” count (Questions page can update real count later)
-      questionsCount: cleanedSections.reduce((acc: number, s: any) => acc + (s.questionsCount || 0), 0),
+      questionsCount: cleanedSections.reduce(
+        (acc: number, s: any) => acc + (s.questionsCount || 0),
+        0
+      ),
 
       isPublished,
       updatedAt: serverTimestamp(),
@@ -1422,8 +1502,8 @@ export default function TestForm() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-display font-bold">Admin • Test Editor</h1>
-          <p className="text-muted-foreground text-sm">You must be logged in as an admin.</p>
+          <h1 className="font-display text-2xl font-bold">Admin • Test Editor</h1>
+          <p className="text-sm text-muted-foreground">You must be logged in as an admin.</p>
         </div>
         <EmptyState
           title="Admin access required"
@@ -1442,43 +1522,51 @@ export default function TestForm() {
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading test…
         </div>
-        <div className="rounded-xl border border-border p-6 text-muted-foreground">Please wait…</div>
+        <div className="rounded-xl border border-border p-6 text-muted-foreground">
+          Please wait…
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="mx-auto max-w-5xl space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div className="space-y-1">
           <Button variant="ghost" asChild className="px-0">
             <Link to="/admin/tests">
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Test Bank
             </Link>
           </Button>
-          <h1 className="text-2xl font-display font-bold">
+          <h1 className="font-display text-2xl font-bold">
             {isEdit ? "Edit Test" : "Create Test"}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Saved in <Badge variant="secondary" className="rounded-full">test_series</Badge>
+            Saved in{" "}
+            <Badge variant="secondary" className="rounded-full">
+              test_series
+            </Badge>
           </p>
         </div>
 
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="rounded-xl"
-            onClick={() => save()}
-            disabled={saving}
-          >
-            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+          <Button variant="outline" className="rounded-xl" onClick={() => save()} disabled={saving}>
+            {saving ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
             Save
           </Button>
 
           <Button className="gradient-bg rounded-xl" onClick={() => save(false)} disabled={saving}>
-            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+            {saving ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
             Save
           </Button>
         </div>
@@ -1490,10 +1578,14 @@ export default function TestForm() {
           <CardTitle className="text-base">Basic Info</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label>Title</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} className="rounded-xl" />
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="rounded-xl"
+              />
             </div>
 
             <div className="space-y-2">
@@ -1514,7 +1606,9 @@ export default function TestForm() {
 
             <div className="space-y-2 md:col-span-2">
               <Label>Test Difficulty (avg of sections)</Label>
-              <span className={`text-sm font-semibold min-w-[70px] text-right ${getDifficultyColor(computedDifficultyLevel)}`}>
+              <span
+                className={`min-w-[70px] text-right text-sm font-semibold ${getDifficultyColor(computedDifficultyLevel)}`}
+              >
                 {computedDifficultyLevel.toFixed(2)} — {getDifficultyLabel(computedDifficultyLevel)}
               </span>
             </div>
@@ -1564,13 +1658,13 @@ export default function TestForm() {
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="rounded-2xl min-h-[110px]"
+              className="min-h-[110px] rounded-2xl"
               placeholder="Write a short description for students..."
             />
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex items-center justify-between p-3 rounded-xl bg-muted/40 border border-border flex-1">
+          <div className="flex flex-col gap-4 sm:flex-row">
+            <div className="flex flex-1 items-center justify-between rounded-xl border border-border bg-muted/40 p-3">
               <div className="space-y-0.5">
                 <p className="text-sm font-medium">Requires Unlock</p>
                 <p className="text-xs text-muted-foreground">
@@ -1580,7 +1674,7 @@ export default function TestForm() {
               <Switch checked={requiresUnlock} onCheckedChange={setRequiresUnlock} />
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-xl bg-muted/40 border border-border flex-1">
+            <div className="flex flex-1 items-center justify-between rounded-xl border border-border bg-muted/40 p-3">
               <div className="space-y-0.5">
                 <p className="text-sm font-medium">Published</p>
                 <p className="text-xs text-muted-foreground">
@@ -1598,7 +1692,7 @@ export default function TestForm() {
         <CardHeader>
           <CardTitle className="text-base">Marking Scheme</CardTitle>
         </CardHeader>
-        <CardContent className="grid sm:grid-cols-3 gap-4">
+        <CardContent className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-2">
             <Label>Correct</Label>
             <Input
@@ -1640,12 +1734,12 @@ export default function TestForm() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Sections</CardTitle>
           <Button variant="outline" className="rounded-xl" onClick={addSection}>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             Add Section
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <div className="rounded-xl border border-border bg-muted/20 p-3">
               <p className="text-xs text-muted-foreground">Section count</p>
               <p className="text-base font-semibold">{sections.length}</p>
@@ -1677,17 +1771,22 @@ export default function TestForm() {
             </p>
           ))}
 
-          <p className="text-xs text-muted-foreground">Drag sections using the handle to reorder.</p>
+          <p className="text-xs text-muted-foreground">
+            Drag sections using the handle to reorder.
+          </p>
 
           <DndContext
             sensors={sectionSensors}
             collisionDetection={closestCenter}
             onDragEnd={handleSectionDragEnd}
           >
-            <SortableContext items={sections.map((section) => section.id)} strategy={verticalListSortingStrategy}>
+            <SortableContext
+              items={sections.map((section) => section.id)}
+              strategy={verticalListSortingStrategy}
+            >
               <div className="space-y-3">
                 {sections.map((section, index) => {
-                  const sectionQuestions = questions.filter(q => q.sectionId === section.id);
+                  const sectionQuestions = questions.filter((q) => q.sectionId === section.id);
                   return (
                     <SortableSectionCard
                       key={section.id}
@@ -1717,7 +1816,8 @@ export default function TestForm() {
           </DndContext>
 
           <p className="text-xs text-muted-foreground">
-            Note: the <b>Questions</b> page can maintain the real count later by syncing with question docs.
+            Note: the <b>Questions</b> page can maintain the real count later by syncing with
+            question docs.
           </p>
         </CardContent>
       </Card>
@@ -1729,16 +1829,16 @@ export default function TestForm() {
         </CardHeader>
         <CardContent className="space-y-2">
           <Label>Topics</Label>
-          <TagInput 
-            tags={syllabusTags} 
-            setTags={setSyllabusTags} 
-            placeholder="Type a topic and press Enter..." 
+          <TagInput
+            tags={syllabusTags}
+            setTags={setSyllabusTags}
+            placeholder="Type a topic and press Enter..."
           />
         </CardContent>
       </Card>
 
       {/* Bottom actions */}
-      <div className="flex flex-col sm:flex-row gap-2 justify-end">
+      <div className="flex flex-col justify-end gap-2 sm:flex-row">
         <Button
           variant="outline"
           className="rounded-xl"
@@ -1747,21 +1847,23 @@ export default function TestForm() {
         >
           Cancel
         </Button>
-        <Button
-          variant="outline"
-          className="rounded-xl"
-          onClick={() => save()}
-          disabled={saving}
-        >
-          {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+        <Button variant="outline" className="rounded-xl" onClick={() => save()} disabled={saving}>
+          {saving ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
+          )}
           Save
         </Button>
         <Button className="gradient-bg rounded-xl" onClick={() => save(false)} disabled={saving}>
-          {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+          {saving ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
+          )}
           Save
         </Button>
       </div>
     </div>
   );
 }
-

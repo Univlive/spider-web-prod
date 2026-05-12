@@ -100,7 +100,8 @@ function formatDateLabel(ms: number) {
 
 function normalizeStatus(raw: any): AttemptStatus {
   const s = String(raw || "").toLowerCase();
-  if (s === "in-progress" || s === "inprogress" || s === "running" || s === "started") return "in-progress";
+  if (s === "in-progress" || s === "inprogress" || s === "running" || s === "started")
+    return "in-progress";
   if (s === "expired" || s === "timeout") return "expired";
   return "completed";
 }
@@ -112,7 +113,11 @@ function mapAttemptRow(id: string, a: any): AttemptRow {
     a?.accuracy != null
       ? (() => {
           const n = Number(a.accuracy);
-          const pct = Number.isFinite(n) ? (n <= 1.01 ? n * 100 : n) : accuracyFrom(score, maxScore);
+          const pct = Number.isFinite(n)
+            ? n <= 1.01
+              ? n * 100
+              : n
+            : accuracyFrom(score, maxScore);
           return Math.max(0, Math.min(100, Math.round(pct)));
         })()
       : accuracyFrom(score, maxScore);
@@ -228,10 +233,20 @@ export default function StudentDashboard() {
 
   // Enrollment details (batch name, course/program name, subject names)
   const { data: enrollment = null } = useQuery({
-    queryKey: ["studentEnrollment", firebaseUser?.uid, educatorId, profile?.batchId, profile?.courseId],
+    queryKey: [
+      "studentEnrollment",
+      firebaseUser?.uid,
+      educatorId,
+      profile?.batchId,
+      profile?.courseId,
+    ],
     queryFn: async () => {
       const { branchId, courseId, batchId, globalCourseName, subjectIds } = profile!;
-      const results: { batchName: string | null; courseName: string | null; subjectNames: string[] } = {
+      const results: {
+        batchName: string | null;
+        courseName: string | null;
+        subjectNames: string[];
+      } = {
         batchName: null,
         courseName: globalCourseName || null,
         subjectNames: [],
@@ -245,17 +260,31 @@ export default function StudentDashboard() {
               doc(db, "educators", educatorId, "branches", branchId, "courses", courseId)
             );
             if (courseSnap.exists()) results.courseName = String(courseSnap.data()?.name || "");
-          } catch { /* non-fatal */ }
+          } catch {
+            /* non-fatal */
+          }
         }
 
         // Fetch batch name
         if (batchId) {
           try {
             const batchSnap = await getDoc(
-              doc(db, "educators", educatorId, "branches", branchId, "courses", courseId, "batches", batchId)
+              doc(
+                db,
+                "educators",
+                educatorId,
+                "branches",
+                branchId,
+                "courses",
+                courseId,
+                "batches",
+                batchId
+              )
             );
             if (batchSnap.exists()) results.batchName = String(batchSnap.data()?.name || "");
-          } catch { /* non-fatal */ }
+          } catch {
+            /* non-fatal */
+          }
         }
       }
 
@@ -266,7 +295,9 @@ export default function StudentDashboard() {
           const q = query(collection(db, "subjects"), where(documentId(), "in", ids.slice(0, 10)));
           const snap = await getDocs(q);
           results.subjectNames = snap.docs.map((d) => String(d.data()?.name || "")).filter(Boolean);
-        } catch { /* non-fatal */ }
+        } catch {
+          /* non-fatal */
+        }
       }
 
       return results;
@@ -333,7 +364,11 @@ export default function StudentDashboard() {
 
   const firstName = useMemo(() => {
     const name =
-      userDoc?.displayName || userDoc?.name || profile?.displayName || firebaseUser?.displayName || "Student";
+      userDoc?.displayName ||
+      userDoc?.name ||
+      profile?.displayName ||
+      firebaseUser?.displayName ||
+      "Student";
     return name.split(" ")[0] || "Student";
   }, [userDoc, profile, firebaseUser]);
 
@@ -348,12 +383,16 @@ export default function StudentDashboard() {
 
   const avgScore = useMemo(() => {
     if (completedAttempts.length === 0) return 0;
-    return Math.round(completedAttempts.reduce((acc, a) => acc + a.score, 0) / completedAttempts.length);
+    return Math.round(
+      completedAttempts.reduce((acc, a) => acc + a.score, 0) / completedAttempts.length
+    );
   }, [completedAttempts]);
 
   const avgMaxScore = useMemo(() => {
     if (completedAttempts.length === 0) return 0;
-    return Math.round(completedAttempts.reduce((acc, a) => acc + a.maxScore, 0) / completedAttempts.length);
+    return Math.round(
+      completedAttempts.reduce((acc, a) => acc + a.maxScore, 0) / completedAttempts.length
+    );
   }, [completedAttempts]);
 
   const scoreTrend = useMemo(() => {
@@ -377,21 +416,21 @@ export default function StudentDashboard() {
   }, [completedAttempts]);
 
   if (loading) {
-    return <div className="text-center py-12 text-muted-foreground">Loading...</div>;
+    return <div className="py-12 text-center text-muted-foreground">Loading...</div>;
   }
 
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <Card className="card-soft border-0 bg-gradient-to-r from-pastel-mint to-pastel-lavender overflow-hidden">
-        <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+      <Card className="card-soft overflow-hidden border-0 bg-gradient-to-r from-pastel-mint to-pastel-lavender">
+        <CardContent className="flex flex-col items-center justify-between gap-4 p-6 md:flex-row">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Welcome back, {firstName}!</h1>
-            <p className="text-muted-foreground mt-1">Ready to take on today's challenges?</p>
+            <p className="mt-1 text-muted-foreground">Ready to take on today's challenges?</p>
           </div>
           <Button className="gradient-bg rounded-xl" asChild>
             <Link to="/student/tests">
-              <Play className="h-4 w-4 mr-2" />
+              <Play className="mr-2 h-4 w-4" />
               Browse Tests
             </Link>
           </Button>
@@ -399,31 +438,35 @@ export default function StudentDashboard() {
       </Card>
 
       {/* Enrollment Details */}
-      {(enrollment?.batchName || enrollment?.courseName || (enrollment?.subjectNames?.length ?? 0) > 0) && (
+      {(enrollment?.batchName ||
+        enrollment?.courseName ||
+        (enrollment?.subjectNames?.length ?? 0) > 0) && (
         <Card className="card-soft border-0 bg-muted/40">
           <CardContent className="p-4">
             <div className="flex flex-wrap gap-4 text-sm">
               {enrollment?.courseName && (
-                <div className="flex items-center gap-2 min-w-0">
-                  <GraduationCap className="h-4 w-4 text-primary shrink-0" />
-                  <span className="text-muted-foreground shrink-0">Program:</span>
-                  <span className="font-medium truncate">{enrollment.courseName}</span>
+                <div className="flex min-w-0 items-center gap-2">
+                  <GraduationCap className="h-4 w-4 shrink-0 text-primary" />
+                  <span className="shrink-0 text-muted-foreground">Program:</span>
+                  <span className="truncate font-medium">{enrollment.courseName}</span>
                 </div>
               )}
               {enrollment?.batchName && (
-                <div className="flex items-center gap-2 min-w-0">
-                  <Users2 className="h-4 w-4 text-primary shrink-0" />
-                  <span className="text-muted-foreground shrink-0">Batch:</span>
-                  <span className="font-medium truncate">{enrollment.batchName}</span>
+                <div className="flex min-w-0 items-center gap-2">
+                  <Users2 className="h-4 w-4 shrink-0 text-primary" />
+                  <span className="shrink-0 text-muted-foreground">Batch:</span>
+                  <span className="truncate font-medium">{enrollment.batchName}</span>
                 </div>
               )}
               {(enrollment?.subjectNames?.length ?? 0) > 0 && (
-                <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                  <BookOpen className="h-4 w-4 text-primary shrink-0" />
-                  <span className="text-muted-foreground shrink-0">Subjects:</span>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <BookOpen className="h-4 w-4 shrink-0 text-primary" />
+                  <span className="shrink-0 text-muted-foreground">Subjects:</span>
                   <div className="flex flex-wrap gap-1">
                     {enrollment!.subjectNames.map((s) => (
-                      <Badge key={s} variant="secondary" className="text-xs rounded-full">{s}</Badge>
+                      <Badge key={s} variant="secondary" className="rounded-full text-xs">
+                        {s}
+                      </Badge>
                     ))}
                   </div>
                 </div>
@@ -436,15 +479,15 @@ export default function StudentDashboard() {
       {/* Resume In-Progress Test — prominent */}
       {inProgressAttempt && (
         <Card className="card-soft border-0 border-l-4 border-l-amber-400 bg-amber-50 dark:bg-amber-950/20">
-          <CardContent className="p-5 flex items-center justify-between gap-4">
+          <CardContent className="flex items-center justify-between gap-4 p-5">
             <div>
-              <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide">
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
                 In Progress
               </p>
-              <p className="font-semibold text-foreground mt-0.5">{inProgressAttempt.testTitle}</p>
+              <p className="mt-0.5 font-semibold text-foreground">{inProgressAttempt.testTitle}</p>
               <p className="text-sm text-muted-foreground">{inProgressAttempt.subject}</p>
             </div>
-            <Button className="gradient-bg rounded-xl shrink-0" asChild>
+            <Button className="gradient-bg shrink-0 rounded-xl" asChild>
               <Link to={`/student/tests/${inProgressAttempt.testId}/attempt`}>Continue Test</Link>
             </Button>
           </CardContent>
@@ -453,26 +496,26 @@ export default function StudentDashboard() {
 
       {/* Live Tests */}
       <section>
-        <div className="flex items-center justify-between mb-3">
+        <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">Available Tests</h2>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/student/tests">
-              View All <ArrowRight className="h-4 w-4 ml-1" />
+              View All <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
         </div>
         {liveTests.length === 0 ? (
           <Card className="card-soft border-0">
-            <CardContent className="p-6 text-center text-muted-foreground text-sm">
+            <CardContent className="p-6 text-center text-sm text-muted-foreground">
               No tests available right now. Check back soon!
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {liveTests.map((test) => (
-              <Card key={test.id} className="card-soft border-0 flex flex-col">
-                <CardContent className="p-4 flex flex-col gap-3 flex-1">
-                  <p className="font-semibold text-sm line-clamp-2 text-foreground">
+              <Card key={test.id} className="card-soft flex flex-col border-0">
+                <CardContent className="flex flex-1 flex-col gap-3 p-4">
+                  <p className="line-clamp-2 text-sm font-semibold text-foreground">
                     {test.title || "Untitled Test"}
                   </p>
                   <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
@@ -513,23 +556,23 @@ export default function StudentDashboard() {
       </div>
 
       {/* Leaderboard Preview + Score Trend */}
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* Leaderboard */}
         <Card className="card-soft border-0">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
               <Trophy className="h-5 w-5 text-amber-500" />
               Top Performers
             </CardTitle>
             <Button variant="ghost" size="sm" asChild>
               <Link to="/student/rankings">
-                Full Rankings <ArrowRight className="h-3 w-3 ml-1" />
+                Full Rankings <ArrowRight className="ml-1 h-3 w-3" />
               </Link>
             </Button>
           </CardHeader>
           <CardContent>
             {leaderboard.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
+              <p className="py-4 text-center text-sm text-muted-foreground">
                 No rankings yet. Be the first!
               </p>
             ) : (
@@ -544,12 +587,14 @@ export default function StudentDashboard() {
                   return (
                     <div
                       key={entry.rank}
-                      className={`flex items-center gap-3 py-2 px-3 rounded-lg ${isMe ? "bg-primary/10 font-semibold" : ""}`}
+                      className={`flex items-center gap-3 rounded-lg px-3 py-2 ${isMe ? "bg-primary/10 font-semibold" : ""}`}
                     >
-                      <span className={`w-6 text-sm font-bold ${rankColors[entry.rank] || "text-muted-foreground"}`}>
+                      <span
+                        className={`w-6 text-sm font-bold ${rankColors[entry.rank] || "text-muted-foreground"}`}
+                      >
                         #{entry.rank}
                       </span>
-                      <span className="flex-1 text-sm truncate">
+                      <span className="flex-1 truncate text-sm">
                         {isMe ? "You" : entry.name.split(" ")[0]}
                       </span>
                       <Badge variant="secondary" className="rounded-full text-xs">
@@ -575,7 +620,13 @@ export default function StudentDashboard() {
                 <XAxis dataKey="date" className="text-xs" />
                 <YAxis className="text-xs" />
                 <Tooltip contentStyle={{ borderRadius: "12px" }} />
-                <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} dot />
+                <Line
+                  type="monotone"
+                  dataKey="score"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot
+                />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -608,7 +659,7 @@ export default function StudentDashboard() {
           <CardTitle className="text-lg">Recent Attempts</CardTitle>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/student/attempts">
-              View All <ArrowRight className="h-4 w-4 ml-1" />
+              View All <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
         </CardHeader>

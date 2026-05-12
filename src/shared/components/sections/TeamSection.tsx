@@ -11,7 +11,8 @@ const teamCategories = [
         role: "Economics Expert",
         image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop",
         highlight: "200/200 in Economics",
-        about: "Passionate about simplifying complex economic theories and helping students ace their macro and micro concepts.",
+        about:
+          "Passionate about simplifying complex economic theories and helping students ace their macro and micro concepts.",
         socials: { linkedin: "#", twitter: "#", email: "mailto:#" },
       },
       {
@@ -19,7 +20,8 @@ const teamCategories = [
         role: "Accountancy Head",
         image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=400&fit=crop",
         highlight: "SRCC Alumni",
-        about: "Specializes in financial statement analysis and core accounting principles for CUET dominance.",
+        about:
+          "Specializes in financial statement analysis and core accounting principles for CUET dominance.",
         socials: { linkedin: "#", twitter: "#" },
       },
       {
@@ -27,7 +29,8 @@ const teamCategories = [
         role: "Business Studies",
         image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
         highlight: "Top Educator '23",
-        about: "Brings business case studies to life, ensuring students score perfectly in theoretical frameworks.",
+        about:
+          "Brings business case studies to life, ensuring students score perfectly in theoretical frameworks.",
         socials: { linkedin: "#", email: "mailto:#" },
       },
       {
@@ -35,7 +38,8 @@ const teamCategories = [
         role: "Commerce Strategist",
         image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop",
         highlight: "CA Finalist",
-        about: "Crafts the ultimate test-taking strategies and time-management skills for commerce students.",
+        about:
+          "Crafts the ultimate test-taking strategies and time-management skills for commerce students.",
         socials: { linkedin: "#", twitter: "#" },
       },
     ],
@@ -49,7 +53,8 @@ const teamCategories = [
         role: "Political Science",
         image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop",
         highlight: "Lady Shri Ram",
-        about: "Expert in Indian and World Politics, making extensive syllabi engaging and easy to retain.",
+        about:
+          "Expert in Indian and World Politics, making extensive syllabi engaging and easy to retain.",
         socials: { linkedin: "#", twitter: "#" },
       },
       {
@@ -57,7 +62,8 @@ const teamCategories = [
         role: "History Expert",
         image: "https://images.unsplash.com/photo-1598550874175-4d0ef436c909?w=400&h=400&fit=crop",
         highlight: "DU Top Ranker",
-        about: "Transforms historical timelines into captivating stories, ensuring max retention for CUET.",
+        about:
+          "Transforms historical timelines into captivating stories, ensuring max retention for CUET.",
         socials: { linkedin: "#", email: "mailto:#" },
       },
       {
@@ -65,7 +71,8 @@ const teamCategories = [
         role: "Geography Specialist",
         image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop",
         highlight: "JNU Alumni",
-        about: "Master of human and physical geography with a knack for map-based question strategies.",
+        about:
+          "Master of human and physical geography with a knack for map-based question strategies.",
         socials: { linkedin: "#", twitter: "#" },
       },
     ],
@@ -79,7 +86,8 @@ const teamCategories = [
         role: "English Expert",
         image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop",
         highlight: "200/200 in English",
-        about: "Decodes reading comprehension and vocabulary with proven tricks to secure full marks.",
+        about:
+          "Decodes reading comprehension and vocabulary with proven tricks to secure full marks.",
         socials: { linkedin: "#", twitter: "#", email: "mailto:#" },
       },
       {
@@ -87,7 +95,8 @@ const teamCategories = [
         role: "Quant & LRDI",
         image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
         highlight: "SBSC",
-        about: "Makes logical reasoning and quantitative aptitude the highest-scoring section for students.",
+        about:
+          "Makes logical reasoning and quantitative aptitude the highest-scoring section for students.",
         socials: { linkedin: "#", twitter: "#" },
       },
       {
@@ -95,7 +104,8 @@ const teamCategories = [
         role: "Verbal Ability",
         image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop",
         highlight: "10+ Years Exp.",
-        about: "Grammar enthusiast and vocabulary builder, preparing students for any language curveballs.",
+        about:
+          "Grammar enthusiast and vocabulary builder, preparing students for any language curveballs.",
         socials: { linkedin: "#" },
       },
       {
@@ -103,7 +113,8 @@ const teamCategories = [
         role: "General Awareness",
         image: "https://images.unsplash.com/photo-1530268729831-4b0b9e170218?w=400&h=400&fit=crop",
         highlight: "UPSC Interviewee",
-        about: "Keeps students updated with dynamic current affairs and static GK without the overwhelm.",
+        about:
+          "Keeps students updated with dynamic current affairs and static GK without the overwhelm.",
         socials: { linkedin: "#", twitter: "#" },
       },
     ],
@@ -117,7 +128,8 @@ const teamCategories = [
         role: "Physics Expert",
         image: "https://images.unsplash.com/photo-1556157382-97eda2d62296?w=400&h=400&fit=crop",
         highlight: "PhD IIT Delhi",
-        about: "Specializes in modern physics and electromagnetism, focusing on application-based MCQs.",
+        about:
+          "Specializes in modern physics and electromagnetism, focusing on application-based MCQs.",
         socials: { linkedin: "#", email: "mailto:#" },
       },
       {
@@ -133,7 +145,8 @@ const teamCategories = [
         role: "Core Mathematics",
         image: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=400&h=400&fit=crop",
         highlight: "100 Percentiler",
-        about: "Calculus and Algebra mastermind helping students navigate lengthy calculations with shortcuts.",
+        about:
+          "Calculus and Algebra mastermind helping students navigate lengthy calculations with shortcuts.",
         socials: { linkedin: "#", twitter: "#" },
       },
     ],
@@ -146,23 +159,24 @@ export function TeamSection() {
       <div className="container-main">
         {/* Header */}
         <motion.div
-          className="text-center max-w-2xl mx-auto mb-20"
+          className="mx-auto mb-20 max-w-2xl text-center"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <span className="inline-block px-4 py-1.5 bg-primary/10 text-primary text-sm font-semibold rounded-full mb-4">
+          <span className="mb-4 inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary">
             Meet Our Team
           </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+          <h2 className="mb-4 text-3xl font-bold sm:text-4xl lg:text-5xl">
             The Experts Behind{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Preparekaro.in
             </span>
           </h2>
-          <p className="text-muted-foreground text-lg">
-            A dedicated team of top-tier educators and alumni committed to transforming your CUET preparation journey.
+          <p className="text-lg text-muted-foreground">
+            A dedicated team of top-tier educators and alumni committed to transforming your CUET
+            preparation journey.
           </p>
         </motion.div>
 
@@ -172,24 +186,24 @@ export function TeamSection() {
             <div key={team.category}>
               {/* Category Header */}
               <motion.div
-                className="mb-10 text-center sm:text-left border-b border-border pb-4"
+                className="mb-10 border-b border-border pb-4 text-center sm:text-left"
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5 }}
               >
-                <h3 className="text-2xl sm:text-3xl font-bold mb-2 text-foreground">
+                <h3 className="mb-2 text-2xl font-bold text-foreground sm:text-3xl">
                   {team.category}
                 </h3>
                 <p className="text-muted-foreground">{team.description}</p>
               </motion.div>
 
               {/* Members Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {team.members.map((member, memberIndex) => (
                   <motion.div
                     key={member.name}
-                    className="flex flex-col bg-card rounded-2xl border border-border shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group"
+                    className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-xl"
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -200,13 +214,13 @@ export function TeamSection() {
                       <img
                         src={member.image}
                         alt={member.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         loading="lazy"
                       />
                       {/* Highlight Badge Overlay */}
                       {member.highlight && (
-                        <div className="absolute top-4 right-4 bg-background/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg border border-border">
-                          <span className="text-xs font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                        <div className="absolute right-4 top-4 rounded-full border border-border bg-background/90 px-3 py-1.5 shadow-lg backdrop-blur-sm">
+                          <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-xs font-bold text-transparent">
                             {member.highlight}
                           </span>
                         </div>
@@ -214,25 +228,21 @@ export function TeamSection() {
                     </div>
 
                     {/* Content */}
-                    <div className="flex flex-col flex-grow p-6">
-                      <h4 className="font-bold text-xl mb-1 text-foreground">
-                        {member.name}
-                      </h4>
-                      <p className="text-primary font-medium text-sm mb-4">
-                        {member.role}
-                      </p>
-                      <p className="text-muted-foreground text-sm leading-relaxed mb-6 flex-grow">
+                    <div className="flex flex-grow flex-col p-6">
+                      <h4 className="mb-1 text-xl font-bold text-foreground">{member.name}</h4>
+                      <p className="mb-4 text-sm font-medium text-primary">{member.role}</p>
+                      <p className="mb-6 flex-grow text-sm leading-relaxed text-muted-foreground">
                         {member.about}
                       </p>
 
                       {/* Socials */}
-                      <div className="flex items-center gap-3 pt-4 border-t border-border/50 mt-auto">
+                      <div className="mt-auto flex items-center gap-3 border-t border-border/50 pt-4">
                         {member.socials.linkedin && (
                           <a
                             href={member.socials.linkedin}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 rounded-full bg-muted text-muted-foreground hover:bg-[#0A66C2] hover:text-white transition-colors duration-300"
+                            className="rounded-full bg-muted p-2 text-muted-foreground transition-colors duration-300 hover:bg-[#0A66C2] hover:text-white"
                             aria-label="LinkedIn Profile"
                           >
                             <Linkedin className="h-4 w-4" />
@@ -243,7 +253,7 @@ export function TeamSection() {
                             href={member.socials.twitter}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 rounded-full bg-muted text-muted-foreground hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors duration-300"
+                            className="rounded-full bg-muted p-2 text-muted-foreground transition-colors duration-300 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
                             aria-label="Twitter Profile"
                           >
                             <Twitter className="h-4 w-4" />
@@ -252,7 +262,7 @@ export function TeamSection() {
                         {member.socials.email && (
                           <a
                             href={member.socials.email}
-                            className="p-2 rounded-full bg-muted text-muted-foreground hover:bg-primary hover:text-white transition-colors duration-300"
+                            className="rounded-full bg-muted p-2 text-muted-foreground transition-colors duration-300 hover:bg-primary hover:text-white"
                             aria-label="Email Contact"
                           >
                             <Mail className="h-4 w-4" />

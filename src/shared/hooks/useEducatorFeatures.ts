@@ -16,7 +16,10 @@ export function useEducatorFeatures(educatorId: string | undefined) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!educatorId) { setLoading(false); return; }
+    if (!educatorId) {
+      setLoading(false);
+      return;
+    }
     const unsub = onSnapshot(doc(db, "educators", educatorId), (snap) => {
       if (snap.exists()) {
         const f = (snap.data()?.features as Partial<EducatorFeatures>) || {};
