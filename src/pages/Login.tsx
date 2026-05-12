@@ -19,7 +19,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@shared/ui/dialog";
-import { generateSessionId, setLocalSessionId, syncSessionWithFirestore } from "@shared/lib/session";
+import {
+  generateSessionId,
+  setLocalSessionId,
+  syncSessionWithFirestore,
+} from "@shared/lib/session";
 
 type RoleUI = "student" | "educator";
 
@@ -29,8 +33,6 @@ export default function Login() {
   const { isTenantDomain, tenantSlug, loading: tenantLoading } = useTenant();
   const { firebaseUser, profile, loading: authLoading, refreshProfile } = useAuth();
 
-
-
   const roleParam = (searchParams.get("role") || "").toLowerCase();
   const initialRole: RoleUI = roleParam === "educator" ? "educator" : "student";
 
@@ -39,7 +41,6 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
-
 
   const [forgotOpen, setForgotOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
@@ -94,7 +95,8 @@ export default function Login() {
 
       let msg = "Failed to send reset email.";
       if (error?.code === "auth/invalid-email") msg = "Please enter a valid email address.";
-      else if (error?.code === "auth/too-many-requests") msg = "Too many attempts. Please try again later.";
+      else if (error?.code === "auth/too-many-requests")
+        msg = "Too many attempts. Please try again later.";
 
       toast.error(msg);
     } finally {
@@ -115,7 +117,7 @@ export default function Login() {
 
       const roleDb = String(data?.role || "STUDENT").toUpperCase();
       const statusDb = String(data?.status || "active").toLowerCase();
-      
+
       if (statusDb === "suspended") {
         toast.error("Your account has been suspended. Please contact support.");
         await auth.signOut();
@@ -151,7 +153,9 @@ export default function Login() {
         }
 
         if (!enrolledTenants.includes(tenantSlug)) {
-          toast.error("You are not enrolled in this coaching. Please signup on this coaching URL first.");
+          toast.error(
+            "You are not enrolled in this coaching. Please signup on this coaching URL first."
+          );
           await auth.signOut();
           return;
         }
@@ -185,18 +189,18 @@ export default function Login() {
       if (error.code === "auth/invalid-credential") msg = "Invalid email or password";
       else msg = error.message || msg;
       toast.error(msg);
-      await auth.signOut().catch(() => { });
+      await auth.signOut().catch(() => {});
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen w-full lg:grid lg:grid-cols-2 bg-background">
+    <div className="min-h-screen w-full bg-background lg:grid lg:grid-cols-2">
       {/* LEFT COLUMN - FORM */}
-      <div className="flex flex-col min-h-screen p-6 lg:p-12 relative">
+      <div className="relative flex min-h-screen flex-col p-6 lg:p-12">
         {/* Header / Nav */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="mb-8 flex items-center justify-between">
           {role === "educator" ? (
             <img src="/logo.png" className="w-25 h-10" alt="UNIV.LIVE Logo" />
           ) : (
@@ -204,15 +208,15 @@ export default function Login() {
           )}
           <Link
             to="/"
-            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            <Home className="w-4 h-4" />
+            <Home className="h-4 w-4" />
             Return to Home
           </Link>
         </div>
 
         {/* Form Wrapper */}
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-md space-y-8">
             <div className="space-y-3">
               <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
@@ -220,7 +224,6 @@ export default function Login() {
                 Welcome back! Please enter your details to sign in.
               </p>
             </div>
-
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -257,7 +260,7 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => setShow((s) => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                   >
                     {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -279,14 +282,9 @@ export default function Login() {
 
               <Button
                 disabled={loading || authLoading}
-                className="w-full h-11 text-base bg-[#4F46E5] hover:bg-[#4338CA] text-white transition-colors"
+                className="h-11 w-full bg-[#4F46E5] text-base text-white transition-colors hover:bg-[#4338CA]"
               >
-                {loading || authLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Continue"
-                )}
-
+                {loading || authLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue"}
               </Button>
             </form>
 
@@ -295,7 +293,10 @@ export default function Login() {
                 Don’t have an account?{" "}
                 <Link
                   className="font-medium text-[#4F46E5] hover:underline"
-                  to="/signup"
+                  to={(() => {
+                    const tenant = searchParams.get("tenant");
+                    return tenant ? `/signup?tenant=${tenant}` : "/signup";
+                  })()}
                 >
                   Sign up
                 </Link>
@@ -308,7 +309,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setRole("educator")}
-                  className="hover:text-muted-foreground underline underline-offset-2 transition-colors"
+                  className="underline underline-offset-2 transition-colors hover:text-muted-foreground"
                 >
                   Sign in here
                 </button>
@@ -320,7 +321,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setRole("student")}
-                  className="hover:text-muted-foreground underline underline-offset-2 transition-colors"
+                  className="underline underline-offset-2 transition-colors hover:text-muted-foreground"
                 >
                   ← Back to student login
                 </button>
@@ -331,24 +332,22 @@ export default function Login() {
       </div>
 
       {/* RIGHT COLUMN - IMAGE (Hidden on Mobile) */}
-      <div className="hidden lg:flex flex-col bg-[#FFF5EE] p-12 justify-center items-center relative overflow-hidden">
+      <div className="relative hidden flex-col items-center justify-center overflow-hidden bg-[#FFF5EE] p-12 lg:flex">
         {/* Soft blur background blobs for extra aesthetics */}
-        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-orange-200/50 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-pink-200/40 rounded-full blur-[100px] translate-x-1/3 translate-y-1/3" />
+        <div className="absolute left-0 top-0 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-200/50 blur-[100px]" />
+        <div className="absolute bottom-0 right-0 h-[500px] w-[500px] translate-x-1/3 translate-y-1/3 rounded-full bg-pink-200/40 blur-[100px]" />
 
-        <div className="relative w-full max-w-xl aspect-[4/5] rounded-[2rem] overflow-hidden shadow-2xl border-8 border-white/50">
+        <div className="relative aspect-[4/5] w-full max-w-xl overflow-hidden rounded-[2rem] border-8 border-white/50 shadow-2xl">
           <img
             src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1000&auto=format&fit=crop"
             alt="Educator Workspace"
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover"
           />
         </div>
       </div>
 
-
-
       <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
-        <DialogContent className="sm:max-w-md rounded-2xl">
+        <DialogContent className="rounded-2xl sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Mail className="h-5 w-5 text-[#4F46E5]" />
@@ -385,7 +384,7 @@ export default function Login() {
               type="button"
               onClick={handleForgotPassword}
               disabled={sendingReset}
-              className="bg-[#4F46E5] hover:bg-[#4338CA] text-white"
+              className="bg-[#4F46E5] text-white hover:bg-[#4338CA]"
             >
               {sendingReset ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send reset link"}
             </Button>
