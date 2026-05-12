@@ -100,10 +100,27 @@ type AttemptDoc = {
 
 type GrowthPoint = { date: string; students: number; active: number };
 type PieSlice = { name: string; value: number; color: string };
-type TopPerformer = { studentId: string; name: string; avatarSeed: string; score: number; tests: number };
-type Struggling = { studentId: string; name: string; avatarSeed: string; score: number; weakness: string };
+type TopPerformer = {
+  studentId: string;
+  name: string;
+  avatarSeed: string;
+  score: number;
+  tests: number;
+};
+type Struggling = {
+  studentId: string;
+  name: string;
+  avatarSeed: string;
+  score: number;
+  weakness: string;
+};
 type TestAgg = { name: string; attempts: number; avgScore: number };
-type BatchAgg = { batch: string; avgScore: number; students: number; growth: number };
+type BatchAgg = {
+  batch: string;
+  avgScore: number;
+  students: number;
+  growth: number;
+};
 type LearnerRow = { id: string; data: LearnerDoc; profile: UserDoc | null };
 type AttemptRow = { id: string; data: AttemptDoc };
 type StudentStatCard = { label: string; value: string; hint: string };
@@ -134,7 +151,6 @@ type StudentDive = {
   scoreTrend: StudentTrendPoint[];
   subjectPerformance: StudentSubjectPoint[];
   recentAttempts: StudentRecentAttempt[];
-  statCards: StudentStatCard[];
 };
 
 const PIE_COLORS = [
@@ -186,7 +202,10 @@ function isActiveStatus(status?: string) {
 function initials(name: string) {
   const parts = (name || "").trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return "S";
-  return parts.slice(0, 2).map((p) => p[0]?.toUpperCase()).join("");
+  return parts
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
 }
 
 function formatCompactInt(n: number) {
@@ -210,7 +229,10 @@ function weekLabel(i: number) {
 }
 
 function formatShortDate(ms: number) {
-  return new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return new Date(ms).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
 }
 
 function formatShortDateTime(ms: number) {
@@ -226,9 +248,12 @@ function formatRelativeTime(ms?: number) {
   if (!ms) return "—";
   const diff = Date.now() - ms;
   if (diff < 60_000) return "just now";
-  if (diff < 3_600_000) return `${Math.max(1, Math.round(diff / 60_000))} min ago`;
-  if (diff < 86_400_000) return `${Math.max(1, Math.round(diff / 3_600_000))} hr ago`;
-  if (diff < 7 * 86_400_000) return `${Math.max(1, Math.round(diff / 86_400_000))} day ago`;
+  if (diff < 3_600_000)
+    return `${Math.max(1, Math.round(diff / 60_000))} min ago`;
+  if (diff < 86_400_000)
+    return `${Math.max(1, Math.round(diff / 3_600_000))} hr ago`;
+  if (diff < 7 * 86_400_000)
+    return `${Math.max(1, Math.round(diff / 86_400_000))} day ago`;
   return formatShortDate(ms);
 }
 
@@ -239,7 +264,13 @@ function average(nums: number[]) {
 
 function getLearnerName(learner: LearnerRow | null) {
   if (!learner) return "Student";
-  return learner.profile?.displayName || learner.profile?.name || learner.data.name || learner.data.email || "Student";
+  return (
+    learner.profile?.displayName ||
+    learner.profile?.name ||
+    learner.data.name ||
+    learner.data.email ||
+    "Student"
+  );
 }
 
 function getAttemptTimeSeconds(a: AttemptDoc) {
@@ -276,14 +307,25 @@ export default function Analytics() {
   const [avgTimeChange, setAvgTimeChange] = useState(0);
 
   const [studentGrowthData, setStudentGrowthData] = useState<GrowthPoint[]>([]);
-  const [attemptDistribution, setAttemptDistribution] = useState<PieSlice[]>([]);
+  const [attemptsTrendData, setAttemptsTrendData] = useState<
+    { date: string; attempts: number }[]
+  >([]);
+  const [attemptDistribution, setAttemptDistribution] = useState<PieSlice[]>(
+    [],
+  );
   const [topPerformers, setTopPerformers] = useState<TopPerformer[]>([]);
-  const [strugglingStudents, setStrugglingStudents] = useState<Struggling[]>([]);
+  const [strugglingStudents, setStrugglingStudents] = useState<Struggling[]>(
+    [],
+  );
   const [mostAttemptedTests, setMostAttemptedTests] = useState<TestAgg[]>([]);
-  const [batchComparisonData, setBatchComparisonData] = useState<BatchAgg[]>([]);
+  const [batchComparisonData, setBatchComparisonData] = useState<BatchAgg[]>(
+    [],
+  );
 
   const canLoad = useMemo(() => {
-    return !authLoading && !tenantLoading && !!firebaseUser?.uid && !!educatorId;
+    return (
+      !authLoading && !tenantLoading && !!firebaseUser?.uid && !!educatorId
+    );
   }, [authLoading, tenantLoading, firebaseUser?.uid, educatorId]);
 
   const getDateRanges = useCallback(() => {
@@ -322,7 +364,7 @@ export default function Analytics() {
         } catch {
           out[sid] = null;
         }
-      })
+      }),
     );
     return out;
   }, []);
@@ -350,10 +392,18 @@ export default function Analytics() {
       ] = await Promise.all([
         getCountFromServer(query(learnersCol)),
         getCountFromServer(
-          query(learnersCol, where("joinedAt", ">=", startTs), where("joinedAt", "<=", endTs))
+          query(
+            learnersCol,
+            where("joinedAt", ">=", startTs),
+            where("joinedAt", "<=", endTs),
+          ),
         ),
         getCountFromServer(
-          query(learnersCol, where("joinedAt", ">=", prevStartTs), where("joinedAt", "<=", prevEndTs))
+          query(
+            learnersCol,
+            where("joinedAt", ">=", prevStartTs),
+            where("joinedAt", "<=", prevEndTs),
+          ),
         ),
         getDocs(learnersCol),
         getDocs(
@@ -363,24 +413,24 @@ export default function Analytics() {
             where("createdAt", ">=", startTs),
             where("createdAt", "<=", endTs),
             orderBy("createdAt", "asc"),
-            limit(5000)
-          )
+            limit(5000),
+          ),
         ),
         getCountFromServer(
           query(
             collection(db, "attempts"),
             where("educatorId", "==", educatorId),
             where("createdAt", ">=", startTs),
-            where("createdAt", "<=", endTs)
-          )
+            where("createdAt", "<=", endTs),
+          ),
         ),
         getCountFromServer(
           query(
             collection(db, "attempts"),
             where("educatorId", "==", educatorId),
             where("createdAt", ">=", prevStartTs),
-            where("createdAt", "<=", prevEndTs)
-          )
+            where("createdAt", "<=", prevEndTs),
+          ),
         ),
         getDocs(
           query(
@@ -389,18 +439,20 @@ export default function Analytics() {
             where("createdAt", ">=", prevStartTs),
             where("createdAt", "<=", prevEndTs),
             orderBy("createdAt", "asc"),
-            limit(2000)
-          )
+            limit(2000),
+          ),
         ),
-        getCountFromServer(query(learnersCol, where("joinedAt", "<", Timestamp.fromDate(start)))),
+        getCountFromServer(
+          query(learnersCol, where("joinedAt", "<", Timestamp.fromDate(start))),
+        ),
         getDocs(
           query(
             learnersCol,
             where("joinedAt", ">=", startTs),
             where("joinedAt", "<=", endTs),
             orderBy("joinedAt", "asc"),
-            limit(5000)
-          )
+            limit(5000),
+          ),
         ),
       ]);
 
@@ -426,27 +478,50 @@ export default function Analytics() {
       setStudentsChange(pctChange(newStudentsCurr, newStudentsPrev));
 
       if (attemptsSnap.size >= 5000) {
-        toast.warning("Analytics is showing last 5000 attempts for this period.");
+        toast.warning(
+          "Analytics is showing last 5000 attempts for this period.",
+        );
       }
 
-      const attempts: AttemptRow[] = attemptsSnap.docs.map((d) => ({ id: d.id, data: d.data() as AttemptDoc }));
+      const attempts: AttemptRow[] = attemptsSnap.docs.map((d) => ({
+        id: d.id,
+        data: d.data() as AttemptDoc,
+      }));
       setPeriodAttempts(attempts);
       setTotalAttempts(attemptsCurrCount);
       setAttemptsChange(pctChange(attemptsCurrCount, attemptsPrevCount));
 
-      const completed = attempts.filter((a) => isCompletedStatus(a.data.status));
+      const completed = attempts.filter((a) =>
+        isCompletedStatus(a.data.status),
+      );
       const completedCount = completed.length;
-      const avgAcc = completedCount > 0 ? average(completed.map((a) => safeNum(a.data.score, 0))) : 0;
-      const avgTimeSec = completedCount > 0 ? average(completed.map((a) => getAttemptTimeSeconds(a.data))) : 0;
+      const avgAcc =
+        completedCount > 0
+          ? average(completed.map((a) => safeNum(a.data.score, 0)))
+          : 0;
+      const avgTimeSec =
+        completedCount > 0
+          ? average(completed.map((a) => getAttemptTimeSeconds(a.data)))
+          : 0;
 
       setAvgScore(avgAcc);
       setAvgTime(avgTimeSec);
-      setCompletionRate(attemptsCurrCount > 0 ? Math.round((completedCount / attemptsCurrCount) * 100) : 0);
+      setCompletionRate(
+        attemptsCurrCount > 0
+          ? Math.round((completedCount / attemptsCurrCount) * 100)
+          : 0,
+      );
 
       const prevDocs = prevAttemptsSnap.docs.map((d) => d.data() as AttemptDoc);
       const prevCompleted = prevDocs.filter((a) => isCompletedStatus(a.status));
-      const prevAvgAcc = prevCompleted.length > 0 ? average(prevCompleted.map((a) => safeNum(a.score, 0))) : 0;
-      const prevAvgTime = prevCompleted.length > 0 ? average(prevCompleted.map((a) => getAttemptTimeSeconds(a))) : 0;
+      const prevAvgAcc =
+        prevCompleted.length > 0
+          ? average(prevCompleted.map((a) => safeNum(a.score, 0)))
+          : 0;
+      const prevAvgTime =
+        prevCompleted.length > 0
+          ? average(prevCompleted.map((a) => getAttemptTimeSeconds(a)))
+          : 0;
 
       setAvgScoreChange(pctChange(avgAcc, prevAvgAcc));
       setAvgTimeChange(Math.round((avgTimeSec - prevAvgTime) / 60));
@@ -459,19 +534,29 @@ export default function Analytics() {
         weekStarts.push(dt.getTime());
       }
 
-      const newLearnerTimes = newLearnersSnap.docs.map((d) => toMillis((d.data() as LearnerDoc).joinedAt));
+      const newLearnerTimes = newLearnersSnap.docs.map((d) =>
+        toMillis((d.data() as LearnerDoc).joinedAt),
+      );
       const weekNewCounts = new Array(totalWeeks).fill(0);
       for (const ms of newLearnerTimes) {
-        const idx = Math.min(totalWeeks - 1, Math.max(0, Math.floor((ms - weekStarts[0]) / (7 * 864e5))));
+        const idx = Math.min(
+          totalWeeks - 1,
+          Math.max(0, Math.floor((ms - weekStarts[0]) / (7 * 864e5))),
+        );
         weekNewCounts[idx] += 1;
       }
 
-      const weekActiveSets: Array<Set<string>> = new Array(totalWeeks).fill(null).map(() => new Set());
+      const weekActiveSets: Array<Set<string>> = new Array(totalWeeks)
+        .fill(null)
+        .map(() => new Set());
       for (const a of attempts) {
         const sid = String(a.data.studentId || "");
         if (!sid) continue;
         const ms = toMillis(a.data.createdAt || a.data.submittedAt);
-        const idx = Math.min(totalWeeks - 1, Math.max(0, Math.floor((ms - weekStarts[0]) / (7 * 864e5))));
+        const idx = Math.min(
+          totalWeeks - 1,
+          Math.max(0, Math.floor((ms - weekStarts[0]) / (7 * 864e5))),
+        );
         weekActiveSets[idx].add(sid);
       }
 
@@ -486,6 +571,24 @@ export default function Analytics() {
         });
       }
       setStudentGrowthData(growth);
+
+      const attemptsTrend: { date: string; attempts: number }[] = [];
+      const trendMap = new Map<string, number>();
+      for (const a of attempts) {
+        const ms = toMillis(a.data.createdAt || a.data.submittedAt);
+        const dateStr = formatShortDate(ms);
+        trendMap.set(dateStr, (trendMap.get(dateStr) || 0) + 1);
+      }
+      for (let i = 0; i < days; i++) {
+        const d = new Date(start.getTime());
+        d.setDate(d.getDate() + i);
+        const dStr = formatShortDate(d.getTime());
+        attemptsTrend.push({
+          date: dStr,
+          attempts: trendMap.get(dStr) || 0,
+        });
+      }
+      setAttemptsTrendData(attemptsTrend);
 
       const subjectMap = new Map<string, number>();
       for (const a of attempts) {
@@ -503,13 +606,24 @@ export default function Analytics() {
         }));
       setAttemptDistribution(pie);
 
-      const perStudent = new Map<string, { attempts: number; sumAcc: number; subject: Map<string, { sum: number; cnt: number }> }>();
+      const perStudent = new Map<
+        string,
+        {
+          attempts: number;
+          sumAcc: number;
+          subject: Map<string, { sum: number; cnt: number }>;
+        }
+      >();
       for (const a of completed) {
         const sid = String(a.data.studentId || "");
         if (!sid) continue;
         const sc = safeNum(a.data.score, 0);
         const subject = String(a.data.subject || "General").trim() || "General";
-        const existing = perStudent.get(sid) || { attempts: 0, sumAcc: 0, subject: new Map() };
+        const existing = perStudent.get(sid) || {
+          attempts: 0,
+          sumAcc: 0,
+          subject: new Map(),
+        };
         existing.attempts += 1;
         existing.sumAcc += sc;
         const subjAgg = existing.subject.get(subject) || { sum: 0, cnt: 0 };
@@ -519,27 +633,32 @@ export default function Analytics() {
         perStudent.set(sid, existing);
       }
 
-      const studentStats = Array.from(perStudent.entries()).map(([studentId, value]) => {
-        let weakness = "General";
-        let weaknessAvg = Infinity;
-        for (const [subject, subjAgg] of value.subject.entries()) {
-          const subjectAvg = subjAgg.cnt ? subjAgg.sum / subjAgg.cnt : Infinity;
-          if (subjectAvg < weaknessAvg) {
-            weaknessAvg = subjectAvg;
-            weakness = subject;
+      const studentStats = Array.from(perStudent.entries()).map(
+        ([studentId, value]) => {
+          let weakness = "General";
+          let weaknessAvg = Infinity;
+          for (const [subject, subjAgg] of value.subject.entries()) {
+            const subjectAvg = subjAgg.cnt
+              ? subjAgg.sum / subjAgg.cnt
+              : Infinity;
+            if (subjectAvg < weaknessAvg) {
+              weaknessAvg = subjectAvg;
+              weakness = subject;
+            }
           }
-        }
-        return {
-          studentId,
-          avg: value.attempts ? Math.round(value.sumAcc / value.attempts) : 0,
-          tests: value.attempts,
-          weakness,
-        };
-      });
+          return {
+            studentId,
+            avg: value.attempts ? Math.round(value.sumAcc / value.attempts) : 0,
+            tests: value.attempts,
+            weakness,
+          };
+        },
+      );
 
       studentStats.sort((a, b) => b.avg - a.avg);
       const top = studentStats.slice(0, 5).map((s) => {
-        const learner = nextLearners.find((row) => row.id === s.studentId) || null;
+        const learner =
+          nextLearners.find((row) => row.id === s.studentId) || null;
         return {
           studentId: s.studentId,
           name: getLearnerName(learner),
@@ -555,7 +674,8 @@ export default function Analytics() {
         .sort((a, b) => a.avg - b.avg)
         .slice(0, 3)
         .map((s) => {
-          const learner = nextLearners.find((row) => row.id === s.studentId) || null;
+          const learner =
+            nextLearners.find((row) => row.id === s.studentId) || null;
           return {
             studentId: s.studentId,
             name: getLearnerName(learner),
@@ -568,7 +688,8 @@ export default function Analytics() {
 
       const testMap = new Map<string, { cnt: number; sumAcc: number }>();
       for (const a of completed) {
-        const title = String(a.data.testTitle || a.data.testId || "Test").trim() || "Test";
+        const title =
+          String(a.data.testTitle || a.data.testId || "Test").trim() || "Test";
         const sc = safeNum(a.data.score, 0);
         const t = testMap.get(title) || { cnt: 0, sumAcc: 0 };
         t.cnt += 1;
@@ -585,14 +706,25 @@ export default function Analytics() {
         .slice(0, 8);
       setMostAttemptedTests(most);
 
-      const batchMap = new Map<string, { students: Set<string>; sumAcc: number; cnt: number }>();
+      const batchMap = new Map<
+        string,
+        { students: Set<string>; sumAcc: number; cnt: number }
+      >();
       for (const a of completed) {
         const sid = String(a.data.studentId || "");
         if (!sid) continue;
         const learner = nextLearners.find((row) => row.id === sid) || null;
-        const batch = learner?.profile?.batchName || learner?.profile?.batch || learner?.data.tenantSlug || "Main";
+        const batch =
+          learner?.profile?.batchName ||
+          learner?.profile?.batch ||
+          learner?.data.tenantSlug ||
+          "Main";
         const sc = safeNum(a.data.score, 0);
-        const existing = batchMap.get(batch) || { students: new Set<string>(), sumAcc: 0, cnt: 0 };
+        const existing = batchMap.get(batch) || {
+          students: new Set<string>(),
+          sumAcc: 0,
+          cnt: 0,
+        };
         existing.students.add(sid);
         existing.sumAcc += sc;
         existing.cnt += 1;
@@ -647,25 +779,45 @@ export default function Analytics() {
   const selectedStudentDive = useMemo<StudentDive | null>(() => {
     if (!selectedLearner) return null;
 
-    const attempts = periodAttempts.filter((row) => row.data.studentId === selectedLearner.id);
-    const completed = attempts.filter((row) => isCompletedStatus(row.data.status));
-    const classCompleted = periodAttempts.filter((row) => isCompletedStatus(row.data.status));
+    const attempts = periodAttempts.filter(
+      (row) => row.data.studentId === selectedLearner.id,
+    );
+    const completed = attempts.filter((row) =>
+      isCompletedStatus(row.data.status),
+    );
+    const classCompleted = periodAttempts.filter((row) =>
+      isCompletedStatus(row.data.status),
+    );
 
     const completedScores = completed.map((row) => safeNum(row.data.score, 0));
     // Svg Score calculator.....
-    const avgStudentScore = completedScores.length ? average(completedScores) : 0;
+    const avgStudentScore = completedScores.length
+      ? average(completedScores)
+      : 0;
     const bestScore = completedScores.length ? Math.max(...completedScores) : 0;
-    const avgStudentTime = completed.length ? average(completed.map((row) => getAttemptTimeSeconds(row.data))) : 0;
-    const classAvgScore = classCompleted.length ? average(classCompleted.map((row) => safeNum(row.data.score, 0))) : 0;
+    const avgStudentTime = completed.length
+      ? average(completed.map((row) => getAttemptTimeSeconds(row.data)))
+      : 0;
+    const classAvgScore = classCompleted.length
+      ? average(classCompleted.map((row) => safeNum(row.data.score, 0)))
+      : 0;
 
     const sortedCompleted = [...completed].sort(
-      (a, b) => toMillis(a.data.submittedAt || a.data.createdAt) - toMillis(b.data.submittedAt || b.data.createdAt)
+      (a, b) =>
+        toMillis(a.data.submittedAt || a.data.createdAt) -
+        toMillis(b.data.submittedAt || b.data.createdAt),
     );
-    const firstScore = sortedCompleted.length ? safeNum(sortedCompleted[0].data.score, 0) : 0;
-    const lastScore = sortedCompleted.length ? safeNum(sortedCompleted[sortedCompleted.length - 1].data.score, 0) : 0;
+    const firstScore = sortedCompleted.length
+      ? safeNum(sortedCompleted[0].data.score, 0)
+      : 0;
+    const lastScore = sortedCompleted.length
+      ? safeNum(sortedCompleted[sortedCompleted.length - 1].data.score, 0)
+      : 0;
 
     const scoreTrend = sortedCompleted.slice(-12).map((row) => ({
-      date: formatShortDate(toMillis(row.data.submittedAt || row.data.createdAt)),
+      date: formatShortDate(
+        toMillis(row.data.submittedAt || row.data.createdAt),
+      ),
       score: safeNum(row.data.score, 0),
     }));
 
@@ -687,65 +839,49 @@ export default function Analytics() {
       .slice(0, 8);
 
     const strongestSubject = subjectPerformance[0]?.subject || "—";
-    const weakestSubject = subjectPerformance.length ? subjectPerformance[subjectPerformance.length - 1].subject : "—";
+    const weakestSubject = subjectPerformance.length
+      ? subjectPerformance[subjectPerformance.length - 1].subject
+      : "—";
 
     const recentAttempts = [...attempts]
-      .sort((a, b) => toMillis(b.data.submittedAt || b.data.createdAt) - toMillis(a.data.submittedAt || a.data.createdAt))
+      .sort(
+        (a, b) =>
+          toMillis(b.data.submittedAt || b.data.createdAt) -
+          toMillis(a.data.submittedAt || a.data.createdAt),
+      )
       .slice(0, 6)
       .map((row) => ({
         id: row.id,
         title: String(row.data.testTitle || row.data.testId || "Test"),
         subject: String(row.data.subject || "General"),
         status: String(row.data.status || "unknown"),
-        scoreLabel: isCompletedStatus(row.data.status) ? `${safeNum(row.data.score, 0)}/${safeNum(row.data.maxScore, 0)}` : "In progress",
-        timeLabel: isCompletedStatus(row.data.status) ? formatMinutes(getAttemptTimeSeconds(row.data)) : "—",
-        dateLabel: formatShortDateTime(toMillis(row.data.submittedAt || row.data.createdAt)),
+        scoreLabel: isCompletedStatus(row.data.status)
+          ? `${safeNum(row.data.score, 0)}/${safeNum(row.data.maxScore, 0)}`
+          : "In progress",
+        timeLabel: isCompletedStatus(row.data.status)
+          ? formatMinutes(getAttemptTimeSeconds(row.data))
+          : "—",
+        dateLabel: formatShortDateTime(
+          toMillis(row.data.submittedAt || row.data.createdAt),
+        ),
       }));
 
     const activeDays = new Set(
-      attempts.map((row) => new Date(toMillis(row.data.submittedAt || row.data.createdAt)).toDateString())
+      attempts.map((row) =>
+        new Date(
+          toMillis(row.data.submittedAt || row.data.createdAt),
+        ).toDateString(),
+      ),
     ).size;
-
-    const statCards: StudentStatCard[] = [
-      {
-        label: "Attempts",
-        value: formatCompactInt(attempts.length),
-        hint: `${completed.length} completed in this period`,
-      },
-      {
-        //Error Here: The "Avg Score" card is showing the change vs class average instead of the actual average score. The hint should indicate how the student's average compares to the class average, while the value should show the student's average score.
-        label: "Avg Score",
-        value: `${avgStudentScore}`,
-        hint: `${avgStudentScore - classAvgScore >= 0 ? "+" : ""}${avgStudentScore - classAvgScore} vs class avg`,
-      },
-      {
-        label: "Best Score",
-        value: `${bestScore}`,
-        hint: strongestSubject !== "—" ? `Best subject: ${strongestSubject}` : "Awaiting subject data",
-      },
-      {
-        label: "Avg Time",
-        value: formatMinutes(avgStudentTime),
-        hint: `${activeDays} active day${activeDays === 1 ? "" : "s"}`,
-      },
-      {
-        label: "Completion Rate",
-        value: `${attempts.length ? Math.round((completed.length / attempts.length) * 100) : 0}%`,
-        hint: `${attempts.length - completed.length} unfinished attempts`,
-      },
-      {
-        label: "Progress",
-        value: `${lastScore - firstScore >= 0 ? "+" : ""}${lastScore - firstScore}`,
-        hint: weakestSubject !== "—" ? `Needs work: ${weakestSubject}` : "Need more attempts to compare",
-      },
-    ];
 
     return {
       totalAttempts: attempts.length,
       completedAttempts: completed.length,
       avgScore: avgStudentScore,
       bestScore,
-      completionRate: attempts.length ? Math.round((completed.length / attempts.length) * 100) : 0,
+      completionRate: attempts.length
+        ? Math.round((completed.length / attempts.length) * 100)
+        : 0,
       avgTimeSec: avgStudentTime,
       firstLastDelta: lastScore - firstScore,
       classAvgDelta: avgStudentScore - classAvgScore,
@@ -755,7 +891,6 @@ export default function Analytics() {
       scoreTrend,
       subjectPerformance,
       recentAttempts,
-      statCards,
     };
   }, [periodAttempts, selectedLearner]);
 
@@ -790,21 +925,36 @@ export default function Analytics() {
         positive: avgTimeChange <= 0,
       },
     ];
-  }, [totalStudents, totalAttempts, avgScore, avgTime, studentsChange, attemptsChange, avgScoreChange, avgTimeChange]);
+  }, [
+    totalStudents,
+    totalAttempts,
+    avgScore,
+    avgTime,
+    studentsChange,
+    attemptsChange,
+    avgScoreChange,
+    avgTimeChange,
+  ]);
 
   if (!canLoad) {
-    return <div className="text-center py-12 text-muted-foreground">Loading...</div>;
+    return (
+      <div className="text-center py-12 text-muted-foreground">Loading...</div>
+    );
   }
 
   return (
     <div className="space-y-6">
-
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.34 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.34 }}
+      >
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Student Deep Dive</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Pick any learner to inspect their detailed performance inside the currently selected time period.
+              Pick any learner to inspect their detailed performance inside the
+              currently selected time period.
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -828,11 +978,18 @@ export default function Analytics() {
                     <button
                       type="button"
                       onClick={() => setSelectedStudentId("__all__")}
-                      className={`w-full text-left rounded-lg border px-3 py-2 transition-colors ${selectedStudentId === "__all__" ? "border-primary bg-primary/5" : "hover:bg-muted/50"
-                        }`}
+                      className={`w-full text-left rounded-lg border px-3 py-2 transition-colors ${
+                        selectedStudentId === "__all__"
+                          ? "border-primary bg-primary/5"
+                          : "hover:bg-muted/50"
+                      }`}
                     >
-                      <p className="font-medium text-sm">All students overview</p>
-                      <p className="text-xs text-muted-foreground">Keep the current class-level analytics view</p>
+                      <p className="font-medium text-sm">
+                        All students overview
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Keep the current class-level analytics view
+                      </p>
                     </button>
 
                     {filteredStudents.map((student) => {
@@ -842,16 +999,32 @@ export default function Analytics() {
                           key={student.id}
                           type="button"
                           onClick={() => setSelectedStudentId(student.id)}
-                          className={`w-full text-left rounded-lg border px-3 py-2 transition-colors ${selectedStudentId === student.id ? "border-primary bg-primary/5" : "hover:bg-muted/50"
-                            }`}
+                          className={`w-full text-left rounded-lg border px-3 py-2 transition-colors ${
+                            selectedStudentId === student.id
+                              ? "border-primary bg-primary/5"
+                              : "hover:bg-muted/50"
+                          }`}
                         >
                           <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0">
-                              <p className="font-medium text-sm truncate">{getLearnerName(student)}</p>
-                              <p className="text-xs text-muted-foreground truncate">{student.data.email || "No email"}</p>
+                              <p className="font-medium text-sm truncate">
+                                {getLearnerName(student)}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {student.data.email || "No email"}
+                              </p>
                             </div>
-                            <Badge variant="secondary" className={active ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : ""}>
-                              {active ? "Active" : String(student.data.status || "Unknown")}
+                            <Badge
+                              variant="secondary"
+                              className={
+                                active
+                                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                  : ""
+                              }
+                            >
+                              {active
+                                ? "Active"
+                                : String(student.data.status || "Unknown")}
                             </Badge>
                           </div>
                         </button>
@@ -859,7 +1032,9 @@ export default function Analytics() {
                     })}
 
                     {filteredStudents.length === 0 && (
-                      <p className="text-sm text-muted-foreground py-3">No students match your search.</p>
+                      <p className="text-sm text-muted-foreground py-3">
+                        No students match your search.
+                      </p>
                     )}
                   </div>
                 </CardContent>
@@ -867,18 +1042,24 @@ export default function Analytics() {
 
               <Card className="lg:col-span-2">
                 <CardHeader>
-                  <CardTitle className="text-sm">Selected Student Summary</CardTitle>
+                  <CardTitle className="text-sm">
+                    Selected Student Summary
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {selectedStudentId === "__all__" ? (
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
                       <div className="rounded-lg bg-muted/40 p-3">
                         <p className="text-muted-foreground">Total Students</p>
-                        <p className="font-semibold text-lg">{formatCompactInt(totalStudents)}</p>
+                        <p className="font-semibold text-lg">
+                          {formatCompactInt(totalStudents)}
+                        </p>
                       </div>
                       <div className="rounded-lg bg-muted/40 p-3">
                         <p className="text-muted-foreground">Total Attempts</p>
-                        <p className="font-semibold text-lg">{formatCompactInt(totalAttempts)}</p>
+                        <p className="font-semibold text-lg">
+                          {formatCompactInt(totalAttempts)}
+                        </p>
                       </div>
                       <div className="rounded-lg bg-muted/40 p-3">
                         <p className="text-muted-foreground">Avg Score</p>
@@ -886,23 +1067,52 @@ export default function Analytics() {
                       </div>
                       <div className="rounded-lg bg-muted/40 p-3">
                         <p className="text-muted-foreground">Completion Rate</p>
-                        <p className="font-semibold text-lg">{completionRate}%</p>
+                        <p className="font-semibold text-lg">
+                          {completionRate}%
+                        </p>
                       </div>
                     </div>
                   ) : selectedLearner ? (
                     <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
                       <div className="flex items-center gap-3 min-w-0">
                         <Avatar className="h-12 w-12">
-                          <AvatarImage src={selectedLearner.profile?.photoURL || selectedLearner.profile?.avatar || undefined} />
-                          <AvatarFallback>{initials(getLearnerName(selectedLearner))}</AvatarFallback>
+                          <AvatarImage
+                            src={
+                              selectedLearner.profile?.photoURL ||
+                              selectedLearner.profile?.avatar ||
+                              undefined
+                            }
+                          />
+                          <AvatarFallback>
+                            {initials(getLearnerName(selectedLearner))}
+                          </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
-                          <p className="font-semibold truncate">{getLearnerName(selectedLearner)}</p>
-                          <p className="text-sm text-muted-foreground truncate">{selectedLearner.data.email || "No email"}</p>
+                          <p className="font-semibold truncate">
+                            {getLearnerName(selectedLearner)}
+                          </p>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {selectedLearner.data.email || "No email"}
+                          </p>
                           <div className="flex flex-wrap items-center gap-2 mt-2">
-                            <Badge variant="secondary">Joined {formatRelativeTime(toMillis(selectedLearner.data.joinedAt))}</Badge>
-                            <Badge variant="outline">Last seen {formatRelativeTime(toMillis(selectedLearner.data.lastSeenAt || selectedLearner.data.updatedAt))}</Badge>
-                            <Badge variant="outline">{String(selectedLearner.data.status || "Unknown")}</Badge>
+                            <Badge variant="secondary">
+                              Joined{" "}
+                              {formatRelativeTime(
+                                toMillis(selectedLearner.data.joinedAt),
+                              )}
+                            </Badge>
+                            <Badge variant="outline">
+                              Last seen{" "}
+                              {formatRelativeTime(
+                                toMillis(
+                                  selectedLearner.data.lastSeenAt ||
+                                    selectedLearner.data.updatedAt,
+                                ),
+                              )}
+                            </Badge>
+                            <Badge variant="outline">
+                              {String(selectedLearner.data.status || "Unknown")}
+                            </Badge>
                           </div>
                         </div>
                       </div>
@@ -910,162 +1120,251 @@ export default function Analytics() {
                       {selectedStudentDive ? (
                         <div className="grid grid-cols-2 gap-3 text-sm min-w-[240px]">
                           <div className="rounded-lg bg-muted/40 p-3">
-                            <p className="text-muted-foreground">Avg Score</p>
-                            <p className="font-semibold text-lg">{selectedStudentDive.avgScore}</p>
+                            <p className="text-muted-foreground">
+                              Total Attempts
+                            </p>
+                            <p className="font-semibold text-lg">
+                              {selectedStudentDive.totalAttempts}
+                            </p>
                           </div>
                           <div className="rounded-lg bg-muted/40 p-3">
                             <p className="text-muted-foreground">Completed</p>
-                            <p className="font-semibold text-lg">{selectedStudentDive.completedAttempts}</p>
+                            <p className="font-semibold text-lg">
+                              {selectedStudentDive.completedAttempts}
+                            </p>
                           </div>
                           <div className="rounded-lg bg-muted/40 p-3">
                             <p className="text-muted-foreground">Strongest</p>
-                            <p className="font-semibold text-sm">{selectedStudentDive.strongestSubject}</p>
+                            <p className="font-semibold text-sm">
+                              {selectedStudentDive.strongestSubject}
+                            </p>
                           </div>
                           <div className="rounded-lg bg-muted/40 p-3">
                             <p className="text-muted-foreground">Needs Work</p>
-                            <p className="font-semibold text-sm">{selectedStudentDive.weakestSubject}</p>
+                            <p className="font-semibold text-sm">
+                              {selectedStudentDive.weakestSubject}
+                            </p>
                           </div>
                         </div>
                       ) : (
-                        <div className="text-sm text-muted-foreground">No activity found for this student in the selected period.</div>
+                        <div className="text-sm text-muted-foreground">
+                          No activity found for this student in the selected
+                          period.
+                        </div>
                       )}
                     </div>
                   ) : (
                     <div className="rounded-xl border border-dashed p-6 text-center text-muted-foreground">
-                      Select a student to view individual score trend, subject-wise performance, recent attempts, and class comparison.
+                      Select a student to view individual score trend,
+                      subject-wise performance, recent attempts, and class
+                      comparison.
                     </div>
                   )}
                 </CardContent>
               </Card>
             </div>
 
+            {selectedStudentId === "__all__" && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <div>
+                    <CardTitle className="text-base">Attempts Over Time</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {formatCompactInt(totalAttempts)} total attempts
+                    </p>
+                  </div>
+                  <div className="shrink-0">
+                    <Select value={periodDays} onValueChange={setPeriodDays}>
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue placeholder="Select time" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Last 1 Day</SelectItem>
+                        <SelectItem value="7">Last 7 Days</SelectItem>
+                        <SelectItem value="30">Last 1 Month</SelectItem>
+                        <SelectItem value="90">Last 3 Months</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {totalAttempts > 0 ? (
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={attemptsTrendData}>
+                          <defs>
+                            <linearGradient id="colorAttemptsAll" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
+                          <XAxis dataKey="date" className="text-xs fill-muted-foreground" tickLine={false} axisLine={false} />
+                          <YAxis className="text-xs fill-muted-foreground" tickLine={false} axisLine={false} />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--card))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "0.5rem",
+                            }}
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="attempts"
+                            stroke="hsl(var(--primary))"
+                            fillOpacity={1}
+                            fill="url(#colorAttemptsAll)"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-6 text-center">
+                      Need submitted attempts to render trend.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             {selectedLearner && selectedStudentDive && (
               <>
-                <div className="grid grid-cols-2 xl:grid-cols-6 gap-4">
-                  {selectedStudentDive.statCards.map((item) => (
-                    <Card key={item.label}>
-                      <CardContent className="p-4">
-                        <p className="text-xs text-muted-foreground">{item.label}</p>
-                        <p className="text-2xl font-bold mt-1">{item.value}</p>
-                        <p className="text-xs text-muted-foreground mt-2">{item.hint}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="grid grid-cols-1 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">
+                        Recent Attempts
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {selectedStudentDive.recentAttempts.map((attempt) => (
+                        <div
+                          key={attempt.id}
+                          className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between rounded-lg border p-3"
+                        >
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">
+                              {attempt.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {attempt.subject} • {attempt.dateLabel}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap sm:justify-end">
+                            <Badge variant="outline">{attempt.status}</Badge>
+                            <Badge variant="secondary">
+                              {attempt.scoreLabel}
+                            </Badge>
+                            <Badge variant="secondary">
+                              {attempt.timeLabel}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                      {selectedStudentDive.recentAttempts.length === 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          No attempts found for this student in the selected
+                          period.
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">Student Score Trend</CardTitle>
+                      <CardTitle className="text-base">
+                        Student Score Trend
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="h-72">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={selectedStudentDive.scoreTrend}>
-                            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                            <XAxis dataKey="date" className="text-xs fill-muted-foreground" />
-                            <YAxis className="text-xs fill-muted-foreground" />
-                            <Tooltip
-                              contentStyle={{
-                                backgroundColor: "hsl(var(--card))",
-                                border: "1px solid hsl(var(--border))",
-                                borderRadius: "0.5rem",
-                              }}
-                            />
-                            <Line type="monotone" dataKey="score" stroke="hsl(204, 91%, 56%)" strokeWidth={3} dot={{ r: 3 }} />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                      {selectedStudentDive.scoreTrend.length === 0 && (
-                        <p className="text-sm text-muted-foreground mt-3">Need submitted attempts to render trend.</p>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base">Subject-wise Performance</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="h-72">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={selectedStudentDive.subjectPerformance} layout="vertical">
-                            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                            <XAxis type="number" className="text-xs fill-muted-foreground" />
-                            <YAxis dataKey="subject" type="category" width={110} className="text-xs fill-muted-foreground" />
-                            <Tooltip
-                              contentStyle={{
-                                backgroundColor: "hsl(var(--card))",
-                                border: "1px solid hsl(var(--border))",
-                                borderRadius: "0.5rem",
-                              }}
-                            />
-                            <Bar dataKey="score" fill="hsl(184, 87%, 65%)" radius={[0, 4, 4, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                      {selectedStudentDive.subjectPerformance.length === 0 && (
-                        <p className="text-sm text-muted-foreground mt-3">No completed subject data available in this period.</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <Card className="lg:col-span-2">
-                    <CardHeader>
-                      <CardTitle className="text-base">Recent Attempts</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {selectedStudentDive.recentAttempts.map((attempt) => (
-                        <div key={attempt.id} className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between rounded-lg border p-3">
-                          <div className="min-w-0">
-                            <p className="font-medium truncate">{attempt.title}</p>
-                            <p className="text-xs text-muted-foreground">{attempt.subject} • {attempt.dateLabel}</p>
-                          </div>
-                          <div className="flex items-center gap-2 flex-wrap sm:justify-end">
-                            <Badge variant="outline">{attempt.status}</Badge>
-                            <Badge variant="secondary">{attempt.scoreLabel}</Badge>
-                            <Badge variant="secondary">{attempt.timeLabel}</Badge>
-                          </div>
+                      {selectedStudentDive.scoreTrend.length > 0 ? (
+                        <div className="h-72">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={selectedStudentDive.scoreTrend}>
+                              <CartesianGrid
+                                strokeDasharray="3 3"
+                                className="stroke-border"
+                              />
+                              <XAxis
+                                dataKey="date"
+                                className="text-xs fill-muted-foreground"
+                              />
+                              <YAxis className="text-xs fill-muted-foreground" />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "hsl(var(--card))",
+                                  border: "1px solid hsl(var(--border))",
+                                  borderRadius: "0.5rem",
+                                }}
+                              />
+                              <Line
+                                type="monotone"
+                                dataKey="score"
+                                stroke="hsl(204, 91%, 56%)"
+                                strokeWidth={3}
+                                dot={{ r: 3 }}
+                              />
+                            </LineChart>
+                          </ResponsiveContainer>
                         </div>
-                      ))}
-                      {selectedStudentDive.recentAttempts.length === 0 && (
-                        <p className="text-sm text-muted-foreground">No attempts found for this student in the selected period.</p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground py-6 text-center">
+                          Need submitted attempts to render trend.
+                        </p>
                       )}
                     </CardContent>
                   </Card>
 
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">Coaching Signals</CardTitle>
+                      <CardTitle className="text-base">
+                        Subject-wise Performance
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="rounded-lg bg-muted/40 p-4">
-                        <p className="text-xs text-muted-foreground">Score vs class average</p>
-                        <p className={`text-2xl font-bold mt-1 ${selectedStudentDive.classAvgDelta >= 0 ? "text-green-600" : "text-amber-600"}`}>
-                          {selectedStudentDive.classAvgDelta >= 0 ? "+" : ""}{selectedStudentDive.classAvgDelta}
+                    <CardContent>
+                      {selectedStudentDive.subjectPerformance.length > 0 ? (
+                        <div className="h-72">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                              data={selectedStudentDive.subjectPerformance}
+                              layout="vertical"
+                            >
+                              <CartesianGrid
+                                strokeDasharray="3 3"
+                                className="stroke-border"
+                              />
+                              <XAxis
+                                type="number"
+                                className="text-xs fill-muted-foreground"
+                              />
+                              <YAxis
+                                dataKey="subject"
+                                type="category"
+                                width={110}
+                                className="text-xs fill-muted-foreground"
+                              />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "hsl(var(--card))",
+                                  border: "1px solid hsl(var(--border))",
+                                  borderRadius: "0.5rem",
+                                }}
+                              />
+                              <Bar
+                                dataKey="score"
+                                fill="hsl(184, 87%, 65%)"
+                                radius={[0, 4, 4, 0]}
+                              />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground py-6 text-center">
+                          No completed subject data available in this period.
                         </p>
-                      </div>
-                      <div className="rounded-lg bg-muted/40 p-4">
-                        <p className="text-xs text-muted-foreground">Improvement from first to latest</p>
-                        <p className={`text-2xl font-bold mt-1 ${selectedStudentDive.firstLastDelta >= 0 ? "text-green-600" : "text-red-600"}`}>
-                          {selectedStudentDive.firstLastDelta >= 0 ? "+" : ""}{selectedStudentDive.firstLastDelta}
-                        </p>
-                      </div>
-                      <div className="rounded-lg bg-muted/40 p-4">
-                        <p className="text-xs text-muted-foreground">Activity footprint</p>
-                        <p className="text-2xl font-bold mt-1">{selectedStudentDive.activeDays}</p>
-                        <p className="text-xs text-muted-foreground mt-1">days with attempt activity</p>
-                      </div>
-                      <div className="rounded-lg border border-dashed p-4">
-                        <p className="font-medium text-sm">Recommended focus</p>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          {selectedStudentDive.weakestSubject !== "—"
-                            ? `Prioritize ${selectedStudentDive.weakestSubject}, then reinforce ${selectedStudentDive.strongestSubject}.`
-                            : "Need more completed attempts to identify a clear focus topic."}
-                        </p>
-                      </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>

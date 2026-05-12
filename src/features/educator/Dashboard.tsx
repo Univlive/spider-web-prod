@@ -271,13 +271,7 @@ export default function EducatorDashboard() {
           iconColor="text-green-400"
           delay={0.05}
         />
-        <MetricCard
-          title="Avg Score"
-          value={avgScore}
-          icon={Target}
-          iconColor="text-purple-400"
-          delay={0.1}
-        />
+
         <MetricCard
           title="Active Codes"
           value={activeAccessCodes.toLocaleString()}
