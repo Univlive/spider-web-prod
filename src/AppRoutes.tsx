@@ -9,7 +9,12 @@ import TenantHome from "@/themes/coaching/TenantHome";
 
 import { getAdminRoutes } from "@app/routes/adminRoutes";
 import { getEducatorRoutes } from "@app/routes/educatorRoutes";
-import { getSharedPublicRoutes, getMainDomainPublicRoutes, getTenantDomainPublicRoutes, getAdminRedirectRoute } from "@app/routes/publicRoutes";
+import {
+  getSharedPublicRoutes,
+  getMainDomainPublicRoutes,
+  getTenantDomainPublicRoutes,
+  getAdminRedirectRoute,
+} from "@app/routes/publicRoutes";
 import { getStudentRoutes } from "@app/routes/studentRoutes";
 import Login from "@/pages/Login";
 

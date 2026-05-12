@@ -23,11 +23,11 @@ const difficultyColors = {
 
 const subjectColors: Record<string, string> = {
   "General Test": "bg-pastel-mint",
-  "English": "bg-pastel-lavender",
-  "Mathematics": "bg-pastel-yellow",
-  "Physics": "bg-pastel-peach",
-  "Chemistry": "bg-pastel-pink",
-  "Biology": "bg-pastel-cream",
+  English: "bg-pastel-lavender",
+  Mathematics: "bg-pastel-yellow",
+  Physics: "bg-pastel-peach",
+  Chemistry: "bg-pastel-pink",
+  Biology: "bg-pastel-cream",
 };
 
 function formatTimeLeft(ms: number): string {
@@ -98,25 +98,29 @@ export function TestCard({ test, attemptsUsed = 0, onView, onStart, onUnlock }: 
   const attemptsRemaining = Math.max(0, attemptsAllowed - attemptsUsedSafe);
 
   return (
-    <Card className={cn(
-      "card-soft card-hover border-0 overflow-hidden",
-      test.isLive ? "bg-red-50 dark:bg-red-900/10 ring-2 ring-red-500/20" :
-      test.isUpcoming ? "bg-amber-50 dark:bg-amber-900/10 ring-2 ring-amber-400/30" :
-      (subjectColors[test.subject] || "bg-pastel-cream")
-    )}>
-      <CardContent className="p-5 space-y-4">
+    <Card
+      className={cn(
+        "card-soft card-hover overflow-hidden border-0",
+        test.isLive
+          ? "bg-red-50 ring-2 ring-red-500/20 dark:bg-red-900/10"
+          : test.isUpcoming
+            ? "bg-amber-50 ring-2 ring-amber-400/30 dark:bg-amber-900/10"
+            : subjectColors[test.subject] || "bg-pastel-cream"
+      )}
+    >
+      <CardContent className="space-y-4 p-5">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-foreground line-clamp-2">{test.title}</h3>
+            <div className="mb-1 flex items-center gap-2">
+              <h3 className="line-clamp-2 font-semibold text-foreground">{test.title}</h3>
               {test.isLive && (
-                <Badge variant="destructive" className="animate-pulse py-0 px-1 text-[10px] h-4">
+                <Badge variant="destructive" className="h-4 animate-pulse px-1 py-0 text-[10px]">
                   LIVE
                 </Badge>
               )}
               {test.isUpcoming && (
-                <Badge className="py-0 px-1 text-[10px] h-4 bg-amber-500 text-white">
+                <Badge className="h-4 bg-amber-500 px-1 py-0 text-[10px] text-white">
                   UPCOMING
                 </Badge>
               )}
@@ -124,11 +128,11 @@ export function TestCard({ test, attemptsUsed = 0, onView, onStart, onUnlock }: 
             <p className="text-sm text-muted-foreground">{test.subject}</p>
           </div>
           {test.isLocked ? (
-            <div className="p-2 rounded-lg bg-destructive/10">
+            <div className="rounded-lg bg-destructive/10 p-2">
               <Lock className="h-4 w-4 text-destructive" />
             </div>
           ) : (
-            <div className="p-2 rounded-lg bg-green-500/10">
+            <div className="rounded-lg bg-green-500/10 p-2">
               <Unlock className="h-4 w-4 text-green-600" />
             </div>
           )}
@@ -137,11 +141,11 @@ export function TestCard({ test, attemptsUsed = 0, onView, onStart, onUnlock }: 
         {/* Stats */}
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary" className="rounded-full bg-background/60">
-            <Clock className="h-3 w-3 mr-1" />
+            <Clock className="mr-1 h-3 w-3" />
             {test.duration} min
           </Badge>
           <Badge variant="secondary" className="rounded-full bg-background/60">
-            <FileText className="h-3 w-3 mr-1" />
+            <FileText className="mr-1 h-3 w-3" />
             {test.questionsCount} Q
           </Badge>
           <Badge className={cn("rounded-full", difficultyColors[test.difficulty])}>
@@ -153,7 +157,9 @@ export function TestCard({ test, attemptsUsed = 0, onView, onStart, onUnlock }: 
         {!test.isLocked && (
           <div className="text-xs text-muted-foreground">
             {attemptsRemaining > 0 ? (
-              <span>{attemptsRemaining} attempt{attemptsRemaining > 1 ? 's' : ''} remaining</span>
+              <span>
+                {attemptsRemaining} attempt{attemptsRemaining > 1 ? "s" : ""} remaining
+              </span>
             ) : (
               <span className="text-destructive">No attempts remaining</span>
             )}
@@ -162,10 +168,12 @@ export function TestCard({ test, attemptsUsed = 0, onView, onStart, onUnlock }: 
 
         {/* Access window countdown */}
         {!test.isLocked && timeLeft !== null && (
-          <div className={cn(
-            "flex items-center gap-1 text-xs font-medium",
-            timeLeft < 5 * 60 * 1000 ? "text-red-600" : "text-amber-600"
-          )}>
+          <div
+            className={cn(
+              "flex items-center gap-1 text-xs font-medium",
+              timeLeft < 5 * 60 * 1000 ? "text-red-600" : "text-amber-600"
+            )}
+          >
             <Timer className="h-3 w-3" />
             {formatTimeLeft(timeLeft)}
           </div>
@@ -177,7 +185,7 @@ export function TestCard({ test, attemptsUsed = 0, onView, onStart, onUnlock }: 
         )}
 
         {test.isLive && (
-          <div className="text-[10px] font-bold text-red-500 uppercase">
+          <div className="text-[10px] font-bold uppercase text-red-500">
             Available for free during live window
           </div>
         )}
@@ -190,7 +198,7 @@ export function TestCard({ test, attemptsUsed = 0, onView, onStart, onUnlock }: 
         )}
       </CardContent>
 
-      <CardFooter className="p-4 pt-0 gap-2">
+      <CardFooter className="gap-2 p-4 pt-0">
         {test.isUpcoming ? (
           <>
             <Button
@@ -198,23 +206,22 @@ export function TestCard({ test, attemptsUsed = 0, onView, onStart, onUnlock }: 
               className="flex-1 rounded-xl bg-background/60"
               onClick={() => onView(test.id)}
             >
-              <Eye className="h-4 w-4 mr-2" />
+              <Eye className="mr-2 h-4 w-4" />
               View
             </Button>
             <Button
-              className="flex-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white"
+              className="flex-1 rounded-xl bg-amber-500 text-white hover:bg-amber-600"
               disabled
             >
-              <CalendarClock className="h-4 w-4 mr-2" />
-              {countdown !== null && countdown > 0 ? `In ${formatCountdown(countdown)}` : "Starting soon"}
+              <CalendarClock className="mr-2 h-4 w-4" />
+              {countdown !== null && countdown > 0
+                ? `In ${formatCountdown(countdown)}`
+                : "Starting soon"}
             </Button>
           </>
         ) : test.isLocked ? (
-          <Button
-            className="w-full rounded-xl gradient-bg"
-            onClick={() => onUnlock(test.id)}
-          >
-            <Lock className="h-4 w-4 mr-2" />
+          <Button className="gradient-bg w-full rounded-xl" onClick={() => onUnlock(test.id)}>
+            <Lock className="mr-2 h-4 w-4" />
             Unlock
           </Button>
         ) : (
@@ -224,15 +231,15 @@ export function TestCard({ test, attemptsUsed = 0, onView, onStart, onUnlock }: 
               className="flex-1 rounded-xl bg-background/60"
               onClick={() => onView(test.id)}
             >
-              <Eye className="h-4 w-4 mr-2" />
+              <Eye className="mr-2 h-4 w-4" />
               View
             </Button>
             <Button
-              className="flex-1 rounded-xl gradient-bg"
+              className="gradient-bg flex-1 rounded-xl"
               onClick={() => onStart(test.id)}
               disabled={attemptsRemaining <= 0}
             >
-              <Play className="h-4 w-4 mr-2" />
+              <Play className="mr-2 h-4 w-4" />
               Start
             </Button>
           </>

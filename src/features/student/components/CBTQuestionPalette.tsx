@@ -59,19 +59,19 @@ export function CBTQuestionPalette({
       {/* Legend */}
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-muted" />
+          <div className="h-4 w-4 rounded bg-muted" />
           <span>Not Visited</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-red-400" />
+          <div className="h-4 w-4 rounded bg-red-400" />
           <span>Not Answered</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-green-500" />
+          <div className="h-4 w-4 rounded bg-green-500" />
           <span>Answered</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-purple-500" />
+          <div className="h-4 w-4 rounded bg-purple-500" />
           <span>Marked for Review</span>
         </div>
       </div>
@@ -92,7 +92,7 @@ export function CBTQuestionPalette({
               key={question.id}
               onClick={() => onQuestionClick(globalIndex)}
               className={cn(
-                "w-10 h-10 rounded-lg flex items-center justify-center text-sm font-medium transition-all hover:scale-105",
+                "flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium transition-all hover:scale-105",
                 getStatusClass(question.id, globalIndex)
               )}
             >
@@ -103,7 +103,7 @@ export function CBTQuestionPalette({
       </div>
 
       {/* Summary */}
-      <div className="pt-4 border-t border-border space-y-2 text-sm">
+      <div className="space-y-2 border-t border-border pt-4 text-sm">
         <div className="flex justify-between">
           <span className="text-muted-foreground">Answered</span>
           <span className="font-medium">

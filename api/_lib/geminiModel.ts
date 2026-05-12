@@ -1,7 +1,9 @@
 const FALLBACK_MODEL = "gemini-1.5-flash";
 
 function cleanModelName(value?: string | null) {
-  return String(value || "").trim().toLowerCase();
+  return String(value || "")
+    .trim()
+    .toLowerCase();
 }
 
 /**

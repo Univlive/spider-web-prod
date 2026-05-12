@@ -20,17 +20,7 @@ function escapeHtml(text: string) {
 
 export function RichText({ html, className }: Props) {
   const raw = (html ?? "").trim();
-  const safe = raw
-    ? looksLikeHtml(raw)
-      ? raw
-      : escapeHtml(raw).replace(/\n/g, "<br />")
-    : "";
+  const safe = raw ? (looksLikeHtml(raw) ? raw : escapeHtml(raw).replace(/\n/g, "<br />")) : "";
 
-  return (
-    <div
-      className={className}
-      dangerouslySetInnerHTML={{ __html: safe }}
-    />
-  );
+  return <div className={className} dangerouslySetInnerHTML={{ __html: safe }} />;
 }
-

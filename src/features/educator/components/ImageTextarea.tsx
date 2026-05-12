@@ -22,21 +22,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@shared/ui/dialog";
-import {
-  Crop as CropIcon,
-  Image as ImageIcon,
-  Loader2,
-  X,
-  Upload,
-} from "lucide-react";
+import { Crop as CropIcon, Image as ImageIcon, Loader2, X, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { uploadToImageKit } from "@shared/lib/imagekitUpload";
 import { cn } from "@shared/lib/utils";
-import ReactCrop, {
-  type Crop,
-  type PercentCrop,
-  type PixelCrop,
-} from "react-image-crop";
+import ReactCrop, { type Crop, type PercentCrop, type PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 
 interface ImageTextareaProps {
@@ -65,9 +55,7 @@ function splitContent(raw: string): { text: string; imageUrls: string[] } {
   }
 
   // Strip all <img …> tags and collapse resulting blank lines
-  const text = raw
-    .replace(new RegExp(IMG_TAG_REGEX.source, "gi"), "")
-    .replace(/\n{3,}/g, "\n\n");
+  const text = raw.replace(new RegExp(IMG_TAG_REGEX.source, "gi"), "").replace(/\n{3,}/g, "\n\n");
 
   return { text, imageUrls };
 }
@@ -152,19 +140,13 @@ export default function ImageTextarea({
 
       setUploading(true);
       try {
-        const { url } = await uploadToImageKit(
-          file,
-          file.name,
-          folder,
-          "website"
-        );
+        const { url } = await uploadToImageKit(file, file.name, folder, "website");
         // Re-read the latest split (avoids stale closure)
         const latest = splitContent(value);
         onChange(combineContent(latest.text, [...latest.imageUrls, url]));
         toast.success("Image uploaded");
       } catch (error) {
-        const msg =
-          error instanceof Error ? error.message : "Image upload failed";
+        const msg = error instanceof Error ? error.message : "Image upload failed";
         console.error("[ImageTextarea upload error]", msg);
         toast.error(msg);
       } finally {
@@ -355,8 +337,7 @@ export default function ImageTextarea({
       <div
         className={cn(
           "relative rounded-xl transition-all duration-200",
-          isDragging &&
-            "ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.005]"
+          isDragging && "scale-[1.005] ring-2 ring-primary ring-offset-2 ring-offset-background"
         )}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
@@ -365,7 +346,7 @@ export default function ImageTextarea({
       >
         {/* Drag overlay */}
         {isDragging && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-primary/10 backdrop-blur-[2px] border-2 border-dashed border-primary pointer-events-none">
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-primary bg-primary/10 backdrop-blur-[2px]">
             <div className="flex flex-col items-center gap-1.5 text-primary">
               <Upload className="h-7 w-7 animate-bounce" />
               <p className="text-sm font-semibold">Drop image here</p>
@@ -375,7 +356,7 @@ export default function ImageTextarea({
 
         {/* Uploading overlay */}
         {uploading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-background/70 backdrop-blur-[2px] pointer-events-none">
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-background/70 backdrop-blur-[2px]">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
               <p className="text-sm font-medium">Uploading image…</p>
@@ -392,8 +373,7 @@ export default function ImageTextarea({
           className={cn("rounded-xl", className)}
           style={{ minHeight, overflowY: "hidden" }}
           placeholder={
-            placeholder ||
-            "Type your text here. You can drag & drop or paste images too."
+            placeholder || "Type your text here. You can drag & drop or paste images too."
           }
           disabled={busy}
         />
@@ -401,19 +381,19 @@ export default function ImageTextarea({
 
       {/* ─── Image previews ─────────────────────────────────────────── */}
       {imageUrls.length > 0 && (
-        <div className="flex flex-wrap gap-2.5 p-2.5 rounded-xl bg-muted/30 border border-border/60">
-          <p className="w-full text-[11px] text-muted-foreground font-medium mb-0.5">
+        <div className="flex flex-wrap gap-2.5 rounded-xl border border-border/60 bg-muted/30 p-2.5">
+          <p className="mb-0.5 w-full text-[11px] font-medium text-muted-foreground">
             Attached images ({imageUrls.length})
           </p>
           {imageUrls.map((url, i) => (
             <div
               key={`${url}-${i}`}
-              className="relative group rounded-lg overflow-hidden shadow-sm border border-border/50 bg-background"
+              className="group relative overflow-hidden rounded-lg border border-border/50 bg-background shadow-sm"
             >
               <img
                 src={url}
                 alt={`Preview ${i + 1}`}
-                className="h-[72px] w-[72px] object-cover transition-transform group-hover:scale-105 cursor-pointer"
+                className="h-[72px] w-[72px] cursor-pointer object-cover transition-transform group-hover:scale-105"
                 onClick={() => openCropDialog(i, url)}
                 title="Click to crop"
                 onError={(e) => {
@@ -425,9 +405,9 @@ export default function ImageTextarea({
                 type="button"
                 onClick={() => openCropDialog(i, url)}
                 className={cn(
-                  "absolute -top-0.5 -left-0.5 h-5 w-5 rounded-full",
-                  "bg-background/95 text-foreground border border-border",
-                  "opacity-0 group-hover:opacity-100 transition-opacity shadow-md",
+                  "absolute -left-0.5 -top-0.5 h-5 w-5 rounded-full",
+                  "border border-border bg-background/95 text-foreground",
+                  "opacity-0 shadow-md transition-opacity group-hover:opacity-100",
                   "hover:bg-muted focus:opacity-100 focus:outline-none"
                 )}
                 title="Crop image"
@@ -439,9 +419,9 @@ export default function ImageTextarea({
                 type="button"
                 onClick={() => removeImage(url)}
                 className={cn(
-                  "absolute -top-0.5 -right-0.5 h-5 w-5 rounded-full",
-                  "bg-destructive text-white flex items-center justify-center",
-                  "opacity-0 group-hover:opacity-100 transition-opacity shadow-md",
+                  "absolute -right-0.5 -top-0.5 h-5 w-5 rounded-full",
+                  "flex items-center justify-center bg-destructive text-white",
+                  "opacity-0 shadow-md transition-opacity group-hover:opacity-100",
                   "hover:bg-destructive/90 focus:opacity-100 focus:outline-none"
                 )}
                 title="Remove image"
@@ -460,7 +440,7 @@ export default function ImageTextarea({
             type="button"
             variant="outline"
             size="sm"
-            className="rounded-xl h-7 text-xs gap-1.5"
+            className="h-7 gap-1.5 rounded-xl text-xs"
             disabled={busy}
             onClick={handlePickFile}
           >
@@ -491,7 +471,7 @@ export default function ImageTextarea({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="rounded-xl border bg-black/70 p-2 max-h-[68vh] overflow-auto">
+          <div className="max-h-[68vh] overflow-auto rounded-xl border bg-black/70 p-2">
             {cropTargetUrl ? (
               <ReactCrop
                 crop={cropSelection}
@@ -508,23 +488,18 @@ export default function ImageTextarea({
                   src={cropTargetUrl}
                   alt="Crop preview"
                   crossOrigin="anonymous"
-                  className="max-h-[60vh] w-auto mx-auto"
+                  className="mx-auto max-h-[60vh] w-auto"
                 />
               </ReactCrop>
             ) : (
-              <div className="h-[260px] flex items-center justify-center text-sm text-muted-foreground">
+              <div className="flex h-[260px] items-center justify-center text-sm text-muted-foreground">
                 No image selected
               </div>
             )}
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={closeCropDialog}
-              disabled={cropping}
-            >
+            <Button type="button" variant="outline" onClick={closeCropDialog} disabled={cropping}>
               Cancel
             </Button>
             <Button

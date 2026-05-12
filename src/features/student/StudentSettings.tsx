@@ -13,13 +13,7 @@ import { useAuth } from "@app/providers/AuthProvider";
 import { useTenant } from "@app/providers/TenantProvider";
 import { db } from "@shared/lib/firebase";
 
-import {
-  doc,
-  onSnapshot,
-  setDoc,
-  serverTimestamp,
-  updateDoc,
-} from "firebase/firestore";
+import { doc, onSnapshot, setDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { getAuth, sendPasswordResetEmail, updateProfile } from "firebase/auth";
 
 type UserDoc = {
@@ -44,7 +38,10 @@ type UserDoc = {
 function initials(name: string) {
   const parts = (name || "").trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return "S";
-  return parts.slice(0, 2).map((p) => p[0]?.toUpperCase()).join("");
+  return parts
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
 }
 
 export default function StudentSettings() {
@@ -67,20 +64,12 @@ export default function StudentSettings() {
   const uid = firebaseUser?.uid || null;
 
   const coachingName = useMemo(() => {
-    return (
-      tenant?.coachingName ||
-      tenant?.educatorId ||
-      "Your Coaching"
-    );
+    return tenant?.coachingName || tenant?.educatorId || "Your Coaching";
   }, [tenant, profile]);
 
   const batchLabel = useMemo(() => {
     return (
-      profile?.role ||
-      profile?.tenantSlug ||
-      tenant?.coachingName ||
-      tenant?.educatorId ||
-      "Batch"
+      profile?.role || profile?.tenantSlug || tenant?.coachingName || tenant?.educatorId || "Batch"
     );
   }, [profile, tenant]);
 
@@ -227,15 +216,17 @@ export default function StudentSettings() {
   };
 
   if (loading) {
-    return <div className="text-center py-12 text-muted-foreground">Loading...</div>;
+    return <div className="py-12 text-center text-muted-foreground">Loading...</div>;
   }
 
   if (!uid) {
-    return <div className="text-center py-12 text-muted-foreground">Please login to view settings.</div>;
+    return (
+      <div className="py-12 text-center text-muted-foreground">Please login to view settings.</div>
+    );
   }
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
+    <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-muted-foreground">Manage your account and preferences</p>
@@ -243,7 +234,7 @@ export default function StudentSettings() {
 
       {/* Profile Card */}
       <Card className="card-soft border-0 bg-pastel-mint">
-        <CardContent className="p-6 flex items-center gap-4">
+        <CardContent className="flex items-center gap-4 p-6">
           <Avatar className="h-20 w-20 border-4 border-white shadow-lg">
             <AvatarImage src={photoURL} />
             <AvatarFallback>{initials(fullName || "Student")}</AvatarFallback>
@@ -266,13 +257,13 @@ export default function StudentSettings() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label>Full Name</Label>
               <Input
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="rounded-xl mt-1"
+                className="mt-1 rounded-xl"
                 placeholder="Enter your name"
               />
             </div>
@@ -282,7 +273,7 @@ export default function StudentSettings() {
               <Input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="rounded-xl mt-1"
+                className="mt-1 rounded-xl"
                 placeholder="Enter your phone"
               />
             </div>
@@ -292,11 +283,11 @@ export default function StudentSettings() {
             <Label className="flex items-center gap-2">
               <Mail className="h-4 w-4" /> Email
             </Label>
-            <Input value={email} disabled className="rounded-xl mt-1 opacity-80" />
+            <Input value={email} disabled className="mt-1 rounded-xl opacity-80" />
           </div>
 
           <Button className="gradient-bg rounded-xl" onClick={saveChanges} disabled={!canSave}>
-            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Save Changes
           </Button>
         </CardContent>
@@ -312,7 +303,7 @@ export default function StudentSettings() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
+          <div className="flex items-center justify-between rounded-xl bg-muted/50 p-3">
             <div className="flex items-center gap-3">
               {theme === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
               <div>
@@ -320,18 +311,26 @@ export default function StudentSettings() {
                 <p className="text-xs text-muted-foreground">Toggle dark/light theme</p>
               </div>
             </div>
-            <Switch checked={theme === "dark"} onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")} />
+            <Switch
+              checked={theme === "dark"}
+              onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+            />
           </div>
 
-          <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
+          <div className="flex items-center justify-between rounded-xl bg-muted/50 p-3">
             <div className="flex items-center gap-3">
               <Bell className="h-5 w-5" />
               <div>
                 <p className="font-medium">Push Notifications</p>
-                <p className="text-xs text-muted-foreground">Get notified about new tests and results</p>
+                <p className="text-xs text-muted-foreground">
+                  Get notified about new tests and results
+                </p>
               </div>
             </div>
-            <Switch checked={pushNotifications} onCheckedChange={(checked) => togglePushNotifications(!!checked)} />
+            <Switch
+              checked={pushNotifications}
+              onCheckedChange={(checked) => togglePushNotifications(!!checked)}
+            />
           </div>
         </CardContent>
       </Card>
@@ -345,11 +344,16 @@ export default function StudentSettings() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Button variant="outline" className="rounded-xl" onClick={changePassword} disabled={sendingReset}>
-            {sendingReset ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+          <Button
+            variant="outline"
+            className="rounded-xl"
+            onClick={changePassword}
+            disabled={sendingReset}
+          >
+            {sendingReset ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Change Password
           </Button>
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="mt-2 text-xs text-muted-foreground">
             We’ll send a password reset link to your email.
           </p>
         </CardContent>
@@ -357,4 +361,3 @@ export default function StudentSettings() {
     </div>
   );
 }
-

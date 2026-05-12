@@ -67,7 +67,6 @@ const sidebarGroups = [
   },
 ];
 
-
 const ThemeToggle = () => {
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== "undefined") {
@@ -115,42 +114,72 @@ export default function AdminLayout() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-primary"></div>
       </div>
     );
   }
 
-  const Sidebar = ({ mobile = false, collapsed = false }: { mobile?: boolean; collapsed?: boolean }) => (
-    <div className={cn("flex flex-col h-full", mobile ? "pt-4" : "")}>
+  const Sidebar = ({
+    mobile = false,
+    collapsed = false,
+  }: {
+    mobile?: boolean;
+    collapsed?: boolean;
+  }) => (
+    <div className={cn("flex h-full flex-col", mobile ? "pt-4" : "")}>
       {/* Logo */}
-      <div className={cn("p-6 border-b border-border", collapsed && !mobile && "px-3")}>
-        <div className={cn("flex items-center", collapsed && !mobile ? "justify-center" : "justify-between")}>
-        <Link to="/admin" className={cn("flex items-center gap-3", collapsed && !mobile && "justify-center")}>
-          <div className="flex items-center gap-3">
-            <img src="/logo-compact.png" alt="UNIV.LIVE" className="h-10 w-10 object-contain flex-shrink-0" />
-            {(!collapsed || mobile) && (
-              <div className="min-w-0 bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text">
-                <h1 className="font-bold text-sm leading-tight tracking-tight text-transparent bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text">Admin Panel</h1>
-                <p className="text-[9px] text-muted-foreground leading-tight">with great power comes great responsibility</p>
-              </div>
-            )}
-          </div>
-        </Link>
-        {!mobile && (
-          <Button variant="ghost" size="icon" onClick={() => setSidebarCollapsed((prev) => !prev)}>
-            {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-          </Button>
-        )}
+      <div className={cn("border-b border-border p-6", collapsed && !mobile && "px-3")}>
+        <div
+          className={cn(
+            "flex items-center",
+            collapsed && !mobile ? "justify-center" : "justify-between"
+          )}
+        >
+          <Link
+            to="/admin"
+            className={cn("flex items-center gap-3", collapsed && !mobile && "justify-center")}
+          >
+            <div className="flex items-center gap-3">
+              <img
+                src="/logo-compact.png"
+                alt="UNIV.LIVE"
+                className="h-10 w-10 flex-shrink-0 object-contain"
+              />
+              {(!collapsed || mobile) && (
+                <div className="min-w-0 bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text">
+                  <h1 className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-sm font-bold leading-tight tracking-tight text-transparent">
+                    Admin Panel
+                  </h1>
+                  <p className="text-[9px] leading-tight text-muted-foreground">
+                    with great power comes great responsibility
+                  </p>
+                </div>
+              )}
+            </div>
+          </Link>
+          {!mobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarCollapsed((prev) => !prev)}
+            >
+              {collapsed ? (
+                <ChevronRight className="h-5 w-5" />
+              ) : (
+                <ChevronLeft className="h-5 w-5" />
+              )}
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-4 overflow-y-auto">
+      <nav className="flex-1 space-y-4 overflow-y-auto p-4">
         {sidebarGroups.map((group, gi) => (
           <div key={gi} className="space-y-1">
             {group.label && (!collapsed || mobile) && (
-              <p className="px-4 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+              <p className="px-4 pb-0.5 pt-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                 {group.label}
               </p>
             )}
@@ -164,7 +193,7 @@ export default function AdminLayout() {
                   to={item.path}
                   onClick={() => mobile && setMobileMenuOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                    "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
                     collapsed && !mobile && "justify-center px-2",
                     isActive
                       ? "bg-primary/10 text-primary"
@@ -182,10 +211,13 @@ export default function AdminLayout() {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-border">
+      <div className="border-t border-border p-4">
         <Button
           variant="ghost"
-          className={cn("w-full gap-3 text-muted-foreground hover:text-destructive", collapsed && !mobile ? "justify-center px-0" : "justify-start")}
+          className={cn(
+            "w-full gap-3 text-muted-foreground hover:text-destructive",
+            collapsed && !mobile ? "justify-center px-0" : "justify-start"
+          )}
           onClick={() => signOut(auth).then(() => navigate("/admin/login"))}
           title={collapsed && !mobile ? "Logout" : undefined}
         >
@@ -197,14 +229,19 @@ export default function AdminLayout() {
   );
 
   return (
-    <div className="min-h-screen h-[100dvh] bg-background">
+    <div className="h-[100dvh] min-h-screen bg-background">
       {/* Desktop Sidebar */}
-      <aside className={cn("hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:flex-col border-r border-border bg-card transition-all duration-300", sidebarCollapsed ? "lg:w-20" : "lg:w-64")}>
+      <aside
+        className={cn(
+          "hidden border-r border-border bg-card transition-all duration-300 lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:flex-col",
+          sidebarCollapsed ? "lg:w-20" : "lg:w-64"
+        )}
+      >
         <Sidebar collapsed={sidebarCollapsed} />
       </aside>
 
       {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 border-b border-border bg-card/95 backdrop-blur-sm z-50 flex items-center justify-between px-4">
+      <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center justify-between border-b border-border bg-card/95 px-4 backdrop-blur-sm lg:hidden">
         <div className="flex items-center gap-3">
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
@@ -231,15 +268,17 @@ export default function AdminLayout() {
             />
           )}
           <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-primary/10 text-primary text-xs">AD</AvatarFallback>
+            <AvatarFallback className="bg-primary/10 text-xs text-primary">AD</AvatarFallback>
           </Avatar>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-20" : "lg:pl-64")}>
+      <main
+        className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-20" : "lg:pl-64")}
+      >
         {/* Desktop Top Bar */}
-        <div className="hidden lg:flex h-16 items-center justify-between border-b border-border bg-card/50 backdrop-blur-sm px-6 sticky top-0 z-40">
+        <div className="sticky top-0 z-40 hidden h-16 items-center justify-between border-b border-border bg-card/50 px-6 backdrop-blur-sm lg:flex">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2">
               <ChevronLeft className="h-4 w-4" />
@@ -288,4 +327,3 @@ export default function AdminLayout() {
     </div>
   );
 }
-

@@ -34,16 +34,20 @@ export function TagInput({ placeholder, tags, setTags, className }: TagInputProp
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-2 p-2 border rounded-md bg-background focus-within:ring-1 focus-within:ring-ring focus-within:border-primary transition-colors cursor-text min-h-[2.5rem]",
+        "flex min-h-[2.5rem] cursor-text flex-wrap items-center gap-2 rounded-md border bg-background p-2 transition-colors focus-within:border-primary focus-within:ring-1 focus-within:ring-ring",
         className
       )}
       onClick={() => inputRef.current?.focus()}
     >
       {tags.map((tag, index) => (
-        <Badge key={index} variant="secondary" className="flex items-center gap-1 px-2 py-0.5 text-sm font-medium rounded-md">
+        <Badge
+          key={index}
+          variant="secondary"
+          className="flex items-center gap-1 rounded-md px-2 py-0.5 text-sm font-medium"
+        >
           {tag}
           <X
-            className="h-3 w-3 cursor-pointer hover:text-destructive transition-colors ml-1"
+            className="ml-1 h-3 w-3 cursor-pointer transition-colors hover:text-destructive"
             onClick={(e) => {
               e.stopPropagation();
               removeTag(index);
@@ -56,8 +60,8 @@ export function TagInput({ placeholder, tags, setTags, className }: TagInputProp
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={tags.length === 0 ? (placeholder || "Type and press Enter...") : ""}
-        className="flex-1 bg-transparent outline-none min-w-[120px] text-sm placeholder:text-muted-foreground"
+        placeholder={tags.length === 0 ? placeholder || "Type and press Enter..." : ""}
+        className="min-w-[120px] flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
       />
     </div>
   );

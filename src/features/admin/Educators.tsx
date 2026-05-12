@@ -10,7 +10,18 @@ import { Badge } from "@shared/ui/badge";
 import { Input } from "@shared/ui/input";
 import { Label } from "@shared/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@shared/ui/dialog";
-import { Check, Copy, Loader2, Plus, Users, Mail, ExternalLink, BookOpen, Settings, Search } from "lucide-react";
+import {
+  Check,
+  Copy,
+  Loader2,
+  Plus,
+  Users,
+  Mail,
+  ExternalLink,
+  BookOpen,
+  Settings,
+  Search,
+} from "lucide-react";
 import { toast } from "sonner";
 
 type Educator = {
@@ -54,7 +65,12 @@ export default function AdminEducators() {
   const [cPhone, setCPhone] = useState("");
   const [cSlug, setCSlug] = useState("");
   const [cPassword, setCPassword] = useState("");
-  const [created, setCreated] = useState<{ uid: string; email: string; tenantSlug: string; password: string } | null>(null);
+  const [created, setCreated] = useState<{
+    uid: string;
+    email: string;
+    tenantSlug: string;
+    password: string;
+  } | null>(null);
   const [credCopied, setCredCopied] = useState(false);
 
   const [selectedEducator, setSelectedEducator] = useState<Educator | null>(null);
@@ -85,24 +101,26 @@ export default function AdminEducators() {
     try {
       const q = query(collection(db, "users"), where("role", "==", "EDUCATOR"));
       const snap = await getDocs(q);
-      
+
       const list: Educator[] = [];
-      
+
       for (const d of snap.docs) {
         const data = d.data();
         const eduId = d.id;
-        
+
         // Find tenant slug
         let tenantSlug = data.tenantSlug;
         if (!tenantSlug) {
-            const tSnap = await getDocs(query(collection(db, "tenants"), where("educatorId", "==", eduId)));
-            if (!tSnap.empty) {
-                tenantSlug = tSnap.docs[0].id;
-            }
+          const tSnap = await getDocs(
+            query(collection(db, "tenants"), where("educatorId", "==", eduId))
+          );
+          if (!tSnap.empty) {
+            tenantSlug = tSnap.docs[0].id;
+          }
         }
 
         const sSnap = await getDocs(collection(db, "educators", eduId, "students"));
-        
+
         list.push({
           uid: eduId,
           displayName: data.displayName || "No Name",
@@ -112,7 +130,7 @@ export default function AdminEducators() {
           createdAt: data.createdAt as Timestamp,
         });
       }
-      
+
       setEducators(list);
     } catch (e) {
       console.error(e);
@@ -127,16 +145,19 @@ export default function AdminEducators() {
     setStudentsOpen(true);
     setLoadingStudents(true);
     try {
-      const q = query(collection(db, "educators", edu.uid, "students"), orderBy("joinedAt", "desc"));
+      const q = query(
+        collection(db, "educators", edu.uid, "students"),
+        orderBy("joinedAt", "desc")
+      );
       const snap = await getDocs(q);
-      const list: Student[] = snap.docs.map(d => {
+      const list: Student[] = snap.docs.map((d) => {
         const data = d.data();
         return {
           uid: d.id,
           name: data.name || "Unknown",
           email: data.email || "No Email",
           status: data.status || "INACTIVE",
-          joinedAt: data.joinedAt as Timestamp
+          joinedAt: data.joinedAt as Timestamp,
         };
       });
       setStudents(list);
@@ -153,9 +174,12 @@ export default function AdminEducators() {
     setTestsOpen(true);
     setLoadingTests(true);
     try {
-      const q = query(collection(db, "educators", edu.uid, "my_tests"), orderBy("createdAt", "desc"));
+      const q = query(
+        collection(db, "educators", edu.uid, "my_tests"),
+        orderBy("createdAt", "desc")
+      );
       const snap = await getDocs(q);
-      const list: Test[] = snap.docs.map(d => {
+      const list: Test[] = snap.docs.map((d) => {
         const data = d.data();
         return {
           id: d.id,
@@ -163,7 +187,7 @@ export default function AdminEducators() {
           subject: data.subject || "N/A",
           questionsCount: data.questionsCount || 0,
           durationMinutes: data.durationMinutes || 0,
-          createdAt: data.createdAt as Timestamp
+          createdAt: data.createdAt as Timestamp,
         };
       });
       setTests(list);
@@ -184,7 +208,13 @@ export default function AdminEducators() {
       const res = await fetch(`${base}/api/admin/create-educator`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ display_name: cName, email: cEmail, phone: cPhone, tenant_slug: cSlug, password: cPassword || undefined }),
+        body: JSON.stringify({
+          display_name: cName,
+          email: cEmail,
+          phone: cPhone,
+          tenant_slug: cSlug,
+          password: cPassword || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.detail || data?.error || "Failed");
@@ -198,8 +228,13 @@ export default function AdminEducators() {
   }
 
   function resetCreate() {
-    setCName(""); setCEmail(""); setCPhone(""); setCSlug(""); setCPassword("");
-    setCreated(null); setCredCopied(false);
+    setCName("");
+    setCEmail("");
+    setCPhone("");
+    setCSlug("");
+    setCPassword("");
+    setCreated(null);
+    setCredCopied(false);
   }
 
   async function handleImpersonate(uid: string, name: string) {
@@ -215,7 +250,10 @@ export default function AdminEducators() {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.detail || "Failed");
       const key = `imp_${Date.now()}`;
-      localStorage.setItem(key, JSON.stringify({ token: data.custom_token, name, expires: Date.now() + 60000 }));
+      localStorage.setItem(
+        key,
+        JSON.stringify({ token: data.custom_token, name, expires: Date.now() + 60000 })
+      );
       window.open(`/impersonate?k=${key}`, "_blank");
     } catch (e: any) {
       toast.error(e.message || "Failed to impersonate");
@@ -224,7 +262,9 @@ export default function AdminEducators() {
 
   function copyCredentials() {
     if (!created) return;
-    navigator.clipboard.writeText(`Email: ${created.email}\nPassword: ${created.password}\nPortal: https://${created.tenantSlug}.preparekaro.in`);
+    navigator.clipboard.writeText(
+      `Email: ${created.email}\nPassword: ${created.password}\nPortal: https://${created.tenantSlug}.preparekaro.in`
+    );
     setCredCopied(true);
     setTimeout(() => setCredCopied(false), 2000);
   }
@@ -246,18 +286,25 @@ export default function AdminEducators() {
           <p className="text-muted-foreground">Manage and view all registered educators</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={() => { resetCreate(); setCreateOpen(true); }} size="sm" className="gap-2">
+          <Button
+            onClick={() => {
+              resetCreate();
+              setCreateOpen(true);
+            }}
+            size="sm"
+            className="gap-2"
+          >
             <Plus className="h-4 w-4" /> New Educator
           </Button>
           <Button onClick={loadEducators} disabled={loading} variant="outline" size="sm">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Refresh
           </Button>
         </div>
       </div>
 
       <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -281,14 +328,14 @@ export default function AdminEducators() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+                  <TableCell colSpan={5} className="py-10 text-center">
+                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
                     <p className="mt-2 text-muted-foreground">Loading educators...</p>
                   </TableCell>
                 </TableRow>
               ) : filteredEducators.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
+                  <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
                     {search ? "No educators match your search." : "No educators found."}
                   </TableCell>
                 </TableRow>
@@ -305,9 +352,9 @@ export default function AdminEducators() {
                       {edu.tenantSlug ? (
                         <div className="flex items-center gap-2">
                           <Badge variant="secondary">{edu.tenantSlug}</Badge>
-                          <a 
-                            href={`https://${edu.tenantSlug}.preparekaro.in`} 
-                            target="_blank" 
+                          <a
+                            href={`https://${edu.tenantSlug}.preparekaro.in`}
+                            target="_blank"
                             rel="noreferrer"
                             className="text-muted-foreground hover:text-primary"
                           >
@@ -315,7 +362,7 @@ export default function AdminEducators() {
                           </a>
                         </div>
                       ) : (
-                        <span className="text-xs text-muted-foreground italic">No slug</span>
+                        <span className="text-xs italic text-muted-foreground">No slug</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -335,10 +382,18 @@ export default function AdminEducators() {
                         <Button variant="ghost" size="sm" onClick={() => viewTests(edu)}>
                           Tests
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/seat-management?educatorId=${edu.uid}`)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(`/admin/seat-management?educatorId=${edu.uid}`)}
+                        >
                           <Settings className="mr-1 h-3 w-3" /> Config
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleImpersonate(edu.uid, edu.displayName)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleImpersonate(edu.uid, edu.displayName)}
+                        >
                           Login as
                         </Button>
                       </div>
@@ -353,18 +408,18 @@ export default function AdminEducators() {
 
       {/* Students Dialog */}
       <Dialog open={studentsOpen} onOpenChange={setStudentsOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogContent className="flex max-h-[80vh] max-w-4xl flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
               Students for {selectedEducator?.displayName}
             </DialogTitle>
           </DialogHeader>
-          
-          <div className="flex-1 overflow-y-auto mt-4">
+
+          <div className="mt-4 flex-1 overflow-y-auto">
             {loadingStudents ? (
               <div className="py-10 text-center">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+                <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : students.length === 0 ? (
               <div className="py-10 text-center text-muted-foreground">
@@ -392,7 +447,7 @@ export default function AdminEducators() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={s.status === "ACTIVE" ? "success" as any : "secondary"}>
+                        <Badge variant={s.status === "ACTIVE" ? ("success" as any) : "secondary"}>
                           {s.status}
                         </Badge>
                       </TableCell>
@@ -400,7 +455,11 @@ export default function AdminEducators() {
                         {fmtTs(s.joinedAt)}
                       </TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm" onClick={() => handleImpersonate(s.uid, s.name)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleImpersonate(s.uid, s.name)}
+                        >
                           Login as
                         </Button>
                       </TableCell>
@@ -414,7 +473,13 @@ export default function AdminEducators() {
       </Dialog>
 
       {/* Create Educator Dialog */}
-      <Dialog open={createOpen} onOpenChange={(v) => { setCreateOpen(v); if (!v) resetCreate(); }}>
+      <Dialog
+        open={createOpen}
+        onOpenChange={(v) => {
+          setCreateOpen(v);
+          if (!v) resetCreate();
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{created ? "Educator Created" : "New Educator Account"}</DialogTitle>
@@ -422,45 +487,87 @@ export default function AdminEducators() {
 
           {created ? (
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">Account created successfully. Share these credentials with the educator.</p>
-              <div className="rounded-xl border bg-muted/40 p-4 space-y-2 text-sm font-mono">
-                <div><span className="text-muted-foreground">UID: </span>{created.uid}</div>
-                <div><span className="text-muted-foreground">Email: </span>{created.email}</div>
-                <div><span className="text-muted-foreground">Password: </span>{created.password}</div>
-                <div><span className="text-muted-foreground">Portal: </span>https://{created.tenantSlug}.preparekaro.in</div>
+              <p className="text-sm text-muted-foreground">
+                Account created successfully. Share these credentials with the educator.
+              </p>
+              <div className="space-y-2 rounded-xl border bg-muted/40 p-4 font-mono text-sm">
+                <div>
+                  <span className="text-muted-foreground">UID: </span>
+                  {created.uid}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Email: </span>
+                  {created.email}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Password: </span>
+                  {created.password}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Portal: </span>https://
+                  {created.tenantSlug}.preparekaro.in
+                </div>
               </div>
               <div className="flex gap-2">
                 <Button className="flex-1 gap-2" onClick={copyCredentials}>
                   {credCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   {credCopied ? "Copied!" : "Copy Credentials"}
                 </Button>
-                <Button variant="outline" onClick={() => setCreateOpen(false)}>Done</Button>
+                <Button variant="outline" onClick={() => setCreateOpen(false)}>
+                  Done
+                </Button>
               </div>
             </div>
           ) : (
             <div className="space-y-3">
               <div>
-                <Label>Institute Name <span className="text-destructive">*</span></Label>
-                <Input value={cName} onChange={(e) => setCName(e.target.value)} placeholder="e.g. Sharma Classes" className="mt-1" />
+                <Label>
+                  Institute Name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  value={cName}
+                  onChange={(e) => setCName(e.target.value)}
+                  placeholder="e.g. Sharma Classes"
+                  className="mt-1"
+                />
               </div>
               <div>
-                <Label>Email <span className="text-destructive">*</span></Label>
-                <Input type="email" value={cEmail} onChange={(e) => setCEmail(e.target.value)} placeholder="educator@example.com" className="mt-1" />
+                <Label>
+                  Email <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  type="email"
+                  value={cEmail}
+                  onChange={(e) => setCEmail(e.target.value)}
+                  placeholder="educator@example.com"
+                  className="mt-1"
+                />
               </div>
               <div>
                 <Label>Phone</Label>
-                <Input value={cPhone} onChange={(e) => setCPhone(e.target.value)} placeholder="10-digit mobile (optional)" className="mt-1" />
+                <Input
+                  value={cPhone}
+                  onChange={(e) => setCPhone(e.target.value)}
+                  placeholder="10-digit mobile (optional)"
+                  className="mt-1"
+                />
               </div>
               <div>
-                <Label>Subdomain (Tenant Slug) <span className="text-destructive">*</span></Label>
-                <div className="flex items-center mt-1">
+                <Label>
+                  Subdomain (Tenant Slug) <span className="text-destructive">*</span>
+                </Label>
+                <div className="mt-1 flex items-center">
                   <Input
                     value={cSlug}
-                    onChange={(e) => setCSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                    onChange={(e) =>
+                      setCSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))
+                    }
                     placeholder="sharma-classes"
                     className="rounded-r-none"
                   />
-                  <span className="h-10 px-3 flex items-center border border-l-0 rounded-r-md bg-muted text-sm text-muted-foreground whitespace-nowrap">.preparekaro.in</span>
+                  <span className="flex h-10 items-center whitespace-nowrap rounded-r-md border border-l-0 bg-muted px-3 text-sm text-muted-foreground">
+                    .preparekaro.in
+                  </span>
                 </div>
               </div>
               <div>
@@ -473,10 +580,12 @@ export default function AdminEducators() {
                   className="mt-1"
                 />
               </div>
-              <div className="flex gap-2 justify-end pt-2">
-                <Button variant="outline" onClick={() => setCreateOpen(false)} disabled={creating}>Cancel</Button>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setCreateOpen(false)} disabled={creating}>
+                  Cancel
+                </Button>
                 <Button onClick={createEducator} disabled={creating || !cName || !cEmail || !cSlug}>
-                  {creating && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Create Account
+                  {creating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Create Account
                 </Button>
               </div>
             </div>
@@ -486,23 +595,21 @@ export default function AdminEducators() {
 
       {/* Tests Dialog */}
       <Dialog open={testsOpen} onOpenChange={setTestsOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogContent className="flex max-h-[80vh] max-w-4xl flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5" />
               Tests uploaded by {selectedEducator?.displayName}
             </DialogTitle>
           </DialogHeader>
-          
-          <div className="flex-1 overflow-y-auto mt-4">
+
+          <div className="mt-4 flex-1 overflow-y-auto">
             {loadingTests ? (
               <div className="py-10 text-center">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+                <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : tests.length === 0 ? (
-              <div className="py-10 text-center text-muted-foreground">
-                No tests uploaded yet.
-              </div>
+              <div className="py-10 text-center text-muted-foreground">No tests uploaded yet.</div>
             ) : (
               <Table>
                 <TableHeader>
@@ -532,7 +639,6 @@ export default function AdminEducators() {
           </div>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }

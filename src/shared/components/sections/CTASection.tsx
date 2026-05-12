@@ -9,7 +9,7 @@ export const CTASection = forwardRef<HTMLElement>((_, ref) => {
     <section ref={ref} className="section-padding section-1">
       <div className="container-main">
         <motion.div
-          className="relative bg-gradient-to-br from-primary via-accent to-primary rounded-3xl p-8 lg:p-16 text-center overflow-hidden"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-accent to-primary p-8 text-center lg:p-16"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -17,13 +17,16 @@ export const CTASection = forwardRef<HTMLElement>((_, ref) => {
         >
           {/* Animated background elements */}
           <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-10 left-10 w-40 h-40 rounded-full bg-white/10 blur-3xl animate-pulse" />
-            <div className="absolute bottom-10 right-10 w-60 h-60 rounded-full bg-white/10 blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-            <div className="absolute top-1/2 left-1/4 w-20 h-20 rounded-full bg-white/5 blur-2xl" />
-            
+            <div className="absolute left-10 top-10 h-40 w-40 animate-pulse rounded-full bg-white/10 blur-3xl" />
+            <div
+              className="absolute bottom-10 right-10 h-60 w-60 animate-pulse rounded-full bg-white/10 blur-3xl"
+              style={{ animationDelay: "1s" }}
+            />
+            <div className="absolute left-1/4 top-1/2 h-20 w-20 rounded-full bg-white/5 blur-2xl" />
+
             {/* Floating icons */}
             <motion.div
-              className="absolute top-8 right-20"
+              className="absolute right-20 top-8"
               animate={{ y: [-5, 5, -5] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             >
@@ -37,18 +40,18 @@ export const CTASection = forwardRef<HTMLElement>((_, ref) => {
               <Zap className="h-10 w-10 text-white/20" />
             </motion.div>
             <motion.div
-              className="absolute top-1/3 right-1/4"
+              className="absolute right-1/4 top-1/3"
               animate={{ rotate: [0, 360] }}
               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
             >
               <Sparkles className="h-6 w-6 text-white/20" />
             </motion.div>
           </div>
-          
+
           <div className="relative z-10">
             {/* Badge */}
             <motion.div
-              className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 mb-6"
+              className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm"
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
@@ -57,29 +60,34 @@ export const CTASection = forwardRef<HTMLElement>((_, ref) => {
               <Zap className="h-4 w-4 text-white" />
               <span className="text-sm font-medium text-white">No Payment Required</span>
             </motion.div>
-            
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4">
+
+            <h2 className="mb-4 text-3xl font-bold text-primary-foreground sm:text-4xl lg:text-5xl">
               1 Free Computer Based Test per Subject
             </h2>
-            <p className="text-primary-foreground/90 text-lg mb-8 max-w-2xl mx-auto">
-              Experience the real CUET CBT environment before you commit. Start your free trial today!
+            <p className="mx-auto mb-8 max-w-2xl text-lg text-primary-foreground/90">
+              Experience the real CUET CBT environment before you commit. Start your free trial
+              today!
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link to="/signup">
                 <ButtonWithIcon
                   variant="heroOutline"
                   size="xl"
-                  className="bg-white text-primary border-white hover:bg-white/90 shadow-lg group"
+                  className="group border-white bg-white text-primary shadow-lg hover:bg-white/90"
                 >
                   Get Started For Free
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </ButtonWithIcon>
               </Link>
-              <a href="https://calendly.com/info-univlive" target="_blank" rel="noopener noreferrer">
+              <a
+                href="https://calendly.com/info-univlive"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <ButtonWithIcon
                   variant="heroOutline"
                   size="xl"
-                  className="text-white border-white/50 hover:bg-white/10 backdrop-blur-sm"
+                  className="border-white/50 text-white backdrop-blur-sm hover:bg-white/10"
                 >
                   Book a Demo
                 </ButtonWithIcon>

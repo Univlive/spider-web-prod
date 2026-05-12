@@ -70,7 +70,7 @@ async function loadProfile(uid: string): Promise<AppUserProfile | null> {
     batchId: typeof data.batchId === "string" ? data.batchId : undefined,
     globalCourseId: typeof data.globalCourseId === "string" ? data.globalCourseId : undefined,
     globalCourseName: typeof data.globalCourseName === "string" ? data.globalCourseName : undefined,
-    subjectIds: Array.isArray(data.subjectIds) ? data.subjectIds as string[] : undefined,
+    subjectIds: Array.isArray(data.subjectIds) ? (data.subjectIds as string[]) : undefined,
   };
 
   if (role === "EDUCATOR") {
@@ -92,7 +92,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [isImpersonating, setIsImpersonating] = useState(() => !!sessionStorage.getItem("imp_session"));
+  const [isImpersonating, setIsImpersonating] = useState(
+    () => !!sessionStorage.getItem("imp_session")
+  );
 
   // Listen for impersonation session changes dispatched by Impersonate.tsx and ImpersonationBanner
   useEffect(() => {
@@ -117,7 +119,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubAuth();
   }, [queryClient, isImpersonating]);
 
-  const { data: profile = null, isLoading: profileLoading, refetch } = useQuery({
+  const {
+    data: profile = null,
+    isLoading: profileLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["userProfile", firebaseUser?.uid],
     queryFn: () => loadProfile(firebaseUser!.uid),
     enabled: !!firebaseUser?.uid,
@@ -148,7 +154,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => unsubSnap();
   }, [firebaseUser, profile, isImpersonating]);
-
 
   const value = useMemo<AuthContextValue>(() => {
     return {

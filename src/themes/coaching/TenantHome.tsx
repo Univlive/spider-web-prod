@@ -11,7 +11,7 @@ export default function TenantHome() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
         Loading...
       </div>
     );
@@ -19,10 +19,10 @@ export default function TenantHome() {
 
   if (!tenant) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold">Coaching not found</h2>
-          <p className="text-muted-foreground mt-2">
+          <p className="mt-2 text-muted-foreground">
             This coaching website does not exist. Check the URL or contact support.
           </p>
         </div>
@@ -31,7 +31,9 @@ export default function TenantHome() {
   }
 
   const homepageSource = tenant?.websiteConfig?.homepageSource;
-  const hasPublishedBuilder = Boolean(tenant?.builderConfig?.sections?.length) && Boolean((tenant as any)?.builderConfig?.publishedAt);
+  const hasPublishedBuilder =
+    Boolean(tenant?.builderConfig?.sections?.length) &&
+    Boolean((tenant as any)?.builderConfig?.publishedAt);
   if (homepageSource === "builder" || hasPublishedBuilder) {
     return <BuilderThemeHome />;
   }
@@ -48,4 +50,3 @@ export default function TenantHome() {
       return <Theme1Home />;
   }
 }
-

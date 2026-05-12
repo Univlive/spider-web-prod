@@ -4,14 +4,7 @@ import { Attempt } from "@features/student/types";
 import { useAuth } from "@app/providers/AuthProvider";
 import { useTenant } from "@app/providers/TenantProvider";
 import { db } from "@shared/lib/firebase";
-import {
-  collection,
-  onSnapshot,
-  orderBy,
-  query,
-  where,
-  Timestamp,
-} from "firebase/firestore";
+import { collection, onSnapshot, orderBy, query, where, Timestamp } from "firebase/firestore";
 
 type AttemptDoc = {
   testId: string;
@@ -56,14 +49,15 @@ function normalizeAccuracyPercent(val: any): number {
   return Math.max(0, Math.min(100, Math.round(pct)));
 }
 
-function mapStatus(docStatus: any, startedAtMs: number | undefined, durationSec: number | undefined) {
+function mapStatus(
+  docStatus: any,
+  startedAtMs: number | undefined,
+  durationSec: number | undefined
+) {
   // AttemptTable expects: 'completed' | 'in-progress' | 'expired'
   const s = String(docStatus || "").toLowerCase();
 
-  const expired =
-    !!startedAtMs &&
-    !!durationSec &&
-    Date.now() > startedAtMs + durationSec * 1000;
+  const expired = !!startedAtMs && !!durationSec && Date.now() > startedAtMs + durationSec * 1000;
 
   if (s === "submitted" || s === "completed" || s === "complete") return "completed" as const;
   if (s === "expired") return "expired" as const;
@@ -185,4 +179,3 @@ export default function StudentAttempts() {
     </div>
   );
 }
-

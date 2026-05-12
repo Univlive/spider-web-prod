@@ -51,30 +51,39 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@shared/ui/alert-dialog";
-import { useAuth } from "@app/providers/AuthProvider"; 
+import { useAuth } from "@app/providers/AuthProvider";
 import { db } from "@shared/lib/firebase";
-import {
-  doc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  collection,
-  query,
-  orderBy
-} from "firebase/firestore";
+import { doc, getDoc, getDocs, updateDoc, collection, query, orderBy } from "firebase/firestore";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useTenant } from "@app/providers/TenantProvider";
 import { uploadToImageKit } from "@shared/lib/imagekitUpload";
 import { aiFeatureFlags, getAiFeatureDisabledMessage } from "@shared/lib/aiFeatureFlags";
-import { DEFAULT_EDUCATOR_THEME, isThemeUnlocked, sanitizeEducatorTheme } from "@shared/lib/themeFeatureFlags";
+import {
+  DEFAULT_EDUCATOR_THEME,
+  isThemeUnlocked,
+  sanitizeEducatorTheme,
+} from "@shared/lib/themeFeatureFlags";
 import { useAIStream } from "@shared/hooks/useAIStream";
 
 // --- Types ---
 type StatItem = { label: string; value: string; icon: string };
 type AchievementItem = { title: string; description: string; icon: string };
-type FacultyItem = { name: string; subject: string; designation: string; experience: string; bio: string; image: string };
-type TestimonialItem = { name: string; course: string; rating: number; text: string; avatar: string };
+type FacultyItem = {
+  name: string;
+  subject: string;
+  designation: string;
+  experience: string;
+  bio: string;
+  image: string;
+};
+type TestimonialItem = {
+  name: string;
+  course: string;
+  rating: number;
+  text: string;
+  avatar: string;
+};
 
 // NEW: Social Links (stored inside websiteConfig)
 type SocialLinks = {
@@ -103,11 +112,18 @@ export default function WebsiteSettings() {
   const [saving, setSaving] = useState(false);
 
   // --- AI Generation with streaming ---
-  const { data: generatedContent, loading: aiGenerating, error: aiError, progress: aiProgress, request: requestAI, cancel: cancelAI } = useAIStream();
-  
+  const {
+    data: generatedContent,
+    loading: aiGenerating,
+    error: aiError,
+    progress: aiProgress,
+    request: requestAI,
+    cancel: cancelAI,
+  } = useAIStream();
+
   const [showAIDialog, setShowAIDialog] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  
+
   // AI Input Form
   const [aiEducatorName, setAiEducatorName] = useState("");
   const [aiSubjects, setAiSubjects] = useState("");
@@ -132,28 +148,23 @@ export default function WebsiteSettings() {
 
   // NEW: Social handles
   const [socials, setSocials] = useState<SocialLinks>({});
-  
+
   const [stats, setStats] = useState<StatItem[]>([]);
   const [achievements, setAchievements] = useState<AchievementItem[]>([]);
   const [faculty, setFaculty] = useState<FacultyItem[]>([]);
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>([]);
 
   // --- NEW: Featured Courses State ---
-  const [availableTests, setAvailableTests] = useState<AvailableTest[]>([]); 
-  const [featuredTestIds, setFeaturedTestIds] = useState<string[]>([]); 
+  const [availableTests, setAvailableTests] = useState<AvailableTest[]>([]);
+  const [featuredTestIds, setFeaturedTestIds] = useState<string[]>([]);
 
   const [theme2SelectedSubjects, setTheme2SelectedSubjects] = useState<string[]>([]);
 
-  const {tenant} = useTenant();
-
+  const { tenant } = useTenant();
 
   const availableSubjects = useMemo(() => {
     return Array.from(
-      new Set(
-        availableTests
-          .map((test) => String(test.subject || "").trim())
-          .filter(Boolean)
-      )
+      new Set(availableTests.map((test) => String(test.subject || "").trim()).filter(Boolean))
     ).sort((a, b) => a.localeCompare(b));
   }, [availableTests]);
 
@@ -174,7 +185,10 @@ export default function WebsiteSettings() {
     }
 
     try {
-      const subjectsArray = aiSubjects.split(",").map(s => s.trim()).filter(Boolean);
+      const subjectsArray = aiSubjects
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
       if (subjectsArray.length === 0) {
         toast.error("Please enter at least one subject");
         return;
@@ -229,7 +243,7 @@ export default function WebsiteSettings() {
 
         if (educatorSnap.exists()) {
           const data = educatorSnap.data().websiteConfig || {};
-          
+
           // Load existing settings
           setCoachingName(data.coachingName || "");
           setTagline(data.tagline || "");
@@ -243,7 +257,7 @@ export default function WebsiteSettings() {
           // NEW: theme + socials
           setThemeId(sanitizeEducatorTheme(data.themeId));
           setSocials((data.socials || {}) as SocialLinks);
-          
+
           // Load Featured Tests selection
           setFeaturedTestIds(data.featuredTestIds || []);
 
@@ -259,14 +273,13 @@ export default function WebsiteSettings() {
           orderBy("createdAt", "desc")
         );
         const testsSnap = await getDocs(testsQuery);
-        
-        const testsData = testsSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as AvailableTest[];
-        
-        setAvailableTests(testsData);
 
+        const testsData = testsSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as AvailableTest[];
+
+        setAvailableTests(testsData);
       } catch (err) {
         console.error("Error loading settings:", err);
         toast.error("Failed to load website settings");
@@ -278,7 +291,6 @@ export default function WebsiteSettings() {
     fetchData();
   }, [firebaseUser]);
 
-  
   // --- Image Upload Helpers (ImageKit) ---
   const uploadWebsiteImage = async (file: File, kind: "logo" | "hero") => {
     if (!firebaseUser) throw new Error("Not logged in");
@@ -321,7 +333,7 @@ export default function WebsiteSettings() {
     }
   };
 
-// --- 2. Save Data ---
+  // --- 2. Save Data ---
   const handleSave = async () => {
     if (!firebaseUser) return;
     setSaving(true);
@@ -333,7 +345,7 @@ export default function WebsiteSettings() {
       if (safeThemeId !== themeId) {
         setThemeId(safeThemeId);
       }
-      
+
       // Construct the config object with ALL fields
       const websiteConfig: any = {
         coachingName,
@@ -357,7 +369,7 @@ export default function WebsiteSettings() {
         testimonials,
         featuredTestIds, // Includes the new selection
         theme2SelectedSubjects,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       // Remove empty social links (keeps Firestore clean)
@@ -371,13 +383,13 @@ export default function WebsiteSettings() {
       }
 
       // Clean undefined values to prevent Firebase errors
-      Object.keys(websiteConfig).forEach(key => 
-        (websiteConfig as any)[key] === undefined && delete (websiteConfig as any)[key]
+      Object.keys(websiteConfig).forEach(
+        (key) => (websiteConfig as any)[key] === undefined && delete (websiteConfig as any)[key]
       );
 
       // Save to Firestore
       await updateDoc(educatorRef, { websiteConfig });
-      
+
       toast.success("Website published successfully!");
     } catch (err) {
       console.error(err);
@@ -389,82 +401,83 @@ export default function WebsiteSettings() {
 
   // --- Helper: Toggle Featured Course ---
   const toggleFeatured = (testId: string) => {
-    setFeaturedTestIds(prev => 
-      prev.includes(testId) 
-        ? prev.filter(id => id !== testId) // Remove if already selected
-        : [...prev, testId] // Add if not selected
+    setFeaturedTestIds(
+      (prev) =>
+        prev.includes(testId)
+          ? prev.filter((id) => id !== testId) // Remove if already selected
+          : [...prev, testId] // Add if not selected
     );
   };
 
-
   const toggleTheme2Subject = (subject: string) => {
     setTheme2SelectedSubjects((prev) =>
-      prev.includes(subject)
-        ? prev.filter((s) => s !== subject)
-        : [...prev, subject]
+      prev.includes(subject) ? prev.filter((s) => s !== subject) : [...prev, subject]
     );
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
+      <div className="flex h-[60vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-1 max-w-5xl mx-auto">
-
+    <div className="mx-auto max-w-5xl space-y-6 p-1">
       {/* Welcome Banner */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="gradient-bg rounded-2xl p-6 text-white relative overflow-hidden"
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="gradient-bg relative overflow-hidden rounded-2xl p-6 text-white"
+      >
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRoLTJ2LTRoMnYyaDR2MmgtNHYtMnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30" />
+        <div className="relative z-10">
+          <h1 className="mb-2 font-display text-2xl font-bold sm:text-3xl">
+            Welcome back, {tenant?.coachingName || "Educator"}! 👋
+          </h1>
+          <p className="max-w-xl text-sm text-white/80 sm:text-base">
+            Your website is love! on{" "}
+            <span className="font-semibold text-white">
+              https://{tenant.tenantSlug}.preparekaro.in
+            </span>
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Button
+              size="sm"
+              className="border-0 bg-white/20 text-white hover:bg-white/30"
+              onClick={() => navigate("/educator/website-builder")}
             >
-              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRoLTJ2LTRoMnYyaDR2MmgtNHYtMnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30" />
-              <div className="relative z-10">
-                <h1 className="text-2xl sm:text-3xl font-display font-bold mb-2">
-                  Welcome back, {tenant?.coachingName || "Educator"}! 👋
-                </h1>
-                <p className="text-white/80 text-sm sm:text-base max-w-xl">
-                  Your website is love! on {" "}
-                  <span className="font-semibold text-white">https://{tenant.tenantSlug}.preparekaro.in</span>
-                </p>
-                <div className="flex flex-wrap gap-3 mt-4">
-                  <Button
-                    size="sm"
-                    className="bg-white/20 hover:bg-white/30 text-white border-0"
-                    onClick={() => navigate("/educator/website-builder")}
-                  >
-                    <Wand2 className="mr-2 h-4 w-4" />
-                    Open Website Builder
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="bg-white/20 hover:bg-white/30 text-white border-0"
-                    onClick={() => {
-                      const slug = tenant?.tenantSlug;
-                      if (!slug) {
-                        toast.error("Website not available — tenant slug is missing.");
-                        return;
-                      }
-                      const url = `https://${slug}.preparekaro.in`;
-                      // Open in a new tab safely
-                      window.open(url, "_blank", "noopener,noreferrer");
-                    }}
-                  >
-                    Visit Your Website
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
+              <Wand2 className="mr-2 h-4 w-4" />
+              Open Website Builder
+            </Button>
+            <Button
+              size="sm"
+              className="border-0 bg-white/20 text-white hover:bg-white/30"
+              onClick={() => {
+                const slug = tenant?.tenantSlug;
+                if (!slug) {
+                  toast.error("Website not available — tenant slug is missing.");
+                  return;
+                }
+                const url = `https://${slug}.preparekaro.in`;
+                // Open in a new tab safely
+                window.open(url, "_blank", "noopener,noreferrer");
+              }}
+            >
+              Visit Your Website
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </motion.div>
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold">Website Builder</h1>
-          <p className="text-muted-foreground">Manage the content visible on your public website.</p>
+          <p className="text-muted-foreground">
+            Manage the content visible on your public website.
+          </p>
         </div>
         <div className="flex gap-2">
           <Dialog open={showAIDialog} onOpenChange={setShowAIDialog}>
@@ -473,7 +486,11 @@ export default function WebsiteSettings() {
                 variant="outline"
                 className="border-primary/30 hover:bg-primary/5"
                 disabled={!isAiWebsiteContentEnabled}
-                title={!isAiWebsiteContentEnabled ? getAiFeatureDisabledMessage("websiteContent") : undefined}
+                title={
+                  !isAiWebsiteContentEnabled
+                    ? getAiFeatureDisabledMessage("websiteContent")
+                    : undefined
+                }
               >
                 <Sparkles className="mr-2 h-4 w-4" />
                 AI Generate Content
@@ -483,7 +500,8 @@ export default function WebsiteSettings() {
               <DialogHeader>
                 <DialogTitle>Generate Website Content with AI</DialogTitle>
                 <DialogDescription>
-                  Tell us about your coaching center, and our AI will generate professional website content.
+                  Tell us about your coaching center, and our AI will generate professional website
+                  content.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -524,7 +542,9 @@ export default function WebsiteSettings() {
                       type="number"
                       placeholder="e.g., 2015"
                       value={aiYearEstablished}
-                      onChange={(e) => setAiYearEstablished(e.target.value ? Number(e.target.value) : "")}
+                      onChange={(e) =>
+                        setAiYearEstablished(e.target.value ? Number(e.target.value) : "")
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -534,28 +554,30 @@ export default function WebsiteSettings() {
                       type="number"
                       placeholder="e.g., 500"
                       value={aiStudentCount}
-                      onChange={(e) => setAiStudentCount(e.target.value ? Number(e.target.value) : "")}
+                      onChange={(e) =>
+                        setAiStudentCount(e.target.value ? Number(e.target.value) : "")
+                      }
                     />
                   </div>
                 </div>
               </div>
               {aiProgress && (
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-sm text-blue-800">
+                <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
                   <div className="flex items-start gap-2">
-                    <Loader2 className="h-4 w-4 mt-0.5 animate-spin flex-shrink-0" />
+                    <Loader2 className="mt-0.5 h-4 w-4 flex-shrink-0 animate-spin" />
                     <div>{aiProgress}</div>
                   </div>
                 </div>
               )}
               {aiError && (
-                <div className="bg-red-50 border border-red-200 rounded-md p-3 text-sm text-red-800">
+                <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
                   <div className="font-medium">Error</div>
                   <div>{aiError}</div>
                 </div>
               )}
-              <div className="flex gap-2 justify-end">
-                <Button 
-                  variant="outline" 
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
                   onClick={() => {
                     if (aiGenerating) {
                       handleCancelAI();
@@ -566,8 +588,8 @@ export default function WebsiteSettings() {
                 >
                   {aiGenerating ? "Cancel Generation" : "Close"}
                 </Button>
-                <Button 
-                  onClick={handleGenerateWithAI} 
+                <Button
+                  onClick={handleGenerateWithAI}
                   disabled={aiGenerating || !isAiWebsiteContentEnabled}
                   className="gradient-bg text-white"
                 >
@@ -593,21 +615,59 @@ export default function WebsiteSettings() {
             </p>
           ) : null} */}
 
-          <Button onClick={handleSave} disabled={saving} className="gradient-bg text-white shadow-md">
-            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="gradient-bg text-white shadow-md"
+          >
+            {saving ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
             Publish Changes
           </Button>
         </div>
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="flex flex-wrap h-auto gap-2 bg-transparent p-0 justify-start mb-6">
-          <TabsTrigger value="general" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border bg-card shadow-sm"><Layout className="w-4 h-4 mr-2" /> General</TabsTrigger>
-          <TabsTrigger value="courses" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border bg-card shadow-sm"><BookOpen className="w-4 h-4 mr-2" /> Featured</TabsTrigger>
-          <TabsTrigger value="stats" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border bg-card shadow-sm"><BarChart className="w-4 h-4 mr-2" /> Stats</TabsTrigger>
-          <TabsTrigger value="achievements" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border bg-card shadow-sm"><Trophy className="w-4 h-4 mr-2" /> Awards</TabsTrigger>
-          <TabsTrigger value="faculty" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border bg-card shadow-sm"><User className="w-4 h-4 mr-2" /> Faculty</TabsTrigger>
-          <TabsTrigger value="testimonials" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border bg-card shadow-sm"><Quote className="w-4 h-4 mr-2" /> Reviews</TabsTrigger>
+        <TabsList className="mb-6 flex h-auto flex-wrap justify-start gap-2 bg-transparent p-0">
+          <TabsTrigger
+            value="general"
+            className="border bg-card shadow-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+          >
+            <Layout className="mr-2 h-4 w-4" /> General
+          </TabsTrigger>
+          <TabsTrigger
+            value="courses"
+            className="border bg-card shadow-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+          >
+            <BookOpen className="mr-2 h-4 w-4" /> Featured
+          </TabsTrigger>
+          <TabsTrigger
+            value="stats"
+            className="border bg-card shadow-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+          >
+            <BarChart className="mr-2 h-4 w-4" /> Stats
+          </TabsTrigger>
+          <TabsTrigger
+            value="achievements"
+            className="border bg-card shadow-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+          >
+            <Trophy className="mr-2 h-4 w-4" /> Awards
+          </TabsTrigger>
+          <TabsTrigger
+            value="faculty"
+            className="border bg-card shadow-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+          >
+            <User className="mr-2 h-4 w-4" /> Faculty
+          </TabsTrigger>
+          <TabsTrigger
+            value="testimonials"
+            className="border bg-card shadow-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+          >
+            <Quote className="mr-2 h-4 w-4" /> Reviews
+          </TabsTrigger>
         </TabsList>
 
         {/* --- 1. General Tab --- */}
@@ -620,11 +680,12 @@ export default function WebsiteSettings() {
                 Website Theme
               </CardTitle>
               <CardDescription>
-                Choose how your public landing page looks on your subdomain. (Student dashboard stays the same.)
+                Choose how your public landing page looks on your subdomain. (Student dashboard
+                stays the same.)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -633,30 +694,38 @@ export default function WebsiteSettings() {
                   }}
                   disabled={!theme1Unlocked}
                   className={
-                    `text-left rounded-xl border p-4 transition-all hover:bg-muted/40 ` +
+                    `rounded-xl border p-4 text-left transition-all hover:bg-muted/40 ` +
                     (!theme1Unlocked
-                      ? "border-border opacity-60 cursor-not-allowed"
+                      ? "cursor-not-allowed border-border opacity-60"
                       : themeId === "theme1"
-                        ? "border-primary ring-1 ring-primary/20 bg-primary/5"
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                         : "border-border")
                   }
                 >
                   <div className="font-semibold">Theme 1</div>
-                  <div className="text-xs text-muted-foreground mt-1">Classic Univ.Live landing</div>
-                  <div className="text-xs mt-3">{theme1Unlocked ? "Available" : "Locked by config"}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    Classic Univ.Live landing
+                  </div>
+                  <div className="mt-3 text-xs">
+                    {theme1Unlocked ? "Available" : "Locked by config"}
+                  </div>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setThemeId("theme2")}
                   className={
-                    `text-left rounded-xl border p-4 transition-all hover:bg-muted/40 ` +
-                    (themeId === "theme2" ? "border-primary ring-1 ring-primary/20 bg-primary/5" : "border-border")
+                    `rounded-xl border p-4 text-left transition-all hover:bg-muted/40 ` +
+                    (themeId === "theme2"
+                      ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                      : "border-border")
                   }
                 >
                   <div className="font-semibold">Theme 2</div>
-                  <div className="text-xs text-muted-foreground mt-1">Modern creator-style landing</div>
-                  <div className="text-xs mt-3">✅ Available</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    Modern creator-style landing
+                  </div>
+                  <div className="mt-3 text-xs">✅ Available</div>
                 </button>
 
                 <button
@@ -667,228 +736,254 @@ export default function WebsiteSettings() {
                   }}
                   disabled={!theme3Unlocked}
                   className={
-                    `text-left rounded-xl border p-4 transition-all hover:bg-muted/40 ` +
+                    `rounded-xl border p-4 text-left transition-all hover:bg-muted/40 ` +
                     (!theme3Unlocked
-                      ? "border-border opacity-60 cursor-not-allowed"
+                      ? "cursor-not-allowed border-border opacity-60"
                       : themeId === "theme3"
-                        ? "border-primary ring-1 ring-primary/20 bg-primary/5"
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                         : "border-border")
                   }
                 >
                   <div className="font-semibold">Theme 3</div>
-                  <div className="text-xs text-muted-foreground mt-1">More advanced</div>
-                  <div className="text-xs mt-3">{theme3Unlocked ? "New arrival" : "Locked by config"}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">More advanced</div>
+                  <div className="mt-3 text-xs">
+                    {theme3Unlocked ? "New arrival" : "Locked by config"}
+                  </div>
                 </button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Tip: After selecting a theme, click <span className="font-medium">Publish Changes</span>.
+                Tip: After selecting a theme, click{" "}
+                <span className="font-medium">Publish Changes</span>.
               </p>
             </CardContent>
           </Card>
 
-           <Card>
-             <CardHeader>
-               <CardTitle>Hero Section</CardTitle>
-               <CardDescription>This is the first thing students see on your landing page.</CardDescription>
-             </CardHeader>
-             <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Logo Image URL (Suggested dimentions: 512*512)</Label>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Input
-                      value={logoUrl}
-                      onChange={(e) => setLogoUrl(e.target.value)}
-                      placeholder="https://example.com/logo.png"
+          <Card>
+            <CardHeader>
+              <CardTitle>Hero Section</CardTitle>
+              <CardDescription>
+                This is the first thing students see on your landing page.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Logo Image URL (Suggested dimentions: 512*512)</Label>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    value={logoUrl}
+                    onChange={(e) => setLogoUrl(e.target.value)}
+                    placeholder="https://example.com/logo.png"
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      ref={logoInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleLogoFilePick(e.target.files?.[0])}
                     />
-                    <div className="flex gap-2">
-                      <input
-                        ref={logoInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => handleLogoFilePick(e.target.files?.[0])}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => logoInputRef.current?.click()}
-                        disabled={uploadingLogo}
-                      >
-                        {uploadingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : "Upload"}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => logoInputRef.current?.click()}
+                      disabled={uploadingLogo}
+                    >
+                      {uploadingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : "Upload"}
+                    </Button>
+                    {logoUrl ? (
+                      <Button type="button" variant="ghost" onClick={() => setLogoUrl("")}>
+                        <X className="h-4 w-4" />
                       </Button>
-                      {logoUrl ? (
-                        <Button type="button" variant="ghost" onClick={() => setLogoUrl("")}>
-                          <X className="h-4 w-4" />
-                        </Button>
-                      ) : null}
-                    </div>
+                    ) : null}
                   </div>
-
-                  {logoUrl ? (
-                    <div className="mt-2 flex items-center gap-3">
-                      <div className="h-14 w-14 rounded-xl overflow-hidden border bg-muted/30">
-                        <img src={logoUrl} alt="Logo Preview" className="h-full w-full object-cover" />
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        Tip: Use a square logo (512×512) for best results.
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="mt-2 text-xs text-muted-foreground">No logo provided</div>
-                  )}
                 </div>
 
+                {logoUrl ? (
+                  <div className="mt-2 flex items-center gap-3">
+                    <div className="h-14 w-14 overflow-hidden rounded-xl border bg-muted/30">
+                      <img
+                        src={logoUrl}
+                        alt="Logo Preview"
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      Tip: Use a square logo (512×512) for best results.
+                    </span>
+                  </div>
+                ) : (
+                  <div className="mt-2 text-xs text-muted-foreground">No logo provided</div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Institute Name</Label>
+                <Input
+                  value={coachingName}
+                  onChange={(e) => setCoachingName(e.target.value)}
+                  placeholder="e.g. Acme Academy"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Tagline / Headline</Label>
+                <Input
+                  value={tagline}
+                  onChange={(e) => setTagline(e.target.value)}
+                  placeholder="e.g. Empowering Next Gen Leaders"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Hero Image URL (Suggested dimentions: 1080*1080)</Label>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    value={heroImage}
+                    onChange={(e) => setHeroImage(e.target.value)}
+                    placeholder="https://example.com/hero.jpg"
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      ref={heroInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleHeroFilePick(e.target.files?.[0])}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => heroInputRef.current?.click()}
+                      disabled={uploadingHero}
+                    >
+                      {uploadingHero ? <Loader2 className="h-4 w-4 animate-spin" /> : "Upload"}
+                    </Button>
+                    {heroImage ? (
+                      <Button type="button" variant="ghost" onClick={() => setHeroImage("")}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+                {heroImage ? (
+                  <div className="relative mt-2 h-40 overflow-hidden rounded-md border">
+                    <img
+                      src={heroImage}
+                      alt="Hero Preview"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-2 flex h-40 items-center justify-center rounded-md border border-dashed bg-muted/30">
+                    <div className="text-center text-muted-foreground">
+                      <ImageIcon className="mx-auto mb-2 h-8 w-8 opacity-50" />
+                      <span className="text-xs">No image provided</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Social Links */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Social Links</CardTitle>
+              <CardDescription>
+                Add your social handles (shown on your landing page footer).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Institute Name</Label>
-                  <Input 
-                    value={coachingName} 
-                    onChange={e => setCoachingName(e.target.value)} 
-                    placeholder="e.g. Acme Academy"
+                  <Label className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" /> Email
+                  </Label>
+                  <Input
+                    type="email"
+                    value={socials.email || ""}
+                    onChange={(e) => setSocials((p) => ({ ...p, email: e.target.value }))}
+                    placeholder="support@yourcoaching.com"
                   />
                 </div>
+
                 <div className="space-y-2">
-                  <Label>Tagline / Headline</Label>
-                  <Input 
-                    value={tagline} 
-                    onChange={e => setTagline(e.target.value)} 
-                    placeholder="e.g. Empowering Next Gen Leaders"
+                  <Label className="flex items-center gap-2">
+                    <Phone className="h-4 w-4" /> Phone
+                  </Label>
+                  <Input
+                    value={socials.phone || ""}
+                    onChange={(e) => setSocials((p) => ({ ...p, phone: e.target.value }))}
+                    placeholder="+91 9876543210"
                   />
                 </div>
+
                 <div className="space-y-2">
-                  <Label>Hero Image URL (Suggested dimentions: 1080*1080)</Label>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Input 
-                      value={heroImage} 
-                      onChange={e => setHeroImage(e.target.value)} 
-                      placeholder="https://example.com/hero.jpg"
-                    />
-                    <div className="flex gap-2">
-                      <input
-                        ref={heroInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => handleHeroFilePick(e.target.files?.[0])}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => heroInputRef.current?.click()}
-                        disabled={uploadingHero}
-                      >
-                        {uploadingHero ? <Loader2 className="h-4 w-4 animate-spin" /> : "Upload"}
-                      </Button>
-                      {heroImage ? (
-                        <Button type="button" variant="ghost" onClick={() => setHeroImage("")}>
-                          <X className="h-4 w-4" />
-                        </Button>
-                      ) : null}
-                    </div>
-                  </div>
-                  {heroImage ? (
-                    <div className="mt-2 relative h-40 rounded-md overflow-hidden border">
-                      <img src={heroImage} alt="Hero Preview" className="w-full h-full object-cover" />
-                    </div>
-                  ) : (
-                    <div className="mt-2 h-40 rounded-md border border-dashed flex items-center justify-center bg-muted/30">
-                      <div className="text-center text-muted-foreground">
-                        <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <span className="text-xs">No image provided</span>
-                      </div>
-                    </div>
-                  )}
+                  <Label className="flex items-center gap-2">
+                    <Globe className="h-4 w-4" /> Website
+                  </Label>
+                  <Input
+                    value={socials.website || ""}
+                    onChange={(e) => setSocials((p) => ({ ...p, website: e.target.value }))}
+                    placeholder="https://your-site.com"
+                  />
                 </div>
-             </CardContent>
-           </Card>
 
-           {/* Social Links */}
-           <Card>
-             <CardHeader>
-               <CardTitle>Social Links</CardTitle>
-               <CardDescription>Add your social handles (shown on your landing page footer).</CardDescription>
-             </CardHeader>
-             <CardContent className="space-y-4">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Instagram className="h-4 w-4" /> Instagram
+                  </Label>
+                  <Input
+                    value={socials.instagram || ""}
+                    onChange={(e) => setSocials((p) => ({ ...p, instagram: e.target.value }))}
+                    placeholder="https://instagram.com/yourhandle"
+                  />
+                </div>
 
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" /> Email
-                    </Label>
-                    <Input
-                      type="email"
-                      value={socials.email || ""}
-                      onChange={(e) => setSocials((p) => ({ ...p, email: e.target.value }))}
-                      placeholder="support@yourcoaching.com"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Youtube className="h-4 w-4" /> YouTube
+                  </Label>
+                  <Input
+                    value={socials.youtube || ""}
+                    onChange={(e) => setSocials((p) => ({ ...p, youtube: e.target.value }))}
+                    placeholder="https://youtube.com/@yourchannel"
+                  />
+                </div>
 
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Phone className="h-4 w-4" /> Phone
-                    </Label>
-                    <Input
-                      value={socials.phone || ""}
-                      onChange={(e) => setSocials((p) => ({ ...p, phone: e.target.value }))}
-                      placeholder="+91 9876543210"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Linkedin className="h-4 w-4" /> LinkedIn
+                  </Label>
+                  <Input
+                    value={socials.linkedin || ""}
+                    onChange={(e) => setSocials((p) => ({ ...p, linkedin: e.target.value }))}
+                    placeholder="https://linkedin.com/in/yourprofile"
+                  />
+                </div>
 
-                 <div className="space-y-2">
-                   <Label className="flex items-center gap-2"><Globe className="h-4 w-4" /> Website</Label>
-                   <Input
-                     value={socials.website || ""}
-                     onChange={(e) => setSocials((p) => ({ ...p, website: e.target.value }))}
-                     placeholder="https://your-site.com"
-                   />
-                 </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Twitter className="h-4 w-4" /> X (Twitter)
+                  </Label>
+                  <Input
+                    value={socials.twitter || ""}
+                    onChange={(e) => setSocials((p) => ({ ...p, twitter: e.target.value }))}
+                    placeholder="https://x.com/yourhandle"
+                  />
+                </div>
 
-                 <div className="space-y-2">
-                   <Label className="flex items-center gap-2"><Instagram className="h-4 w-4" /> Instagram</Label>
-                   <Input
-                     value={socials.instagram || ""}
-                     onChange={(e) => setSocials((p) => ({ ...p, instagram: e.target.value }))}
-                     placeholder="https://instagram.com/yourhandle"
-                   />
-                 </div>
-
-                 <div className="space-y-2">
-                   <Label className="flex items-center gap-2"><Youtube className="h-4 w-4" /> YouTube</Label>
-                   <Input
-                     value={socials.youtube || ""}
-                     onChange={(e) => setSocials((p) => ({ ...p, youtube: e.target.value }))}
-                     placeholder="https://youtube.com/@yourchannel"
-                   />
-                 </div>
-
-                 <div className="space-y-2">
-                   <Label className="flex items-center gap-2"><Linkedin className="h-4 w-4" /> LinkedIn</Label>
-                   <Input
-                     value={socials.linkedin || ""}
-                     onChange={(e) => setSocials((p) => ({ ...p, linkedin: e.target.value }))}
-                     placeholder="https://linkedin.com/in/yourprofile"
-                   />
-                 </div>
-
-                 <div className="space-y-2">
-                   <Label className="flex items-center gap-2"><Twitter className="h-4 w-4" /> X (Twitter)</Label>
-                   <Input
-                     value={socials.twitter || ""}
-                     onChange={(e) => setSocials((p) => ({ ...p, twitter: e.target.value }))}
-                     placeholder="https://x.com/yourhandle"
-                   />
-                 </div>
-
-                 <div className="space-y-2">
-                   <Label className="flex items-center gap-2"><Facebook className="h-4 w-4" /> Facebook</Label>
-                   <Input
-                     value={socials.facebook || ""}
-                     onChange={(e) => setSocials((p) => ({ ...p, facebook: e.target.value }))}
-                     placeholder="https://facebook.com/yourpage"
-                   />
-                 </div>
-               </div>
-             </CardContent>
-           </Card>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Facebook className="h-4 w-4" /> Facebook
+                  </Label>
+                  <Input
+                    value={socials.facebook || ""}
+                    onChange={(e) => setSocials((p) => ({ ...p, facebook: e.target.value }))}
+                    placeholder="https://facebook.com/yourpage"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* --- 2. Featured Courses Tab (NEW SECTION) --- */}
@@ -897,67 +992,73 @@ export default function WebsiteSettings() {
             <CardHeader>
               <CardTitle>Featured Test Series</CardTitle>
               <CardDescription>
-                Select which tests appear on your home page. 
-                <span className="block mt-1 text-xs text-muted-foreground">
+                Select which tests appear on your home page.
+                <span className="mt-1 block text-xs text-muted-foreground">
                   Note: If you don't select any, the 4 newest tests will be shown automatically.
                 </span>
               </CardDescription>
             </CardHeader>
             <CardContent>
               {availableTests.length === 0 ? (
-                <div className="text-center py-10 border-2 border-dashed rounded-lg bg-muted/20">
-                  <BookOpen className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                <div className="rounded-lg border-2 border-dashed bg-muted/20 py-10 text-center">
+                  <BookOpen className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
                   <p className="font-medium">No tests found</p>
-                  <p className="text-sm text-muted-foreground">Go to the "Test Series" tab to create your first exam.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Go to the "Test Series" tab to create your first exam.
+                  </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {availableTests.map((test) => {
                     const isSelected = featuredTestIds.includes(test.id);
                     return (
-                      <div 
+                      <div
                         key={test.id}
                         onClick={() => toggleFeatured(test.id)}
-                        className={`
-                          cursor-pointer flex items-center gap-3 p-4 rounded-lg border transition-all select-none
-                          ${isSelected 
-                            ? 'border-primary bg-primary/5 ring-1 ring-primary/20' 
-                            : 'border-border hover:bg-muted/50'}
-                        `}
+                        className={`flex cursor-pointer select-none items-center gap-3 rounded-lg border p-4 transition-all ${
+                          isSelected
+                            ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                            : "border-border hover:bg-muted/50"
+                        } `}
                       >
-                        <div className={`
-                          flex items-center justify-center
-                          ${isSelected ? 'text-primary' : 'text-muted-foreground'}
-                        `}>
-                           {isSelected ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5" />}
+                        <div
+                          className={`flex items-center justify-center ${isSelected ? "text-primary" : "text-muted-foreground"} `}
+                        >
+                          {isSelected ? (
+                            <CheckSquare className="h-5 w-5" />
+                          ) : (
+                            <Square className="h-5 w-5" />
+                          )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm line-clamp-1">{test.title}</h4>
-                          <div className="flex items-center gap-2 mt-1">
-                             <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded truncate max-w-[120px]">
-                               {test.subject}
-                             </span>
-                             <span className={`text-xs font-medium ${test.price === "Included" ? "text-green-600" : ""}`}>
-                               {test.price === "Included" ? "Free" : `₹${test.price}`}
-                             </span>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="line-clamp-1 text-sm font-semibold">{test.title}</h4>
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="max-w-[120px] truncate rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+                              {test.subject}
+                            </span>
+                            <span
+                              className={`text-xs font-medium ${test.price === "Included" ? "text-green-600" : ""}`}
+                            >
+                              {test.price === "Included" ? "Free" : `₹${test.price}`}
+                            </span>
                           </div>
                         </div>
                       </div>
-                    )
+                    );
                   })}
                 </div>
               )}
             </CardContent>
           </Card>
 
-
           <Card className="mt-6">
             <CardHeader>
               <CardTitle>Theme 2 Subject Visibility</CardTitle>
               <CardDescription>
                 Select which subjects should appear in the “Our Tests” section of Theme 2.
-                <span className="block mt-1 text-xs text-muted-foreground">
-                  If you leave this empty, Theme 2 can fall back to showing top subjects automatically.
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  If you leave this empty, Theme 2 can fall back to showing top subjects
+                  automatically.
                 </span>
               </CardDescription>
             </CardHeader>
@@ -965,11 +1066,12 @@ export default function WebsiteSettings() {
             <CardContent>
               {availableSubjects.length === 0 ? (
                 <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-                  No subjects found yet. Create tests with subject names first, then they will appear here.
+                  No subjects found yet. Create tests with subject names first, then they will
+                  appear here.
                 </div>
               ) : (
                 <>
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  <div className="mb-4 flex flex-wrap gap-2">
                     <Button
                       type="button"
                       variant="outline"
@@ -989,7 +1091,7 @@ export default function WebsiteSettings() {
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     {availableSubjects.map((subject) => {
                       const isSelected = theme2SelectedSubjects.includes(subject);
 
@@ -998,12 +1100,11 @@ export default function WebsiteSettings() {
                           key={subject}
                           type="button"
                           onClick={() => toggleTheme2Subject(subject)}
-                          className={`
-                            w-full text-left cursor-pointer flex items-center gap-3 p-4 rounded-lg border transition-all
-                            ${isSelected
+                          className={`flex w-full cursor-pointer items-center gap-3 rounded-lg border p-4 text-left transition-all ${
+                            isSelected
                               ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                              : "border-border hover:bg-muted/50"}
-                          `}
+                              : "border-border hover:bg-muted/50"
+                          } `}
                         >
                           <div className={isSelected ? "text-primary" : "text-muted-foreground"}>
                             {isSelected ? (
@@ -1013,8 +1114,8 @@ export default function WebsiteSettings() {
                             )}
                           </div>
 
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm">{subject}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium">{subject}</p>
                           </div>
                         </button>
                       );
@@ -1028,196 +1129,297 @@ export default function WebsiteSettings() {
 
         {/* --- 3. Stats Tab --- */}
         <TabsContent value="stats">
-           <Card>
-             <CardHeader>
-               <CardTitle>Key Statistics</CardTitle>
-               <CardDescription>Showcase your institute's impact.</CardDescription>
-             </CardHeader>
-             <CardContent className="space-y-4">
-               {stats.map((stat, idx) => (
-                 <div key={idx} className="flex gap-4 items-end p-3 border rounded-lg bg-card">
-                    <div className="flex-1 space-y-2">
-                       <Label>Label</Label>
-                       <Input 
-                         value={stat.label} 
-                         onChange={e => {
-                           const list = [...stats]; list[idx].label = e.target.value; setStats(list);
-                         }} 
-                         placeholder="e.g. Students"
-                       />
-                    </div>
-                    <div className="flex-1 space-y-2">
-                       <Label>Value</Label>
-                       <Input 
-                         value={stat.value} 
-                         onChange={e => {
-                           const list = [...stats]; list[idx].value = e.target.value; setStats(list);
-                         }} 
-                         placeholder="e.g. 1000+"
-                       />
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={() => {
-                       setStats(stats.filter((_, i) => i !== idx));
-                    }}>
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                 </div>
-               ))}
-               <Button variant="outline" className="w-full border-dashed" onClick={() => setStats([...stats, { label: "", value: "", icon: "Users" }])}>
-                 <Plus className="mr-2 h-4 w-4" /> Add Stat
-               </Button>
-             </CardContent>
-           </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Key Statistics</CardTitle>
+              <CardDescription>Showcase your institute's impact.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {stats.map((stat, idx) => (
+                <div key={idx} className="flex items-end gap-4 rounded-lg border bg-card p-3">
+                  <div className="flex-1 space-y-2">
+                    <Label>Label</Label>
+                    <Input
+                      value={stat.label}
+                      onChange={(e) => {
+                        const list = [...stats];
+                        list[idx].label = e.target.value;
+                        setStats(list);
+                      }}
+                      placeholder="e.g. Students"
+                    />
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <Label>Value</Label>
+                    <Input
+                      value={stat.value}
+                      onChange={(e) => {
+                        const list = [...stats];
+                        list[idx].value = e.target.value;
+                        setStats(list);
+                      }}
+                      placeholder="e.g. 1000+"
+                    />
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setStats(stats.filter((_, i) => i !== idx));
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                className="w-full border-dashed"
+                onClick={() => setStats([...stats, { label: "", value: "", icon: "Users" }])}
+              >
+                <Plus className="mr-2 h-4 w-4" /> Add Stat
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* --- 4. Achievements Tab --- */}
         <TabsContent value="achievements">
-           <Card>
-             <CardHeader>
-               <CardTitle>Awards & Achievements</CardTitle>
-             </CardHeader>
-             <CardContent className="space-y-4">
-               {achievements.map((item, idx) => (
-                 <div key={idx} className="p-4 border rounded-lg space-y-4 relative bg-card">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="absolute top-2 right-2"
-                      onClick={() => setAchievements(achievements.filter((_, i) => i !== idx))}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       <div className="space-y-2">
-                          <Label>Title</Label>
-                          <Input value={item.title} onChange={e => {
-                            const list = [...achievements]; list[idx].title = e.target.value; setAchievements(list);
-                          }} placeholder="e.g. Best Coaching 2024" />
-                       </div>
-                       <div className="space-y-2">
-                          <Label>Description</Label>
-                          <Input value={item.description} onChange={e => {
-                            const list = [...achievements]; list[idx].description = e.target.value; setAchievements(list);
-                          }} placeholder="Short detail..." />
-                       </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Awards & Achievements</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {achievements.map((item, idx) => (
+                <div key={idx} className="relative space-y-4 rounded-lg border bg-card p-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-2"
+                    onClick={() => setAchievements(achievements.filter((_, i) => i !== idx))}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Title</Label>
+                      <Input
+                        value={item.title}
+                        onChange={(e) => {
+                          const list = [...achievements];
+                          list[idx].title = e.target.value;
+                          setAchievements(list);
+                        }}
+                        placeholder="e.g. Best Coaching 2024"
+                      />
                     </div>
-                 </div>
-               ))}
-               <Button variant="outline" className="w-full border-dashed" onClick={() => setAchievements([...achievements, { title: "", description: "", icon: "Trophy" }])}>
-                 <Plus className="mr-2 h-4 w-4" /> Add Achievement
-               </Button>
-             </CardContent>
-           </Card>
+                    <div className="space-y-2">
+                      <Label>Description</Label>
+                      <Input
+                        value={item.description}
+                        onChange={(e) => {
+                          const list = [...achievements];
+                          list[idx].description = e.target.value;
+                          setAchievements(list);
+                        }}
+                        placeholder="Short detail..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                className="w-full border-dashed"
+                onClick={() =>
+                  setAchievements([...achievements, { title: "", description: "", icon: "Trophy" }])
+                }
+              >
+                <Plus className="mr-2 h-4 w-4" /> Add Achievement
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* --- 5. Faculty Tab --- */}
         <TabsContent value="faculty">
-           <Card>
-             <CardHeader>
-               <CardTitle>Our Faculty</CardTitle>
-             </CardHeader>
-             <CardContent className="space-y-4">
-               {faculty.map((item, idx) => (
-                 <div key={idx} className="p-4 border rounded-lg space-y-4 relative bg-card">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="absolute top-2 right-2"
-                      onClick={() => setFaculty(faculty.filter((_, i) => i !== idx))}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       <div className="space-y-2">
-                          <Label>Name</Label>
-                          <Input value={item.name} onChange={e => {
-                            const list = [...faculty]; list[idx].name = e.target.value; setFaculty(list);
-                          }} placeholder="Dr. Smith" />
-                       </div>
-                       <div className="space-y-2">
-                          <Label>Subject / Designation</Label>
-                          <Input value={item.subject} onChange={e => {
-                            const list = [...faculty]; list[idx].subject = e.target.value; setFaculty(list);
-                          }} placeholder="Physics HOD" />
-                       </div>
-                       <div className="space-y-2 md:col-span-2">
-                          <Label>Bio</Label>
-                          <Textarea value={item.bio} onChange={e => {
-                            const list = [...faculty]; list[idx].bio = e.target.value; setFaculty(list);
-                          }} placeholder="10+ years experience..." />
-                       </div>
-                       <div className="space-y-2 md:col-span-2">
-                          <Label>Image URL</Label>
-                          <Input value={item.image} onChange={e => {
-                            const list = [...faculty]; list[idx].image = e.target.value; setFaculty(list);
-                          }} placeholder="https://..." />
-                       </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Our Faculty</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {faculty.map((item, idx) => (
+                <div key={idx} className="relative space-y-4 rounded-lg border bg-card p-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-2"
+                    onClick={() => setFaculty(faculty.filter((_, i) => i !== idx))}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Name</Label>
+                      <Input
+                        value={item.name}
+                        onChange={(e) => {
+                          const list = [...faculty];
+                          list[idx].name = e.target.value;
+                          setFaculty(list);
+                        }}
+                        placeholder="Dr. Smith"
+                      />
                     </div>
-                 </div>
-               ))}
-               <Button variant="outline" className="w-full border-dashed" onClick={() => setFaculty([...faculty, { name: "", subject: "", designation: "", experience: "", bio: "", image: "" }])}>
-                 <Plus className="mr-2 h-4 w-4" /> Add Faculty Member
-               </Button>
-             </CardContent>
-           </Card>
+                    <div className="space-y-2">
+                      <Label>Subject / Designation</Label>
+                      <Input
+                        value={item.subject}
+                        onChange={(e) => {
+                          const list = [...faculty];
+                          list[idx].subject = e.target.value;
+                          setFaculty(list);
+                        }}
+                        placeholder="Physics HOD"
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label>Bio</Label>
+                      <Textarea
+                        value={item.bio}
+                        onChange={(e) => {
+                          const list = [...faculty];
+                          list[idx].bio = e.target.value;
+                          setFaculty(list);
+                        }}
+                        placeholder="10+ years experience..."
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label>Image URL</Label>
+                      <Input
+                        value={item.image}
+                        onChange={(e) => {
+                          const list = [...faculty];
+                          list[idx].image = e.target.value;
+                          setFaculty(list);
+                        }}
+                        placeholder="https://..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                className="w-full border-dashed"
+                onClick={() =>
+                  setFaculty([
+                    ...faculty,
+                    { name: "", subject: "", designation: "", experience: "", bio: "", image: "" },
+                  ])
+                }
+              >
+                <Plus className="mr-2 h-4 w-4" /> Add Faculty Member
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* --- 6. Testimonials Tab --- */}
         <TabsContent value="testimonials">
           <Card>
             <CardHeader>
-               <CardTitle>Student Reviews</CardTitle>
+              <CardTitle>Student Reviews</CardTitle>
             </CardHeader>
             <CardContent>
-               <div className="space-y-6">
+              <div className="space-y-6">
                 {testimonials.map((item, idx) => (
-                  <div key={idx} className="p-4 border rounded-lg relative bg-card">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="absolute top-2 right-2"
+                  <div key={idx} className="relative rounded-lg border bg-card p-4">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-2 top-2"
                       onClick={() => setTestimonials(testimonials.filter((_, i) => i !== idx))}
                     >
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       <div className="space-y-2">
-                          <Label>Student Name</Label>
-                          <Input value={item.name} onChange={e => {
-                            const list = [...testimonials]; list[idx].name = e.target.value; setTestimonials(list);
-                          }} />
-                       </div>
-                       <div className="space-y-2">
-                          <Label>Course/Exam</Label>
-                          <Input value={item.course} onChange={e => {
-                            const list = [...testimonials]; list[idx].course = e.target.value; setTestimonials(list);
-                          }} />
-                       </div>
-                       <div className="space-y-2 md:col-span-2">
-                          <Label>Review Text</Label>
-                          <Textarea value={item.text} onChange={e => {
-                            const list = [...testimonials]; list[idx].text = e.target.value; setTestimonials(list);
-                          }} />
-                       </div>
-                       <div className="space-y-2">
-                          <Label>Avatar URL</Label>
-                          <Input value={item.avatar} onChange={e => {
-                            const list = [...testimonials]; list[idx].avatar = e.target.value; setTestimonials(list);
-                          }} placeholder="https://..." />
-                       </div>
-                       <div className="space-y-2">
-                          <Label>Rating (1-5)</Label>
-                          <Input type="number" max={5} min={1} value={item.rating} onChange={e => {
-                            const list = [...testimonials]; list[idx].rating = Number(e.target.value); setTestimonials(list);
-                          }} />
-                       </div>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>Student Name</Label>
+                        <Input
+                          value={item.name}
+                          onChange={(e) => {
+                            const list = [...testimonials];
+                            list[idx].name = e.target.value;
+                            setTestimonials(list);
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Course/Exam</Label>
+                        <Input
+                          value={item.course}
+                          onChange={(e) => {
+                            const list = [...testimonials];
+                            list[idx].course = e.target.value;
+                            setTestimonials(list);
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label>Review Text</Label>
+                        <Textarea
+                          value={item.text}
+                          onChange={(e) => {
+                            const list = [...testimonials];
+                            list[idx].text = e.target.value;
+                            setTestimonials(list);
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Avatar URL</Label>
+                        <Input
+                          value={item.avatar}
+                          onChange={(e) => {
+                            const list = [...testimonials];
+                            list[idx].avatar = e.target.value;
+                            setTestimonials(list);
+                          }}
+                          placeholder="https://..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Rating (1-5)</Label>
+                        <Input
+                          type="number"
+                          max={5}
+                          min={1}
+                          value={item.rating}
+                          onChange={(e) => {
+                            const list = [...testimonials];
+                            list[idx].rating = Number(e.target.value);
+                            setTestimonials(list);
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
-                <Button variant="outline" className="w-full border-dashed" onClick={() => setTestimonials([...testimonials, { name: "", course: "", text: "", rating: 5, avatar: "" }])}>
-                   <Plus className="mr-2 h-4 w-4" /> Add Testimonial
+                <Button
+                  variant="outline"
+                  className="w-full border-dashed"
+                  onClick={() =>
+                    setTestimonials([
+                      ...testimonials,
+                      { name: "", course: "", text: "", rating: 5, avatar: "" },
+                    ])
+                  }
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add Testimonial
                 </Button>
-               </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -1225,14 +1427,15 @@ export default function WebsiteSettings() {
 
       {/* --- AI Content Confirmation Modal --- */}
       <AlertDialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
-        <AlertDialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <AlertDialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
               Review AI-Generated Content
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Here's the professional content our AI generated for your website. Review and make adjustments as needed before applying.
+              Here's the professional content our AI generated for your website. Review and make
+              adjustments as needed before applying.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -1240,12 +1443,12 @@ export default function WebsiteSettings() {
             <div className="space-y-6 py-4">
               {/* Stats Preview */}
               <div className="space-y-3">
-                <h3 className="font-semibold text-sm">📊 Key Statistics</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <h3 className="text-sm font-semibold">📊 Key Statistics</h3>
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
                   {generatedContent.stats?.map((stat: any, idx: number) => (
-                    <div key={idx} className="p-3 bg-muted rounded-lg text-center text-sm">
+                    <div key={idx} className="rounded-lg bg-muted p-3 text-center text-sm">
                       <div className="text-xs text-muted-foreground">{stat.label}</div>
-                      <div className="font-bold text-lg mt-1">{stat.value}</div>
+                      <div className="mt-1 text-lg font-bold">{stat.value}</div>
                     </div>
                   ))}
                 </div>
@@ -1253,12 +1456,14 @@ export default function WebsiteSettings() {
 
               {/* Achievements Preview */}
               <div className="space-y-3">
-                <h3 className="font-semibold text-sm">🏆 Awards & Achievements</h3>
+                <h3 className="text-sm font-semibold">🏆 Awards & Achievements</h3>
                 <div className="space-y-2">
                   {generatedContent.achievements?.map((achievement: any, idx: number) => (
-                    <div key={idx} className="p-3 bg-muted rounded-lg text-sm">
+                    <div key={idx} className="rounded-lg bg-muted p-3 text-sm">
                       <div className="font-semibold">{achievement.title}</div>
-                      <div className="text-xs text-muted-foreground mt-1">{achievement.description}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {achievement.description}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1266,13 +1471,15 @@ export default function WebsiteSettings() {
 
               {/* Faculty Preview */}
               <div className="space-y-3">
-                <h3 className="font-semibold text-sm">👥 Faculty</h3>
+                <h3 className="text-sm font-semibold">👥 Faculty</h3>
                 <div className="space-y-2">
                   {generatedContent.faculty?.map((member: any, idx: number) => (
-                    <div key={idx} className="p-3 bg-muted rounded-lg text-sm">
+                    <div key={idx} className="rounded-lg bg-muted p-3 text-sm">
                       <div className="font-semibold">{member.name}</div>
-                      <div className="text-xs text-muted-foreground">{member.subject} • {member.designation}</div>
-                      <div className="text-xs mt-2">{member.bio}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {member.subject} • {member.designation}
+                      </div>
+                      <div className="mt-2 text-xs">{member.bio}</div>
                     </div>
                   ))}
                 </div>
@@ -1280,10 +1487,10 @@ export default function WebsiteSettings() {
 
               {/* Testimonials Preview */}
               <div className="space-y-3">
-                <h3 className="font-semibold text-sm">⭐ Student Reviews</h3>
+                <h3 className="text-sm font-semibold">⭐ Student Reviews</h3>
                 <div className="space-y-2">
                   {generatedContent.testimonials?.map((testimonial: any, idx: number) => (
-                    <div key={idx} className="p-3 bg-muted rounded-lg text-sm">
+                    <div key={idx} className="rounded-lg bg-muted p-3 text-sm">
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <div className="font-semibold">{testimonial.name}</div>
@@ -1291,7 +1498,7 @@ export default function WebsiteSettings() {
                         </div>
                         <div className="text-xs">⭐ {testimonial.rating}/5</div>
                       </div>
-                      <div className="text-xs mt-2 italic">"{testimonial.text}"</div>
+                      <div className="mt-2 text-xs italic">"{testimonial.text}"</div>
                     </div>
                   ))}
                 </div>
@@ -1299,9 +1506,9 @@ export default function WebsiteSettings() {
             </div>
           )}
 
-          <div className="flex gap-2 justify-end">
+          <div className="flex justify-end gap-2">
             <AlertDialogCancel>Discard & Edit Manually</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleApplyGeneratedContent}
               className="gradient-bg text-white"
             >

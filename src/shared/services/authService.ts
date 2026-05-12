@@ -140,7 +140,9 @@ export async function signUpStudent(input: StudentSignupInput) {
     const contentType = String(registerRes.headers.get("content-type") || "").toLowerCase();
     if (contentType.includes("application/json")) {
       const data = await registerRes.json().catch(() => ({}));
-      throw new Error(data?.error || `Failed to register student for this tenant (HTTP ${registerRes.status})`);
+      throw new Error(
+        data?.error || `Failed to register student for this tenant (HTTP ${registerRes.status})`
+      );
     }
     const text = (await registerRes.text().catch(() => "")).trim();
     throw new Error(
@@ -152,4 +154,3 @@ export async function signUpStudent(input: StudentSignupInput) {
 
   return { uid, tenantSlug: slug };
 }
-

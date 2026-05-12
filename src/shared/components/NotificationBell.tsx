@@ -56,21 +56,28 @@ export default function NotificationBell({
       orderBy("createdAt", "desc"),
       limit(30)
     );
-    const unsub = onSnapshot(q, (snap) => {
-      setNotifications(
-        snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }))
-      );
-    }, () => setNotifications([]));
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        setNotifications(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
+      },
+      () => setNotifications([])
+    );
     return () => unsub();
   }, [uid]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const markRead = useCallback(async (notifId: string) => {
-    try {
-      await updateDoc(doc(db, "users", uid, "notifications", notifId), { read: true });
-    } catch { /* silent */ }
-  }, [uid]);
+  const markRead = useCallback(
+    async (notifId: string) => {
+      try {
+        await updateDoc(doc(db, "users", uid, "notifications", notifId), { read: true });
+      } catch {
+        /* silent */
+      }
+    },
+    [uid]
+  );
 
   const markAllRead = useCallback(async () => {
     const unread = notifications.filter((n) => !n.read);
@@ -79,7 +86,11 @@ export default function NotificationBell({
     unread.forEach((n) => {
       batch.update(doc(db, "users", uid, "notifications", n.id), { read: true });
     });
-    try { await batch.commit(); } catch { /* silent */ }
+    try {
+      await batch.commit();
+    } catch {
+      /* silent */
+    }
   }, [uid, notifications]);
 
   const clearAll = useCallback(async () => {
@@ -88,7 +99,11 @@ export default function NotificationBell({
     notifications.forEach((n) => {
       batch.delete(doc(db, "users", uid, "notifications", n.id));
     });
-    try { await batch.commit(); } catch { /* silent */ }
+    try {
+      await batch.commit();
+    } catch {
+      /* silent */
+    }
   }, [uid, notifications]);
 
   function relativeTime(ts: any): string {
@@ -106,15 +121,15 @@ export default function NotificationBell({
         <Button variant="ghost" size="icon" className="relative rounded-xl">
           <Bell className="h-5 w-5" />
           {(unreadCount > 0 || supportThreadCount > 0) && (
-            <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
+            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />
           )}
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent align="end" className="w-80 p-0 rounded-xl shadow-lg">
+      <PopoverContent align="end" className="w-80 rounded-xl p-0 shadow-lg">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <span className="font-semibold text-sm">Notifications</span>
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <span className="text-sm font-semibold">Notifications</span>
           <div className="flex items-center gap-1">
             {canBroadcast && onBroadcast && (
               <Button
@@ -122,7 +137,10 @@ export default function NotificationBell({
                 size="icon"
                 className="h-7 w-7 rounded-lg"
                 title="Send notification"
-                onClick={() => { setOpen(false); onBroadcast(); }}
+                onClick={() => {
+                  setOpen(false);
+                  onBroadcast();
+                }}
               >
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
@@ -164,19 +182,21 @@ export default function NotificationBell({
                 <button
                   key={n.id}
                   className={cn(
-                    "w-full text-left px-4 py-3 border-b border-border last:border-0 hover:bg-muted/50 transition-colors",
+                    "w-full border-b border-border px-4 py-3 text-left transition-colors last:border-0 hover:bg-muted/50",
                     !n.read && "bg-primary/5"
                   )}
                   onClick={() => markRead(n.id)}
                 >
                   <div className="flex items-start gap-2">
                     {!n.read && (
-                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                      <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
                     )}
-                    <div className={cn("flex-1 min-w-0", n.read && "pl-3.5")}>
-                      <p className="text-sm font-medium truncate">{n.title}</p>
-                      <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{n.body}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">{relativeTime(n.createdAt)}</p>
+                    <div className={cn("min-w-0 flex-1", n.read && "pl-3.5")}>
+                      <p className="truncate text-sm font-medium">{n.title}</p>
+                      <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.body}</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        {relativeTime(n.createdAt)}
+                      </p>
                     </div>
                   </div>
                 </button>
@@ -186,13 +206,13 @@ export default function NotificationBell({
                 <>
                   {notifications.length > 0 && <div className="border-t border-border" />}
                   <button
-                    className="w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors flex items-center gap-2"
+                    className="flex w-full items-center gap-2 px-4 py-3 text-left transition-colors hover:bg-muted/50"
                     onClick={() => {
                       setOpen(false);
                       if (supportThreadLink) navigate(supportThreadLink);
                     }}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0 mt-0.5" />
+                    <span className="mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
                     <div>
                       <p className="text-sm font-medium">Messages</p>
                       <p className="text-xs text-muted-foreground">

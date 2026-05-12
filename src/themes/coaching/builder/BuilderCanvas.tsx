@@ -1,5 +1,10 @@
 import React from "react";
-import { COMPONENT_REGISTRY, THEME_PRESETS, type ThemeKey, type Section } from "@features/educator/InstituteBuilder";
+import {
+  COMPONENT_REGISTRY,
+  THEME_PRESETS,
+  type ThemeKey,
+  type Section,
+} from "@features/educator/InstituteBuilder";
 
 type BuilderCanvasProps = {
   sections: Section[];

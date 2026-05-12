@@ -1,11 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  CheckCircle2,
-  ClipboardList,
-  ExternalLink,
-  Loader2,
-  RefreshCw,
-} from "lucide-react";
+import { CheckCircle2, ClipboardList, ExternalLink, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@shared/ui/button";
 import { Badge } from "@shared/ui/badge";
@@ -13,28 +7,9 @@ import { Card, CardContent } from "@shared/ui/card";
 import { Input } from "@shared/ui/input";
 import { Label } from "@shared/ui/label";
 import { Textarea } from "@shared/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@shared/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@shared/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@shared/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@shared/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/ui/table";
 
 const API = import.meta.env.VITE_MONKEY_KING_API_URL;
 const ADMIN_KEY = import.meta.env.VITE_MONKEY_KING_ADMIN_KEY;
@@ -163,12 +138,12 @@ export default function AdminQuestionPaperRequests() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Question Paper Requests</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="mt-1 text-sm text-muted-foreground">
             Manage educator requests to upload question papers.
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={fetchRequests}>
-          <RefreshCw className="h-4 w-4 mr-2" />
+          <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
       </div>
@@ -200,8 +175,8 @@ export default function AdminQuestionPaperRequests() {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : requests.length === 0 ? (
-            <div className="text-center py-14 text-muted-foreground">
-              <ClipboardList className="h-10 w-10 mx-auto mb-3 opacity-30" />
+            <div className="py-14 text-center text-muted-foreground">
+              <ClipboardList className="mx-auto mb-3 h-10 w-10 opacity-30" />
               <p className="text-sm">No requests found.</p>
             </div>
           ) : (
@@ -222,15 +197,15 @@ export default function AdminQuestionPaperRequests() {
                   const canUpdate = nextStatuses(req.status).length > 0;
                   return (
                     <TableRow key={req.id}>
-                      <TableCell className="font-medium max-w-[180px]">
+                      <TableCell className="max-w-[180px] font-medium">
                         <div className="truncate">{req.title}</div>
                         {req.description && (
-                          <div className="text-xs text-muted-foreground truncate mt-0.5">
+                          <div className="mt-0.5 truncate text-xs text-muted-foreground">
                             {req.description}
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground max-w-[120px] truncate">
+                      <TableCell className="max-w-[120px] truncate font-mono text-xs text-muted-foreground">
                         {req.educator_id}
                       </TableCell>
                       <TableCell>
@@ -238,7 +213,7 @@ export default function AdminQuestionPaperRequests() {
                           href={req.file_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center gap-1 text-xs text-primary hover:underline truncate max-w-[130px]"
+                          className="flex max-w-[130px] items-center gap-1 truncate text-xs text-primary hover:underline"
                         >
                           {req.file_name}
                           <ExternalLink className="h-3 w-3 flex-shrink-0" />
@@ -246,15 +221,15 @@ export default function AdminQuestionPaperRequests() {
                       </TableCell>
                       <TableCell>
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${STATUS_BADGE[req.status]}`}
+                          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[req.status]}`}
                         >
                           {STATUS_LABEL[req.status]}
                         </span>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground max-w-[160px] truncate">
+                      <TableCell className="max-w-[160px] truncate text-sm text-muted-foreground">
                         {req.admin_note || "—"}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                      <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                         {fmtDate(req.created_at)}
                       </TableCell>
                       <TableCell className="text-right">
@@ -266,7 +241,7 @@ export default function AdminQuestionPaperRequests() {
                               className="h-7 text-xs"
                               onClick={() => openUpdateDialog(req)}
                             >
-                              <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                              <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
                               Update
                             </Button>
                           )}
@@ -290,10 +265,7 @@ export default function AdminQuestionPaperRequests() {
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label>New Status</Label>
-              <Select
-                value={newStatus}
-                onValueChange={(v) => setNewStatus(v as RequestStatus)}
-              >
+              <Select value={newStatus} onValueChange={(v) => setNewStatus(v as RequestStatus)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -322,13 +294,12 @@ export default function AdminQuestionPaperRequests() {
               Cancel
             </Button>
             <Button onClick={handleUpdateStatus} disabled={updateBusy}>
-              {updateBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {updateBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }

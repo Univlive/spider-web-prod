@@ -58,4 +58,3 @@ export async function setTenantStatus(tenantSlug: string, status: TenantStatus) 
     { merge: true }
   );
 }
-

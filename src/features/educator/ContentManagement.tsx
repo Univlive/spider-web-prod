@@ -20,29 +20,22 @@ import { Input } from "@shared/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
 import { Badge } from "@shared/ui/badge";
 import { Label } from "@shared/ui/label";
-import { Loader2, Lock, Plus, Trash2, ExternalLink, BookOpen, FileText, Network, ScrollText, Library } from "lucide-react";
+import {
+  Loader2,
+  Lock,
+  Plus,
+  Trash2,
+  ExternalLink,
+  BookOpen,
+  FileText,
+  Network,
+  ScrollText,
+  Library,
+} from "lucide-react";
 import { useContentTypes } from "@shared/hooks/useContentTypes";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@shared/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@shared/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@shared/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@shared/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/ui/table";
 import { uploadToImageKit, getContentUploadLimit } from "@shared/lib/imagekitUpload";
 import { auth } from "@shared/lib/firebase";
 import { useEducatorFeatures } from "@shared/hooks/useEducatorFeatures";
@@ -161,13 +154,10 @@ export default function ContentManagement() {
       }
     });
 
-    const unsub = onSnapshot(
-      collection(db, "educators", educatorId, "branches"),
-      (snap) => {
-        setBranches(snap.docs.map((d) => ({ id: d.id, name: d.data().name as string })));
-        setLoading(false);
-      }
-    );
+    const unsub = onSnapshot(collection(db, "educators", educatorId, "branches"), (snap) => {
+      setBranches(snap.docs.map((d) => ({ id: d.id, name: d.data().name as string })));
+      setLoading(false);
+    });
 
     getContentUploadLimit().then(setUploadLimitMB);
 
@@ -176,7 +166,10 @@ export default function ContentManagement() {
 
   // Load courses when branches change
   useEffect(() => {
-    if (!educatorId || branches.length === 0) { setCourses([]); return; }
+    if (!educatorId || branches.length === 0) {
+      setCourses([]);
+      return;
+    }
     const unsubs = branches.map((branch) =>
       onSnapshot(
         collection(db, "educators", educatorId, "branches", branch.id, "courses"),
@@ -202,7 +195,16 @@ export default function ContentManagement() {
     setContentLoading(true);
     const unsub = onSnapshot(
       query(
-        collection(db, "educators", educatorId, "branches", selectedBranchId, "courses", selectedCourseId, "content"),
+        collection(
+          db,
+          "educators",
+          educatorId,
+          "branches",
+          selectedBranchId,
+          "courses",
+          selectedCourseId,
+          "content"
+        ),
         orderBy("createdAt", "desc")
       ),
       (snap) => {
@@ -215,17 +217,25 @@ export default function ContentManagement() {
 
   if (!featuresLoading && !features.contentLibrary) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 p-8 text-center">
         <Lock className="h-12 w-12 text-muted-foreground" />
         <h2 className="text-xl font-semibold">Content Library not included in your plan</h2>
-        <p className="text-muted-foreground max-w-sm">Upgrade your plan to upload and manage books, notes, and course content. Contact your admin to enable this feature.</p>
+        <p className="max-w-sm text-muted-foreground">
+          Upgrade your plan to upload and manage books, notes, and course content. Contact your
+          admin to enable this feature.
+        </p>
       </div>
     );
   }
 
   async function openImport() {
-    const libSnap = await getDocs(query(collection(db, "admin_library"), orderBy("createdAt", "desc")));
-    const all = libSnap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<AdminLibraryItem, "id">) }));
+    const libSnap = await getDocs(
+      query(collection(db, "admin_library"), orderBy("createdAt", "desc"))
+    );
+    const all = libSnap.docs.map((d) => ({
+      id: d.id,
+      ...(d.data() as Omit<AdminLibraryItem, "id">),
+    }));
 
     if (allowedCourseIds.length === 0) {
       // No restriction — show everything
@@ -246,7 +256,16 @@ export default function ContentManagement() {
     setImportBusy(true);
     try {
       await addDoc(
-        collection(db, "educators", educatorId, "branches", selectedBranchId, "courses", selectedCourseId, "content"),
+        collection(
+          db,
+          "educators",
+          educatorId,
+          "branches",
+          selectedBranchId,
+          "courses",
+          selectedCourseId,
+          "content"
+        ),
         {
           type: item.type,
           title: item.title,
@@ -293,10 +312,24 @@ export default function ContentManagement() {
 
     setUploadBusy(true);
     try {
-      const result = await uploadToImageKit(file, file.name, `/content/educator/${educatorId}`, "content");
+      const result = await uploadToImageKit(
+        file,
+        file.name,
+        `/content/educator/${educatorId}`,
+        "content"
+      );
 
       const ref = await addDoc(
-        collection(db, "educators", educatorId, "branches", selectedBranchId, "courses", selectedCourseId, "content"),
+        collection(
+          db,
+          "educators",
+          educatorId,
+          "branches",
+          selectedBranchId,
+          "courses",
+          selectedCourseId,
+          "content"
+        ),
         {
           type,
           title: title.trim(),
@@ -339,7 +372,17 @@ export default function ContentManagement() {
     if (!confirm(`Delete "${item.title}"?`)) return;
     try {
       await deleteDoc(
-        doc(db, "educators", educatorId, "branches", selectedBranchId, "courses", selectedCourseId, "content", item.id)
+        doc(
+          db,
+          "educators",
+          educatorId,
+          "branches",
+          selectedBranchId,
+          "courses",
+          selectedCourseId,
+          "content",
+          item.id
+        )
       );
       toast.success("Deleted");
     } catch (e: any) {
@@ -352,13 +395,13 @@ export default function ContentManagement() {
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="animate-spin h-6 w-6 text-muted-foreground" />
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6">
+    <div className="space-y-6 p-4 sm:p-6">
       <div>
         <h1 className="text-2xl font-bold">Content</h1>
         <p className="text-sm text-muted-foreground">Manage books and notes per course</p>
@@ -369,17 +412,22 @@ export default function ContentManagement() {
         <CardHeader>
           <CardTitle className="text-base">Select Course</CardTitle>
         </CardHeader>
-        <CardContent className="flex gap-3 flex-wrap">
+        <CardContent className="flex flex-wrap gap-3">
           <Select
             value={selectedBranchId}
-            onValueChange={(v) => { setSelectedBranchId(v); setSelectedCourseId(""); }}
+            onValueChange={(v) => {
+              setSelectedBranchId(v);
+              setSelectedCourseId("");
+            }}
           >
             <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="Branch" />
             </SelectTrigger>
             <SelectContent>
               {branches.map((b) => (
-                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                <SelectItem key={b.id} value={b.id}>
+                  {b.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -396,7 +444,9 @@ export default function ContentManagement() {
               {courses
                 .filter((c) => c.branchId === selectedBranchId)
                 .map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
                 ))}
             </SelectContent>
           </Select>
@@ -406,11 +456,9 @@ export default function ContentManagement() {
       {/* Content list */}
       {selectedCourseId && (
         <Card>
-          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <CardTitle className="text-base">
-              Content — {selectedCourse?.name}
-            </CardTitle>
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="text-base">Content — {selectedCourse?.name}</CardTitle>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
               <Button variant="outline" size="sm" onClick={openImport}>
                 <Library className="mr-2 h-4 w-4" /> Import from Library
               </Button>
@@ -422,58 +470,62 @@ export default function ContentManagement() {
           <CardContent className="p-0">
             {contentLoading ? (
               <div className="flex justify-center py-10">
-                <Loader2 className="animate-spin h-5 w-5 text-muted-foreground" />
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             ) : content.length === 0 ? (
-              <div className="text-center py-10 text-muted-foreground">No content yet</div>
+              <div className="py-10 text-center text-muted-foreground">No content yet</div>
             ) : (
               <div className="w-full overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>Size</TableHead>
-                    <TableHead>Added</TableHead>
-                    <TableHead className="w-20" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {content.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.title}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">
-                          <ContentTypeIcon slug={item.type} />
-                          {activeTypes.find((t) => t.slug === item.type)?.name ?? item.type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={item.source === "admin_library" ? "outline" : "secondary"}>
-                          {item.source === "admin_library" ? "Admin Library" : "Own"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{formatBytes(item.fileSize)}</TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {item.createdAt?.toDate().toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button size="icon" variant="ghost" asChild>
-                            <a href={item.fileUrl} target="_blank" rel="noreferrer">
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                          </Button>
-                          <Button size="icon" variant="ghost" onClick={() => handleDelete(item)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Source</TableHead>
+                      <TableHead>Size</TableHead>
+                      <TableHead>Added</TableHead>
+                      <TableHead className="w-20" />
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {content.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.title}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">
+                            <ContentTypeIcon slug={item.type} />
+                            {activeTypes.find((t) => t.slug === item.type)?.name ?? item.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={item.source === "admin_library" ? "outline" : "secondary"}
+                          >
+                            {item.source === "admin_library" ? "Admin Library" : "Own"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {formatBytes(item.fileSize)}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {item.createdAt?.toDate().toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button size="icon" variant="ghost" asChild>
+                              <a href={item.fileUrl} target="_blank" rel="noreferrer">
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={() => handleDelete(item)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             )}
           </CardContent>
@@ -489,7 +541,11 @@ export default function ContentManagement() {
           <div className="space-y-4">
             <div className="space-y-1">
               <Label>Title</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Chapter 1 Notes" />
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Chapter 1 Notes"
+              />
             </div>
             <div className="space-y-1">
               <Label>Description (optional)</Label>
@@ -503,13 +559,17 @@ export default function ContentManagement() {
                 </SelectTrigger>
                 <SelectContent>
                   {activeTypes.map((t) => (
-                    <SelectItem key={t.slug} value={t.slug}>{t.name}</SelectItem>
+                    <SelectItem key={t.slug} value={t.slug}>
+                      {t.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label>File <span className="text-muted-foreground text-xs">(max {uploadLimitMB} MB)</span></Label>
+              <Label>
+                File <span className="text-xs text-muted-foreground">(max {uploadLimitMB} MB)</span>
+              </Label>
               <input
                 ref={fileRef}
                 type="file"
@@ -532,45 +592,45 @@ export default function ContentManagement() {
             <DialogTitle>Import from Admin Library</DialogTitle>
           </DialogHeader>
           {adminItems.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">
+            <p className="py-4 text-center text-sm text-muted-foreground">
               No admin content available for your assigned courses
             </p>
           ) : (
             <div className="w-full overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="w-20" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {adminItems.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.title}</TableCell>
-                    <TableCell>{item.subjectName}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        <ContentTypeIcon slug={item.type} />
-                        {activeTypes.find((t) => t.slug === item.type)?.name ?? item.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={importBusy}
-                        onClick={() => handleImport(item)}
-                      >
-                        Add
-                      </Button>
-                    </TableCell>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Subject</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead className="w-20" />
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {adminItems.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium">{item.title}</TableCell>
+                      <TableCell>{item.subjectName}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">
+                          <ContentTypeIcon slug={item.type} />
+                          {activeTypes.find((t) => t.slug === item.type)?.name ?? item.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={importBusy}
+                          onClick={() => handleImport(item)}
+                        >
+                          Add
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
         </DialogContent>

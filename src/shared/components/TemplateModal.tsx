@@ -1,9 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
-import { addDoc, collection, doc, getDocs, increment, serverTimestamp, updateDoc } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDocs,
+  increment,
+  serverTimestamp,
+  updateDoc,
+} from "firebase/firestore";
 import { toast } from "sonner";
 import { Plus, Loader2, Save } from "lucide-react";
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@shared/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@shared/ui/dialog";
 import { Button } from "@shared/ui/button";
 import { Input } from "@shared/ui/input";
 import { Label } from "@shared/ui/label";
@@ -30,7 +44,9 @@ function clamp(v?: number) {
 }
 function normalizeLegacy(v?: string | number): number {
   if (typeof v === "number") return clamp(v);
-  const s = String(v || "").toLowerCase().trim();
+  const s = String(v || "")
+    .toLowerCase()
+    .trim();
   if (s === "easy") return 0.15;
   if (s === "hard") return 0.85;
   return 0.5;
@@ -79,7 +95,12 @@ export type TemplateModalProps = {
 
 // ─── component ────────────────────────────────────────────────────────────────
 
-export default function TemplateModal({ role, open, onOpenChange, templateToEdit }: TemplateModalProps) {
+export default function TemplateModal({
+  role,
+  open,
+  onOpenChange,
+  templateToEdit,
+}: TemplateModalProps) {
   const isAdmin = role === "admin";
   const isEdit = isAdmin && !!templateToEdit;
 
@@ -92,7 +113,9 @@ export default function TemplateModal({ role, open, onOpenChange, templateToEdit
 
   // Admin-scoped course/subject/QB data
   const [allCourses, setAllCourses] = useState<{ id: string; name: string }[]>([]);
-  const [allSubjects, setAllSubjects] = useState<{ id: string; name: string; courseId: string }[]>([]);
+  const [allSubjects, setAllSubjects] = useState<{ id: string; name: string; courseId: string }[]>(
+    []
+  );
   const [qbTopics, setQbTopics] = useState<string[]>([]);
   const [qbTags, setQbTags] = useState<string[]>([]);
 
@@ -105,15 +128,19 @@ export default function TemplateModal({ role, open, onOpenChange, templateToEdit
     ]).then(([courseSnap, subjectSnap, qbSnap]) => {
       setAllCourses(
         courseSnap.docs
-          .filter(d => d.data()?.isActive !== false)
-          .map(d => ({ id: d.id, name: d.data().name as string }))
+          .filter((d) => d.data()?.isActive !== false)
+          .map((d) => ({ id: d.id, name: d.data().name as string }))
       );
       setAllSubjects(
-        subjectSnap.docs.map(d => ({ id: d.id, name: d.data().name as string, courseId: d.data().courseId as string }))
+        subjectSnap.docs.map((d) => ({
+          id: d.id,
+          name: d.data().name as string,
+          courseId: d.data().courseId as string,
+        }))
       );
       const topics = new Set<string>();
       const tags = new Set<string>();
-      qbSnap.docs.forEach(d => {
+      qbSnap.docs.forEach((d) => {
         const data = d.data() as any;
         (data.topics || []).forEach((t: string) => t && topics.add(t));
         if (data.topic) topics.add(data.topic);
@@ -136,8 +163,14 @@ export default function TemplateModal({ role, open, onOpenChange, templateToEdit
   const [durationMinutes, setDurationMinutes] = useState("60");
   const [attemptsAllowed, setAttemptsAllowed] = useState("3");
   const [isPublished, setIsPublished] = useState(true);
-  const [markingScheme, setMarkingScheme] = useState<MarkingScheme>({ correct: isAdmin ? 5 : 4, incorrect: -1, unanswered: 0 });
-  const [sections, setSections] = useState<Section[]>([{ ...BLANK_SECTION(), id: "sec_1", name: "Section 1" }]);
+  const [markingScheme, setMarkingScheme] = useState<MarkingScheme>({
+    correct: isAdmin ? 5 : 4,
+    incorrect: -1,
+    unanswered: 0,
+  });
+  const [sections, setSections] = useState<Section[]>([
+    { ...BLANK_SECTION(), id: "sec_1", name: "Section 1" },
+  ]);
 
   const computedDifficulty = useMemo(() => avgDifficulty(sections), [sections]);
 
@@ -165,7 +198,9 @@ export default function TemplateModal({ role, open, onOpenChange, templateToEdit
           ? templateToEdit.sections.map((s: any) => ({
               ...s,
               attemptlimit: s.attemptlimit ?? null,
-              difficultyLevel: clamp(s.difficultyLevel ?? normalizeLegacy(s.difficulty ?? s.level ?? base)),
+              difficultyLevel: clamp(
+                s.difficultyLevel ?? normalizeLegacy(s.difficulty ?? s.level ?? base)
+              ),
               topics: Array.isArray(s.topics) ? s.topics.map(String) : [],
               subject: s.subject || "",
               tags: Array.isArray(s.tags) ? s.tags : [],
@@ -191,19 +226,35 @@ export default function TemplateModal({ role, open, onOpenChange, templateToEdit
 
   // ─── section handlers ────────────────────────────────────────────────────────
 
-  const handleAddSection = () => setSections(prev => [
-    ...prev,
-    { ...BLANK_SECTION(), name: `Section ${prev.length + 1}`, difficultyLevel: computedDifficulty },
-  ]);
+  const handleAddSection = () =>
+    setSections((prev) => [
+      ...prev,
+      {
+        ...BLANK_SECTION(),
+        name: `Section ${prev.length + 1}`,
+        difficultyLevel: computedDifficulty,
+      },
+    ]);
 
-  const handleRemoveSection = (i: number) => setSections(prev => prev.filter((_, idx) => idx !== i));
+  const handleRemoveSection = (i: number) =>
+    setSections((prev) => prev.filter((_, idx) => idx !== i));
 
-  const handleSectionEdit = (i: number, payload: {
-    name: string; questionsCount: number; attemptLimit?: number | null;
-    durationMinutes?: number | null; difficultyLevel: number; topics: string[];
-    markingScheme: MarkingScheme | null; subject: string; tags: string[]; format: string;
-  }) => {
-    setSections(prev => {
+  const handleSectionEdit = (
+    i: number,
+    payload: {
+      name: string;
+      questionsCount: number;
+      attemptLimit?: number | null;
+      durationMinutes?: number | null;
+      difficultyLevel: number;
+      topics: string[];
+      markingScheme: MarkingScheme | null;
+      subject: string;
+      tags: string[];
+      format: string;
+    }
+  ) => {
+    setSections((prev) => {
       const next = [...prev];
       next[i] = {
         ...next[i],
@@ -225,19 +276,39 @@ export default function TemplateModal({ role, open, onOpenChange, templateToEdit
   // ─── save ────────────────────────────────────────────────────────────────────
 
   const handleSave = async () => {
-    if (!title.trim()) { toast.error("Title is required"); return; }
-    if (!courseId) { toast.error("Course is required"); return; }
-    if (isAdmin && subjectMode === "single" && !subject.trim()) { toast.error("Subject is required"); return; }
-    if (!isAdmin && !subject.trim()) { toast.error("Subject is required"); return; }
-    if (!sections.length) { toast.error("At least one section is required"); return; }
+    if (!title.trim()) {
+      toast.error("Title is required");
+      return;
+    }
+    if (!courseId) {
+      toast.error("Course is required");
+      return;
+    }
+    if (isAdmin && subjectMode === "single" && !subject.trim()) {
+      toast.error("Subject is required");
+      return;
+    }
+    if (!isAdmin && !subject.trim()) {
+      toast.error("Subject is required");
+      return;
+    }
+    if (!sections.length) {
+      toast.error("At least one section is required");
+      return;
+    }
     if (!isAdmin && !firebaseUser) return;
 
     setLoading(true);
     try {
       const difficulty = avgDifficulty(sections, 0.5);
-      const mappedSections = sections.map(s => {
+      const mappedSections = sections.map((s) => {
         const totalQ = Number(s.questionsCount) || 0;
-        const attemptLimit = s.attemptlimit == null ? (isAdmin ? 0 : totalQ) : Math.min(Number(s.attemptlimit), totalQ);
+        const attemptLimit =
+          s.attemptlimit == null
+            ? isAdmin
+              ? 0
+              : totalQ
+            : Math.min(Number(s.attemptlimit), totalQ);
         return {
           name: s.name.trim(),
           questionsCount: totalQ,
@@ -248,11 +319,13 @@ export default function TemplateModal({ role, open, onOpenChange, templateToEdit
           subject: s.subject || "",
           tags: Array.isArray(s.tags) ? s.tags : [],
           format: s.format || "",
-          markingScheme: s.markingScheme ? {
-            correct: Number(s.markingScheme.correct),
-            incorrect: Number(s.markingScheme.incorrect),
-            unanswered: Number(s.markingScheme.unanswered),
-          } : null,
+          markingScheme: s.markingScheme
+            ? {
+                correct: Number(s.markingScheme.correct),
+                incorrect: Number(s.markingScheme.incorrect),
+                unanswered: Number(s.markingScheme.unanswered),
+              }
+            : null,
         };
       });
 
@@ -276,16 +349,32 @@ export default function TemplateModal({ role, open, onOpenChange, templateToEdit
       };
 
       if (isAdmin) {
-        const adminPayload = { ...base, subjectMode, attemptsAllowed: Number(attemptsAllowed) || 3, isPublished, source: "admin" };
+        const adminPayload = {
+          ...base,
+          subjectMode,
+          attemptsAllowed: Number(attemptsAllowed) || 3,
+          isPublished,
+          source: "admin",
+        };
         if (isEdit) {
-          await updateDoc(doc(db, "templates", templateToEdit.id), { ...adminPayload, version: increment(1) });
+          await updateDoc(doc(db, "templates", templateToEdit.id), {
+            ...adminPayload,
+            version: increment(1),
+          });
           toast.success("Template updated");
         } else {
-          await addDoc(collection(db, "templates"), { ...adminPayload, version: 1, createdAt: serverTimestamp() });
+          await addDoc(collection(db, "templates"), {
+            ...adminPayload,
+            version: 1,
+            createdAt: serverTimestamp(),
+          });
           toast.success("Template created");
         }
       } else {
-        await addDoc(collection(db, "educators", firebaseUser!.uid, "templates"), { ...base, createdAt: serverTimestamp() });
+        await addDoc(collection(db, "educators", firebaseUser!.uid, "templates"), {
+          ...base,
+          createdAt: serverTimestamp(),
+        });
         toast.success("Template created");
       }
 
@@ -302,14 +391,16 @@ export default function TemplateModal({ role, open, onOpenChange, templateToEdit
 
   const courses = isAdmin ? allCourses : accessibleCourses;
   const subjectsForCourse = isAdmin
-    ? (courseId ? allSubjects.filter(s => s.courseId === courseId) : allSubjects)
+    ? courseId
+      ? allSubjects.filter((s) => s.courseId === courseId)
+      : allSubjects
     : accessibleSubjects;
 
   // ─── render ──────────────────────────────────────────────────────────────────
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl rounded-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto rounded-2xl">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit Template" : "Create Template"}</DialogTitle>
           <DialogDescription>
@@ -319,19 +410,38 @@ export default function TemplateModal({ role, open, onOpenChange, templateToEdit
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 mt-4">
+        <div className="mt-4 space-y-6">
           {/* Title + Course */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label>Title *</Label>
-              <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. JEE Mains Mock" />
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. JEE Mains Mock"
+              />
             </div>
             {courses.length > 0 && (
               <div className="space-y-2">
                 <Label>Course</Label>
-                <Select value={courseId} onValueChange={v => { setCourseId(v); setCourseName(courses.find(c => c.id === v)?.name ?? ""); setSubject(""); }}>
-                  <SelectTrigger><SelectValue placeholder="Select course" /></SelectTrigger>
-                  <SelectContent>{courses.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                <Select
+                  value={courseId}
+                  onValueChange={(v) => {
+                    setCourseId(v);
+                    setCourseName(courses.find((c) => c.id === v)?.name ?? "");
+                    setSubject("");
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select course" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courses.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
             )}
@@ -341,8 +451,22 @@ export default function TemplateModal({ role, open, onOpenChange, templateToEdit
               <div className="space-y-2">
                 <Label>Subject Mode</Label>
                 <div className="flex gap-2">
-                  <Button type="button" variant={subjectMode === "single" ? "default" : "outline"} size="sm" onClick={() => setSubjectMode("single")}>Single Subject</Button>
-                  <Button type="button" variant={subjectMode === "section_wise" ? "default" : "outline"} size="sm" onClick={() => setSubjectMode("section_wise")}>Section-wise</Button>
+                  <Button
+                    type="button"
+                    variant={subjectMode === "single" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSubjectMode("single")}
+                  >
+                    Single Subject
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={subjectMode === "section_wise" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSubjectMode("section_wise")}
+                  >
+                    Section-wise
+                  </Button>
                 </div>
               </div>
             )}
@@ -353,11 +477,23 @@ export default function TemplateModal({ role, open, onOpenChange, templateToEdit
                 <Label>Subject *</Label>
                 {subjectsForCourse.length > 0 ? (
                   <Select value={subject} onValueChange={setSubject}>
-                    <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
-                    <SelectContent>{subjectsForCourse.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subjectsForCourse.map((s) => (
+                        <SelectItem key={s.id} value={s.name}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
                 ) : (
-                  <Input value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. Physics" />
+                  <Input
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="e.g. Physics"
+                  />
                 )}
               </div>
             )}
@@ -366,33 +502,70 @@ export default function TemplateModal({ role, open, onOpenChange, templateToEdit
           {/* Description */}
           <div className="space-y-2">
             <Label>Description</Label>
-            <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Template description..." />
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Template description..."
+            />
           </div>
 
           {/* Difficulty + Duration + Marking Scheme */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <div className="space-y-2">
               <Label>Difficulty (avg of sections)</Label>
-              <span className={`text-sm font-semibold block mt-1 ${getDifficultyColor(computedDifficulty)}`}>
+              <span
+                className={`mt-1 block text-sm font-semibold ${getDifficultyColor(computedDifficulty)}`}
+              >
                 {computedDifficulty.toFixed(2)} — {getDifficultyLabel(computedDifficulty)}
               </span>
             </div>
             <div className="space-y-2">
               <Label>Duration (min)</Label>
-              <Input type="number" value={durationMinutes} onChange={e => setDurationMinutes(e.target.value)} min={1} />
+              <Input
+                type="number"
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(e.target.value)}
+                min={1}
+              />
             </div>
             {isAdmin && (
               <div className="space-y-2">
                 <Label>Attempts Allowed</Label>
-                <Input type="number" value={attemptsAllowed} onChange={e => setAttemptsAllowed(e.target.value)} min={1} />
+                <Input
+                  type="number"
+                  value={attemptsAllowed}
+                  onChange={(e) => setAttemptsAllowed(e.target.value)}
+                  min={1}
+                />
               </div>
             )}
-            <div className="space-y-3 col-span-2">
-              <h3 className="font-semibold text-sm">Marking Scheme</h3>
+            <div className="col-span-2 space-y-3">
+              <h3 className="text-sm font-semibold">Marking Scheme</h3>
               <div className="grid grid-cols-3 gap-4">
-                <FloatingInput label="Correct" type="number" value={markingScheme.correct} onChange={e => setMarkingScheme(m => ({ ...m, correct: Number(e.target.value) }))} />
-                <FloatingInput label="Incorrect" type="number" value={markingScheme.incorrect} onChange={e => setMarkingScheme(m => ({ ...m, incorrect: Number(e.target.value) }))} />
-                <FloatingInput label="Unanswered" type="number" value={markingScheme.unanswered} onChange={e => setMarkingScheme(m => ({ ...m, unanswered: Number(e.target.value) }))} />
+                <FloatingInput
+                  label="Correct"
+                  type="number"
+                  value={markingScheme.correct}
+                  onChange={(e) =>
+                    setMarkingScheme((m) => ({ ...m, correct: Number(e.target.value) }))
+                  }
+                />
+                <FloatingInput
+                  label="Incorrect"
+                  type="number"
+                  value={markingScheme.incorrect}
+                  onChange={(e) =>
+                    setMarkingScheme((m) => ({ ...m, incorrect: Number(e.target.value) }))
+                  }
+                />
+                <FloatingInput
+                  label="Unanswered"
+                  type="number"
+                  value={markingScheme.unanswered}
+                  onChange={(e) =>
+                    setMarkingScheme((m) => ({ ...m, unanswered: Number(e.target.value) }))
+                  }
+                />
               </div>
             </div>
           </div>
@@ -400,8 +573,11 @@ export default function TemplateModal({ role, open, onOpenChange, templateToEdit
           {/* Sections */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-sm">Sections *</h3>
-              <Button size="sm" variant="outline" onClick={handleAddSection}><Plus className="h-4 w-4 mr-2" />Add Section</Button>
+              <h3 className="text-sm font-semibold">Sections *</h3>
+              <Button size="sm" variant="outline" onClick={handleAddSection}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Section
+              </Button>
             </div>
             {sections.map((sec, i) => (
               <SectionCard
@@ -422,19 +598,27 @@ export default function TemplateModal({ role, open, onOpenChange, templateToEdit
                 availableTopics={isAdmin ? qbTopics : undefined}
                 availableTagOptions={isAdmin ? qbTags : undefined}
                 showSubjectPicker={isAdmin && subjectMode === "section_wise"}
-                courseSubjects={isAdmin ? allSubjects.filter(s => s.courseId === courseId) : undefined}
+                courseSubjects={
+                  isAdmin ? allSubjects.filter((s) => s.courseId === courseId) : undefined
+                }
                 // Educator gets their accessible subjects
                 availableSubjects={!isAdmin ? accessibleSubjects : undefined}
-                onEdit={payload => handleSectionEdit(i, payload)}
+                onEdit={(payload) => handleSectionEdit(i, payload)}
                 onRemove={() => handleRemoveSection(i)}
               />
             ))}
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
             <Button className="gradient-bg text-white" onClick={handleSave} disabled={loading}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
               Save Template
             </Button>
           </div>

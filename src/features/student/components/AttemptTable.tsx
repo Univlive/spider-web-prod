@@ -1,14 +1,7 @@
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { Eye, Trophy, Clock, CheckCircle, Loader2, AlertCircle } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@shared/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/ui/table";
 import { Badge } from "@shared/ui/badge";
 import { Button } from "@shared/ui/button";
 import { cn } from "@shared/lib/utils";
@@ -46,7 +39,7 @@ export function AttemptTable({ attempts, showTest = true, compact = false }: Att
   };
 
   return (
-    <div className="rounded-xl border border-border overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-border">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">
@@ -68,7 +61,7 @@ export function AttemptTable({ attempts, showTest = true, compact = false }: Att
             return (
               <TableRow key={attempt.id} className="hover:bg-muted/30">
                 {showTest && (
-                  <TableCell className="font-medium max-w-[200px]">
+                  <TableCell className="max-w-[200px] font-medium">
                     <div className="truncate">{attempt.testTitle}</div>
                     <div className="text-xs text-muted-foreground">{attempt.subject}</div>
                   </TableCell>
@@ -90,11 +83,16 @@ export function AttemptTable({ attempts, showTest = true, compact = false }: Att
                 </TableCell>
                 <TableCell className="text-center">
                   {attempt.status === "completed" ? (
-                    <span className={cn(
-                      "font-medium",
-                      attempt.accuracy >= 80 ? "text-green-600" :
-                      attempt.accuracy >= 60 ? "text-yellow-600" : "text-red-500"
-                    )}>
+                    <span
+                      className={cn(
+                        "font-medium",
+                        attempt.accuracy >= 80
+                          ? "text-green-600"
+                          : attempt.accuracy >= 60
+                            ? "text-yellow-600"
+                            : "text-red-500"
+                      )}
+                    >
                       {attempt.accuracy}%
                     </span>
                   ) : (
@@ -117,12 +115,16 @@ export function AttemptTable({ attempts, showTest = true, compact = false }: Att
                   <TableCell className="text-center">
                     {attempt.status === "completed" && attempt.rank > 0 ? (
                       <div className="flex items-center justify-center gap-1">
-                        <Trophy className={cn(
-                          "h-3 w-3",
-                          attempt.rank <= 3 ? "text-yellow-500" : "text-muted-foreground"
-                        )} />
+                        <Trophy
+                          className={cn(
+                            "h-3 w-3",
+                            attempt.rank <= 3 ? "text-yellow-500" : "text-muted-foreground"
+                          )}
+                        />
                         <span className="font-medium">#{attempt.rank}</span>
-                        <span className="text-xs text-muted-foreground">/{attempt.totalParticipants}</span>
+                        <span className="text-xs text-muted-foreground">
+                          /{attempt.totalParticipants}
+                        </span>
                       </div>
                     ) : (
                       <span className="text-muted-foreground">—</span>
@@ -131,7 +133,12 @@ export function AttemptTable({ attempts, showTest = true, compact = false }: Att
                 )}
                 <TableCell className="text-center">
                   <Badge variant="secondary" className={cn("rounded-full", status.className)}>
-                    <StatusIcon className={cn("h-3 w-3 mr-1", attempt.status === "in-progress" && "animate-spin")} />
+                    <StatusIcon
+                      className={cn(
+                        "mr-1 h-3 w-3",
+                        attempt.status === "in-progress" && "animate-spin"
+                      )}
+                    />
                     {status.label}
                   </Badge>
                 </TableCell>
@@ -139,15 +146,13 @@ export function AttemptTable({ attempts, showTest = true, compact = false }: Att
                   {attempt.status === "completed" ? (
                     <Button size="sm" variant="ghost" className="rounded-lg" asChild>
                       <Link to={`/student/results/${attempt.id}`}>
-                        <Eye className="h-4 w-4 mr-1" />
+                        <Eye className="mr-1 h-4 w-4" />
                         View
                       </Link>
                     </Button>
                   ) : attempt.status === "in-progress" ? (
-                    <Button size="sm" variant="default" className="rounded-lg gradient-bg" asChild>
-                      <Link to={`/student/tests/${attempt.testId}/attempt`}>
-                        Continue
-                      </Link>
+                    <Button size="sm" variant="default" className="gradient-bg rounded-lg" asChild>
+                      <Link to={`/student/tests/${attempt.testId}/attempt`}>Continue</Link>
                     </Button>
                   ) : null}
                 </TableCell>

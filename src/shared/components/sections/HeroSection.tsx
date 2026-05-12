@@ -5,15 +5,15 @@ import { Link } from "react-router-dom";
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden section-padding section-1">
+    <section className="section-padding section-1 relative overflow-hidden">
       {/* Subtle background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-10 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute right-10 top-20 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute bottom-20 left-10 h-96 w-96 rounded-full bg-accent/5 blur-3xl" />
       </div>
 
       <div className="container-main relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           {/* Left - Content */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -44,21 +44,23 @@ export function HeroSection() {
             </motion.div> */}
 
             {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground mb-6 text-balance leading-[1.1]">
+            <h1 className="mb-6 text-balance text-4xl font-extrabold leading-[1.1] text-foreground sm:text-5xl lg:text-6xl">
               Launch Your Own CUET Test Platform in{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-pulse">
+              <span className="animate-pulse bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] bg-clip-text text-transparent">
                 Minutes
               </span>
             </h1>
 
             {/* Subtext */}
-            <p className="text-lg lg:text-xl text-muted-foreground max-w-xl mb-8 leading-relaxed">
-              <strong className="text-foreground">Preparekaro.in</strong> is a CUET test series platform crafted by top academic teams and subject experts, built specifically for coaching centers.
+            <p className="mb-8 max-w-xl text-lg leading-relaxed text-muted-foreground lg:text-xl">
+              <strong className="text-foreground">Preparekaro.in</strong> is a CUET test series
+              platform crafted by top academic teams and subject experts, built specifically for
+              coaching centers.
             </p>
 
             {/* CTA Buttons */}
             <motion.div
-              className="flex flex-wrap gap-4 mb-10"
+              className="mb-10 flex flex-wrap gap-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
@@ -66,10 +68,14 @@ export function HeroSection() {
               <Link to="/signup">
                 <ButtonWithIcon variant="hero" size="xl" className="group">
                   Get Started for Free
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </ButtonWithIcon>
               </Link>
-              <a href="https://calendly.com/info-univlive" target="_blank" rel="noopener noreferrer">
+              <a
+                href="https://calendly.com/info-univlive"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <ButtonWithIcon variant="heroOutline" size="xl">
                   Book a Demo
                 </ButtonWithIcon>
@@ -110,22 +116,22 @@ export function HeroSection() {
             transition={{ duration: 0.8, delay: 0.3 }}
           >
             {/* Decorative elements */}
-            <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-full opacity-20 blur-2xl" />
-            <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-accent to-primary rounded-full opacity-20 blur-2xl" />
-            
-            <div className="relative aspect-video bg-gradient-to-br from-primary/5 to-accent/5 rounded-3xl overflow-hidden border-2 border-border shadow-elevated group">
+            <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br from-primary to-accent opacity-20 blur-2xl" />
+            <div className="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-gradient-to-br from-accent to-primary opacity-20 blur-2xl" />
+
+            <div className="shadow-elevated group relative aspect-video overflow-hidden rounded-3xl border-2 border-border bg-gradient-to-br from-primary/5 to-accent/5">
               <iframe
                 src="https://www.youtube.com/embed/KdVzlfhzDpc"
                 title="Preparekaro.in Demo"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                className="absolute inset-0 w-full h-full rounded-3xl"
+                className="absolute inset-0 h-full w-full rounded-3xl"
               />
-              
+
               {/* Play button overlay hint */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                <div className="w-16 h-16 rounded-full bg-primary/90 flex items-center justify-center shadow-lg">
-                  <Play className="h-6 w-6 text-white ml-1" fill="white" />
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/90 shadow-lg">
+                  <Play className="ml-1 h-6 w-6 text-white" fill="white" />
                 </div>
               </div>
             </div>

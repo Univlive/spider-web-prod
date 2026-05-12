@@ -8,25 +8,9 @@ import { toast } from "sonner";
 
 import { useAuth } from "@app/providers/AuthProvider";
 import { db } from "@shared/lib/firebase";
-import {
-  Timestamp,
-  collection,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  where,
-} from "firebase/firestore";
+import { Timestamp, collection, getDocs, limit, orderBy, query, where } from "firebase/firestore";
 
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from "recharts";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 type AttemptDoc = {
   testTitle?: string;
@@ -101,9 +85,7 @@ export default function AdminAnalytics() {
             orderBy("createdAt", "asc")
           )
         ),
-        getDocs(
-          query(collection(db, "attempts"), orderBy("createdAt", "desc"), limit(8))
-        ),
+        getDocs(query(collection(db, "attempts"), orderBy("createdAt", "desc"), limit(8))),
       ]);
 
       const studentIds = new Set<string>();
@@ -166,24 +148,42 @@ export default function AdminAnalytics() {
   useEffect(() => {
     if (!canView) return;
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canView]);
 
-  if (authLoading) return <div className="text-center py-12 text-muted-foreground">Loading…</div>;
-  if (role !== "ADMIN") return <div className="py-12 text-center text-muted-foreground">Access denied.</div>;
+  if (authLoading) return <div className="py-12 text-center text-muted-foreground">Loading…</div>;
+  if (role !== "ADMIN")
+    return <div className="py-12 text-center text-muted-foreground">Access denied.</div>;
 
   const todayCards = [
-    { title: "Attempts Today", value: attemptsToday, icon: BarChart3, color: "text-orange-500", bg: "bg-orange-500/10" },
-    { title: "Active Students Today", value: activeStudentsToday, icon: GraduationCap, color: "text-rose-500", bg: "bg-rose-500/10" },
-    { title: "Active Educators Today", value: activeEducatorsToday, icon: Users, color: "text-cyan-500", bg: "bg-cyan-500/10" },
+    {
+      title: "Attempts Today",
+      value: attemptsToday,
+      icon: BarChart3,
+      color: "text-orange-500",
+      bg: "bg-orange-500/10",
+    },
+    {
+      title: "Active Students Today",
+      value: activeStudentsToday,
+      icon: GraduationCap,
+      color: "text-rose-500",
+      bg: "bg-rose-500/10",
+    },
+    {
+      title: "Active Educators Today",
+      value: activeEducatorsToday,
+      icon: Users,
+      color: "text-cyan-500",
+      bg: "bg-cyan-500/10",
+    },
   ];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Analytics</h1>
-          <p className="text-muted-foreground mt-1">Platform activity and engagement</p>
+          <h1 className="text-2xl font-bold text-foreground md:text-3xl">Analytics</h1>
+          <p className="mt-1 text-muted-foreground">Platform activity and engagement</p>
         </div>
         <Button variant="outline" className="gap-2 self-start" onClick={loadData}>
           <RefreshCcw className="h-4 w-4" />
@@ -191,21 +191,21 @@ export default function AdminAnalytics() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {todayCards.map((s) => (
           <Card key={s.title} className="border-border/50">
             <CardContent className="p-6">
-              <div className={`w-10 h-10 rounded-xl ${s.bg} flex items-center justify-center mb-4`}>
+              <div className={`h-10 w-10 rounded-xl ${s.bg} mb-4 flex items-center justify-center`}>
                 <s.icon className={`h-5 w-5 ${s.color}`} />
               </div>
               <p className="text-2xl font-bold text-foreground">{loading ? "—" : s.value}</p>
-              <p className="text-sm text-muted-foreground mt-1">{s.title}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{s.title}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card className="border-border/50">
           <CardHeader>
             <CardTitle className="text-lg">Attempts — Last 7 Days</CardTitle>
@@ -213,7 +213,7 @@ export default function AdminAnalytics() {
           <CardContent>
             <div className="h-64">
               {attemptsChart.length === 0 ? (
-                <div className="h-full rounded-xl border border-dashed border-border flex items-center justify-center text-muted-foreground">
+                <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-border text-muted-foreground">
                   No data yet.
                 </div>
               ) : (
@@ -237,14 +237,14 @@ export default function AdminAnalytics() {
           </CardHeader>
           <CardContent>
             {recentActivity.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-border p-6 text-muted-foreground text-sm">
+              <div className="rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
                 No recent activity.
               </div>
             ) : (
               <div className="space-y-3">
                 {recentActivity.map((item) => (
                   <div key={item.id} className="flex items-start gap-3">
-                    <Badge variant="secondary" className="rounded-full shrink-0 mt-0.5">
+                    <Badge variant="secondary" className="mt-0.5 shrink-0 rounded-full">
                       attempt
                     </Badge>
                     <div>

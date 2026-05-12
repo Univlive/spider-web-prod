@@ -36,21 +36,13 @@ export async function tryHandleImagePaste(
   try {
     const fileName = `pasted_${Date.now()}.png`;
     const up = await uploadToImageKit(blob, fileName, opts.folder || "/question-bank");
-    const tpl =
-      opts.insertTemplate ||
-      ((url) => `\n<img src="${url}" alt="image" />\n`);
+    const tpl = opts.insertTemplate || ((url) => `\n<img src="${url}" alt="image" />\n`);
 
     const el = e.currentTarget;
-    const next = insertAtCursor(
-      opts.currentValue,
-      tpl(up.url),
-      el.selectionStart,
-      el.selectionEnd
-    );
+    const next = insertAtCursor(opts.currentValue, tpl(up.url), el.selectionStart, el.selectionEnd);
     opts.setValue(next);
     return true;
   } finally {
     opts.onUploading?.(false);
   }
 }
-

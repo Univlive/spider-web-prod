@@ -37,7 +37,10 @@ export function getMainDomainPublicRoutes() {
   );
 }
 
-export function getTenantDomainPublicRoutes(tenantHome: React.ReactElement, tenantCourses: React.ReactElement) {
+export function getTenantDomainPublicRoutes(
+  tenantHome: React.ReactElement,
+  tenantCourses: React.ReactElement
+) {
   return (
     <>
       <Route path="/" element={tenantHome} />

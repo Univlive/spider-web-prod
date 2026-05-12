@@ -26,7 +26,7 @@ import {
   Target,
   Users,
   MessageSquare,
-  BookOpen
+  BookOpen,
 } from "lucide-react";
 
 import { useTenant } from "@app/providers/TenantProvider";
@@ -52,7 +52,9 @@ export default function TenantHomeTheme2() {
   const tagline = config.tagline || (tenant as any)?.tagline || "Learn smarter. Score higher.";
   const logoUrl: string | undefined = config.logoUrl;
   const faculty: FacultyItem[] = Array.isArray(config.faculty) ? config.faculty : [];
-  const testimonials: TestimonialItem[] = Array.isArray(config.testimonials) ? config.testimonials : [];
+  const testimonials: TestimonialItem[] = Array.isArray(config.testimonials)
+    ? config.testimonials
+    : [];
   const educatorId = tenant?.educatorId;
   const featuredIds: string[] = Array.isArray(config.featuredTestIds) ? config.featuredTestIds : [];
   const featuredKey = featuredIds.join(",");
@@ -109,8 +111,8 @@ export default function TenantHomeTheme2() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-neutral-400">
-        <Loader2 className="h-5 w-5 animate-spin mr-2 text-orange-500" />
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a] text-neutral-400">
+        <Loader2 className="mr-2 h-5 w-5 animate-spin text-orange-500" />
         Loading...
       </div>
     );
@@ -118,10 +120,10 @@ export default function TenantHomeTheme2() {
 
   if (!tenant) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-white">
-        <div className="text-center px-6">
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a] text-white">
+        <div className="px-6 text-center">
           <h2 className="text-2xl font-bold">Coaching not found</h2>
-          <p className="text-neutral-400 mt-2">
+          <p className="mt-2 text-neutral-400">
             This coaching website does not exist. Check the URL or contact support.
           </p>
         </div>
@@ -150,38 +152,53 @@ export default function TenantHomeTheme2() {
 
   // CUET Subjects hardcoded for the "Our Tests" section
   const cuetSubjects = [
-    "English", "General Test", "Physics", "Chemistry", "Mathematics", 
-    "Biology", "Accountancy", "Economics", "Business Studies", 
-    "History", "Political Science", "Geography"
+    "English",
+    "General Test",
+    "Physics",
+    "Chemistry",
+    "Mathematics",
+    "Biology",
+    "Accountancy",
+    "Economics",
+    "Business Studies",
+    "History",
+    "Political Science",
+    "Geography",
   ];
 
   return (
-    <div id="top" className="min-h-screen bg-[#0a0a0a] text-neutral-200 font-sans selection:bg-orange-500/30 selection:text-white scroll-smooth">
-      
+    <div
+      id="top"
+      className="min-h-screen scroll-smooth bg-[#0a0a0a] font-sans text-neutral-200 selection:bg-orange-500/30 selection:text-white"
+    >
       {/* Background Grid Pattern */}
-      <div className="fixed inset-0 pointer-events-none opacity-[0.03] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:40px_40px]" />
+      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:40px_40px] opacity-[0.03]" />
 
       {/* FLOATING NAVBAR */}
-      <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl">
-        <nav className="rounded-full border border-neutral-800 bg-[#111111]/90 backdrop-blur-md px-4 py-3 flex items-center justify-between shadow-2xl">
+      <div className="fixed left-1/2 top-6 z-50 w-[95%] max-w-5xl -translate-x-1/2">
+        <nav className="flex items-center justify-between rounded-full border border-neutral-800 bg-[#111111]/90 px-4 py-3 shadow-2xl backdrop-blur-md">
           <Link to="/" className="flex items-center gap-2.5 pl-2">
             {logoUrl ? (
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden border border-neutral-700 flex-shrink-0 bg-neutral-900">
-                <img src={logoUrl} alt={`${coachingName} logo`} className="h-full w-full object-contain" />
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-neutral-700 bg-neutral-900">
+                <img
+                  src={logoUrl}
+                  alt={`${coachingName} logo`}
+                  className="h-full w-full object-contain"
+                />
               </div>
             ) : (
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-600 text-white shadow-sm flex-shrink-0">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-orange-600 text-white shadow-sm">
                 <span className="text-sm font-bold">
                   {coachingName?.trim()?.[0]?.toUpperCase() || "U"}
                 </span>
               </div>
             )}
-            <span className="text-base font-semibold text-white hidden sm:block">
+            <span className="hidden text-base font-semibold text-white sm:block">
               {coachingName}
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden items-center gap-8 md:flex">
             {navLinks.map((l) => (
               <a
                 key={l.label}
@@ -195,12 +212,15 @@ export default function TenantHomeTheme2() {
 
           <div className="flex items-center gap-3 pr-1">
             <Link to="/login?role=student">
-              <Button size="sm" className="hidden md:inline-flex rounded-full px-6 bg-orange-600 text-white hover:bg-orange-700 border-none transition-all">
+              <Button
+                size="sm"
+                className="hidden rounded-full border-none bg-orange-600 px-6 text-white transition-all hover:bg-orange-700 md:inline-flex"
+              >
                 Login <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
 
-            <button className="md:hidden text-neutral-300" onClick={() => setMobileOpen((s) => !s)}>
+            <button className="text-neutral-300 md:hidden" onClick={() => setMobileOpen((s) => !s)}>
               {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
@@ -208,7 +228,7 @@ export default function TenantHomeTheme2() {
 
         {/* Mobile Menu */}
         {mobileOpen && (
-          <div className="absolute top-16 left-0 w-full rounded-2xl border border-neutral-800 bg-[#111111]/95 backdrop-blur-xl p-4 md:hidden shadow-2xl flex flex-col gap-2">
+          <div className="absolute left-0 top-16 flex w-full flex-col gap-2 rounded-2xl border border-neutral-800 bg-[#111111]/95 p-4 shadow-2xl backdrop-blur-xl md:hidden">
             {navLinks.map((l) => (
               <a
                 key={l.label}
@@ -220,7 +240,10 @@ export default function TenantHomeTheme2() {
               </a>
             ))}
             <Link to="/login?role=student" onClick={() => setMobileOpen(false)} className="mt-2">
-              <Button size="sm" className="w-full rounded-full bg-orange-600 hover:bg-orange-700 text-white border-none py-5">
+              <Button
+                size="sm"
+                className="w-full rounded-full border-none bg-orange-600 py-5 text-white hover:bg-orange-700"
+              >
                 Login
               </Button>
             </Link>
@@ -229,41 +252,46 @@ export default function TenantHomeTheme2() {
       </div>
 
       {/* HERO SECTION */}
-      <section className="relative pt-40 pb-20 lg:pt-52 lg:pb-32 px-4 overflow-hidden">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-orange-600/10 blur-[120px] rounded-full pointer-events-none" />
-        
-        <div className="container mx-auto max-w-4xl relative text-center">
+      <section className="relative overflow-hidden px-4 pb-20 pt-40 lg:pb-32 lg:pt-52">
+        <div className="pointer-events-none absolute left-1/2 top-1/4 h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-orange-600/10 blur-[120px]" />
+
+        <div className="container relative mx-auto max-w-4xl text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="space-y-6 flex flex-col items-center"
+            className="flex flex-col items-center space-y-6"
           >
-            <div className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-[#151515] px-4 py-1.5 text-xs font-medium text-neutral-300 mb-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse" />
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-[#151515] px-4 py-1.5 text-xs font-medium text-neutral-300">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500" />
               {tagline}
             </div>
 
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[80px] font-bold leading-[1.05] tracking-tight text-white">
+            <h1 className="text-5xl font-bold leading-[1.05] tracking-tight text-white sm:text-6xl md:text-7xl lg:text-[80px]">
               Unlock your potential <br className="hidden sm:block" />
               with <span className="text-orange-500">{coachingName}</span>.
             </h1>
 
-            <p className="max-w-2xl mx-auto text-lg md:text-xl text-neutral-400 mt-6 leading-relaxed">
-              Explore structured test series, expert faculty guidance, and performance insights — all designed to move your score up.
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-neutral-400 md:text-xl">
+              Explore structured test series, expert faculty guidance, and performance insights —
+              all designed to move your score up.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 pt-8 w-full justify-center">
+            <div className="flex w-full flex-col justify-center gap-4 pt-8 sm:flex-row">
               <Link to="/login?role=student">
                 <Button
                   size="lg"
-                  className="w-full sm:w-auto rounded-full bg-orange-600 px-8 py-6 text-base text-white hover:bg-orange-700 border-none transition-transform hover:scale-105"
+                  className="w-full rounded-full border-none bg-orange-600 px-8 py-6 text-base text-white transition-transform hover:scale-105 hover:bg-orange-700 sm:w-auto"
                 >
                   Enroll Today <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
               <a href="#tests">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-8 py-6 text-base border-neutral-700 text-white bg-neutral-900/50 hover:bg-neutral-800 hover:text-white">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full rounded-full border-neutral-700 bg-neutral-900/50 px-8 py-6 text-base text-white hover:bg-neutral-800 hover:text-white sm:w-auto"
+                >
                   Explore Tests
                 </Button>
               </a>
@@ -273,26 +301,28 @@ export default function TenantHomeTheme2() {
       </section>
 
       {/* NEW SECTION: WHAT WE STAND FOR */}
-      <section className="py-16 border-y border-neutral-800/50 bg-[#0f0f0f]">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <div className="text-center mb-12">
-            <h2 className="text-sm font-bold tracking-widest text-neutral-500 uppercase">What We Stand For</h2>
+      <section className="border-y border-neutral-800/50 bg-[#0f0f0f] py-16">
+        <div className="container mx-auto max-w-6xl px-4">
+          <div className="mb-12 text-center">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-neutral-500">
+              What We Stand For
+            </h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[#141414] border border-neutral-800/60 hover:border-orange-500/30 transition-colors">
-              <Target className="h-8 w-8 text-orange-500 mb-4" />
+          <div className="grid grid-cols-2 gap-6 text-center md:grid-cols-4">
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-neutral-800/60 bg-[#141414] p-6 transition-colors hover:border-orange-500/30">
+              <Target className="mb-4 h-8 w-8 text-orange-500" />
               <h3 className="font-semibold text-white">Proven Results</h3>
             </div>
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[#141414] border border-neutral-800/60 hover:border-orange-500/30 transition-colors">
-              <Users className="h-8 w-8 text-orange-500 mb-4" />
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-neutral-800/60 bg-[#141414] p-6 transition-colors hover:border-orange-500/30">
+              <Users className="mb-4 h-8 w-8 text-orange-500" />
               <h3 className="font-semibold text-white">Expert Faculty</h3>
             </div>
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[#141414] border border-neutral-800/60 hover:border-orange-500/30 transition-colors">
-              <BookOpen className="h-8 w-8 text-orange-500 mb-4" />
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-neutral-800/60 bg-[#141414] p-6 transition-colors hover:border-orange-500/30">
+              <BookOpen className="mb-4 h-8 w-8 text-orange-500" />
               <h3 className="font-semibold text-white">Personalised Mentorship</h3>
             </div>
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[#141414] border border-neutral-800/60 hover:border-orange-500/30 transition-colors">
-              <MessageSquare className="h-8 w-8 text-orange-500 mb-4" />
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-neutral-800/60 bg-[#141414] p-6 transition-colors hover:border-orange-500/30">
+              <MessageSquare className="mb-4 h-8 w-8 text-orange-500" />
               <h3 className="font-semibold text-white">1:1 Doubt Support</h3>
             </div>
           </div>
@@ -300,48 +330,58 @@ export default function TenantHomeTheme2() {
       </section>
 
       {/* NEW FEATURES SECTION */}
-      <section id="features" className="py-24 relative bg-[#0a0a0a]">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
+      <section id="features" className="relative bg-[#0a0a0a] py-24">
+        <div className="container mx-auto max-w-6xl px-4">
+          <div className="mb-16 text-center">
+            <h2 className="mb-6 text-3xl font-bold text-white md:text-5xl">
               Designed for <span className="text-orange-500">Maximum Impact</span>
             </h2>
-            <p className="text-lg text-neutral-400 max-w-2xl mx-auto">
+            <p className="mx-auto max-w-2xl text-lg text-neutral-400">
               Everything you need to master your exams, built right into the platform.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="p-8 rounded-3xl border border-neutral-800 bg-[#121212] hover:bg-[#161616] transition-colors relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+          <div className="grid gap-6 md:grid-cols-3">
+            <div className="group relative overflow-hidden rounded-3xl border border-neutral-800 bg-[#121212] p-8 transition-colors hover:bg-[#161616]">
+              <div className="absolute right-0 top-0 p-6 opacity-10 transition-opacity group-hover:opacity-20">
                 <MonitorPlay className="h-24 w-24 text-orange-500" />
               </div>
-              <MonitorPlay className="h-10 w-10 text-orange-500 mb-6 relative z-10" />
-              <h3 className="text-2xl font-bold text-white mb-4 relative z-10">Real Exam–Like Test Experience</h3>
-              <p className="text-neutral-400 leading-relaxed relative z-10">
-                Feels exactly like the actual CUET exam with an authentic interface, realistic timer, and seamless navigation. Practice in the exact environment you'll face on test day.
+              <MonitorPlay className="relative z-10 mb-6 h-10 w-10 text-orange-500" />
+              <h3 className="relative z-10 mb-4 text-2xl font-bold text-white">
+                Real Exam–Like Test Experience
+              </h3>
+              <p className="relative z-10 leading-relaxed text-neutral-400">
+                Feels exactly like the actual CUET exam with an authentic interface, realistic
+                timer, and seamless navigation. Practice in the exact environment you'll face on
+                test day.
               </p>
             </div>
 
-            <div className="p-8 rounded-3xl border border-neutral-800 bg-[#121212] hover:bg-[#161616] transition-colors relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+            <div className="group relative overflow-hidden rounded-3xl border border-neutral-800 bg-[#121212] p-8 transition-colors hover:bg-[#161616]">
+              <div className="absolute right-0 top-0 p-6 opacity-10 transition-opacity group-hover:opacity-20">
                 <BrainCircuit className="h-24 w-24 text-orange-500" />
               </div>
-              <BrainCircuit className="h-10 w-10 text-orange-500 mb-6 relative z-10" />
-              <h3 className="text-2xl font-bold text-white mb-4 relative z-10">AI-Powered Advanced Analytics</h3>
-              <p className="text-neutral-400 leading-relaxed relative z-10">
-                Question-wise accuracy, time taken per question/section, and clear identification of strengths and weak areas. Let data drive your study plan.
+              <BrainCircuit className="relative z-10 mb-6 h-10 w-10 text-orange-500" />
+              <h3 className="relative z-10 mb-4 text-2xl font-bold text-white">
+                AI-Powered Advanced Analytics
+              </h3>
+              <p className="relative z-10 leading-relaxed text-neutral-400">
+                Question-wise accuracy, time taken per question/section, and clear identification of
+                strengths and weak areas. Let data drive your study plan.
               </p>
             </div>
 
-            <div className="p-8 rounded-3xl border border-neutral-800 bg-[#121212] hover:bg-[#161616] transition-colors relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+            <div className="group relative overflow-hidden rounded-3xl border border-neutral-800 bg-[#121212] p-8 transition-colors hover:bg-[#161616]">
+              <div className="absolute right-0 top-0 p-6 opacity-10 transition-opacity group-hover:opacity-20">
                 <Clock className="h-24 w-24 text-orange-500" />
               </div>
-              <Clock className="h-10 w-10 text-orange-500 mb-6 relative z-10" />
-              <h3 className="text-2xl font-bold text-white mb-4 relative z-10">Time & Accuracy Insights</h3>
-              <p className="text-neutral-400 leading-relaxed relative z-10">
-                Pinpoint exactly where you lose time. Master your pacing, eliminate guesswork, and optimize your test-taking strategy to maximize your final score.
+              <Clock className="relative z-10 mb-6 h-10 w-10 text-orange-500" />
+              <h3 className="relative z-10 mb-4 text-2xl font-bold text-white">
+                Time & Accuracy Insights
+              </h3>
+              <p className="relative z-10 leading-relaxed text-neutral-400">
+                Pinpoint exactly where you lose time. Master your pacing, eliminate guesswork, and
+                optimize your test-taking strategy to maximize your final score.
               </p>
             </div>
           </div>
@@ -349,55 +389,65 @@ export default function TenantHomeTheme2() {
       </section>
 
       {/* EXAM CENTER / TEST SERIES */}
-      <section id="tests" className="py-24 bg-[#0c0c0c] border-t border-neutral-800/50 relative">
-        <div className="container mx-auto px-4 max-w-6xl relative">
-          
+      <section id="tests" className="relative border-t border-neutral-800/50 bg-[#0c0c0c] py-24">
+        <div className="container relative mx-auto max-w-6xl px-4">
           {/* Featured Tests Sub-section */}
           <div className="mb-24">
-            <div className="flex items-center justify-between mb-10">
+            <div className="mb-10 flex items-center justify-between">
               <div>
-                <h2 className="text-3xl font-bold text-white mb-2">Featured Series</h2>
+                <h2 className="mb-2 text-3xl font-bold text-white">Featured Series</h2>
                 <p className="text-neutral-400">Hand-picked by our experts.</p>
               </div>
             </div>
 
             {loadingFeatured ? (
-              <div className="py-20 flex justify-center text-neutral-500">
-                <Loader2 className="h-6 w-6 animate-spin mr-3 text-orange-500" />
+              <div className="flex justify-center py-20 text-neutral-500">
+                <Loader2 className="mr-3 h-6 w-6 animate-spin text-orange-500" />
                 Loading curriculum...
               </div>
             ) : featured.length === 0 ? (
-              <div className="py-12 text-center text-neutral-500 border border-neutral-800 rounded-2xl bg-[#111]">
+              <div className="rounded-2xl border border-neutral-800 bg-[#111] py-12 text-center text-neutral-500">
                 No featured series available right now.
               </div>
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                 {featured.slice(0, 4).map((t) => (
-                  <div key={t.id} className="group flex flex-col rounded-2xl border border-neutral-800 bg-[#141414] overflow-hidden hover:border-neutral-600 transition-all">
-                    <div className="aspect-video bg-[#1a1a1a] relative overflow-hidden">
+                  <div
+                    key={t.id}
+                    className="group flex flex-col overflow-hidden rounded-2xl border border-neutral-800 bg-[#141414] transition-all hover:border-neutral-600"
+                  >
+                    <div className="relative aspect-video overflow-hidden bg-[#1a1a1a]">
                       {t.coverImage ? (
-                        <img src={t.coverImage} alt={t.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <img
+                          src={t.coverImage}
+                          alt={t.title}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-neutral-600">
+                        <div className="flex h-full w-full items-center justify-center text-neutral-600">
                           <FileText className="h-10 w-10 opacity-40" />
                         </div>
                       )}
                       {t.subject && (
-                        <div className="absolute top-3 left-3">
-                          <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-black/80 backdrop-blur-md text-white rounded border border-white/10">
+                        <div className="absolute left-3 top-3">
+                          <span className="rounded border border-white/10 bg-black/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
                             {t.subject}
                           </span>
                         </div>
                       )}
                     </div>
-                    <div className="p-5 flex flex-col flex-grow">
-                      <h3 className="text-lg font-bold text-white mb-2 line-clamp-2">{t.title}</h3>
-                      <div className="flex items-center justify-between mt-auto pt-4">
+                    <div className="flex flex-grow flex-col p-5">
+                      <h3 className="mb-2 line-clamp-2 text-lg font-bold text-white">{t.title}</h3>
+                      <div className="mt-auto flex items-center justify-between pt-4">
                         <span className="text-base font-bold text-orange-500">
                           {t.price === "Included" || t.price == 0 ? "Free" : `$${t.price}`}
                         </span>
                         <Link to="/login?role=student">
-                          <Button size="sm" variant="ghost" className="text-white hover:text-orange-500 hover:bg-orange-500/10 p-0 h-auto">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-auto p-0 text-white hover:bg-orange-500/10 hover:text-orange-500"
+                          >
                             View <ArrowRight className="ml-1 h-4 w-4" />
                           </Button>
                         </Link>
@@ -411,28 +461,41 @@ export default function TenantHomeTheme2() {
 
           {/* New Section: Our Tests (Subject-wise) */}
           <div>
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Our Tests</h2>
-              <p className="text-lg text-neutral-400">Subject-wise mock tests designed specifically for CUET.</p>
+            <div className="mb-12 text-center">
+              <h2 className="mb-4 text-3xl font-bold text-white md:text-5xl">Our Tests</h2>
+              <p className="text-lg text-neutral-400">
+                Subject-wise mock tests designed specifically for CUET.
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {cuetSubjects.map((subject, idx) => (
-                <div key={idx} className="p-5 rounded-2xl border border-neutral-800 bg-[#121212] hover:bg-[#181818] transition-all group flex flex-col justify-between min-h-[160px]">
+                <div
+                  key={idx}
+                  className="group flex min-h-[160px] flex-col justify-between rounded-2xl border border-neutral-800 bg-[#121212] p-5 transition-all hover:bg-[#181818]"
+                >
                   <div>
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="h-10 w-10 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500 border border-orange-500/20">
+                    <div className="mb-3 flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-orange-500/20 bg-orange-500/10 text-orange-500">
                         <BookOpen className="h-5 w-5" />
                       </div>
-                      <Badge variant="outline" className="border-neutral-700 text-neutral-400 font-normal">CUET</Badge>
+                      <Badge
+                        variant="outline"
+                        className="border-neutral-700 font-normal text-neutral-400"
+                      >
+                        CUET
+                      </Badge>
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-1">{subject}</h3>
+                    <h3 className="mb-1 text-xl font-bold text-white">{subject}</h3>
                     <p className="text-sm text-neutral-500">Chapter-wise & Full Mocks</p>
                   </div>
-                  
-                  <div className="mt-4 pt-4 border-t border-neutral-800/60 flex justify-end opacity-80 group-hover:opacity-100 transition-opacity">
+
+                  <div className="mt-4 flex justify-end border-t border-neutral-800/60 pt-4 opacity-80 transition-opacity group-hover:opacity-100">
                     <Link to="/login?role=student" className="w-full">
-                      <Button size="sm" className="w-full rounded-xl bg-white/5 hover:bg-orange-600 text-white border-none transition-colors">
+                      <Button
+                        size="sm"
+                        className="w-full rounded-xl border-none bg-white/5 text-white transition-colors hover:bg-orange-600"
+                      >
                         Get Started
                       </Button>
                     </Link>
@@ -441,28 +504,32 @@ export default function TenantHomeTheme2() {
               ))}
             </div>
           </div>
-
         </div>
       </section>
 
       {/* REVIEWS / TESTIMONIALS */}
-      <section id="reviews" className="py-24 border-t border-neutral-800/50">
-        <div className="container mx-auto px-4 max-w-6xl">
-           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
+      <section id="reviews" className="border-t border-neutral-800/50 py-24">
+        <div className="container mx-auto max-w-6xl px-4">
+          <div className="mb-16 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-white md:text-5xl">
               Happy students sharing experiences :
             </h2>
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">
             {(testimonials.length ? testimonials : []).slice(0, 6).map((t, idx) => (
-              <div key={idx} className="p-8 rounded-3xl border border-neutral-800 bg-[#121212] relative">
-                <Quote className="absolute top-6 right-6 h-8 w-8 text-orange-500/20" />
-                
-                <div className="flex items-center gap-4 mb-6">
+              <div
+                key={idx}
+                className="relative rounded-3xl border border-neutral-800 bg-[#121212] p-8"
+              >
+                <Quote className="absolute right-6 top-6 h-8 w-8 text-orange-500/20" />
+
+                <div className="mb-6 flex items-center gap-4">
                   <Avatar className="h-12 w-12 border border-neutral-700">
                     <AvatarImage src={t.avatar} />
-                    <AvatarFallback className="bg-neutral-800 text-neutral-300">{initials(t.name)}</AvatarFallback>
+                    <AvatarFallback className="bg-neutral-800 text-neutral-300">
+                      {initials(t.name)}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
                     <p className="font-bold text-white">{t.name}</p>
@@ -470,21 +537,19 @@ export default function TenantHomeTheme2() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 mb-4">
+                <div className="mb-4 flex items-center gap-1">
                   {Array.from({ length: Math.max(1, Math.min(5, t.rating || 5)) }).map((_, i) => (
                     <Star key={i} className="h-4 w-4 fill-orange-500 text-orange-500" />
                   ))}
                 </div>
 
-                <p className="text-neutral-300 text-sm leading-relaxed italic">
-                  "{t.text}"
-                </p>
+                <p className="text-sm italic leading-relaxed text-neutral-300">"{t.text}"</p>
               </div>
             ))}
           </div>
-          
+
           {(!testimonials || testimonials.length === 0) && (
-            <div className="text-sm text-neutral-500 text-center border border-neutral-800 rounded-3xl bg-[#111] p-10">
+            <div className="rounded-3xl border border-neutral-800 bg-[#111] p-10 text-center text-sm text-neutral-500">
               No reviews available yet.
             </div>
           )}
@@ -492,30 +557,31 @@ export default function TenantHomeTheme2() {
       </section>
 
       {/* NEW CONTACT SECTION */}
-      <section id="contact" className="py-32 bg-[#0c0c0c] border-t border-neutral-800/50 relative overflow-hidden">
+      <section
+        id="contact"
+        className="relative overflow-hidden border-t border-neutral-800/50 bg-[#0c0c0c] py-32"
+      >
         {/* Decorative background blurs */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-600/5 blur-[150px] pointer-events-none rounded-full" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-neutral-600/5 blur-[150px] pointer-events-none rounded-full" />
-        
-        <div className="container mx-auto px-4 max-w-4xl relative text-center">
-          <Badge className="bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 border-orange-500/20 px-4 py-1.5 mb-8 rounded-full">
+        <div className="pointer-events-none absolute right-0 top-0 h-[500px] w-[500px] rounded-full bg-orange-600/5 blur-[150px]" />
+        <div className="pointer-events-none absolute bottom-0 left-0 h-[500px] w-[500px] rounded-full bg-neutral-600/5 blur-[150px]" />
+
+        <div className="container relative mx-auto max-w-4xl px-4 text-center">
+          <Badge className="mb-8 rounded-full border-orange-500/20 bg-orange-500/10 px-4 py-1.5 text-orange-500 hover:bg-orange-500/20">
             Get In Touch
           </Badge>
-          <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">
-            Let's connect.
-          </h2>
-          <p className="text-xl text-neutral-400 mb-12 max-w-2xl mx-auto">
-            Have questions about the courses or need guidance? Reach out to us directly or follow us on our social channels.
+          <h2 className="mb-6 text-4xl font-bold text-white md:text-6xl">Let's connect.</h2>
+          <p className="mx-auto mb-12 max-w-2xl text-xl text-neutral-400">
+            Have questions about the courses or need guidance? Reach out to us directly or follow us
+            on our social channels.
           </p>
 
-          <div className="flex flex-col items-center justify-center gap-8 bg-[#141414]/50 border border-neutral-800/60 p-12 rounded-[3rem] backdrop-blur-sm">
-            
+          <div className="flex flex-col items-center justify-center gap-8 rounded-[3rem] border border-neutral-800/60 bg-[#141414]/50 p-12 backdrop-blur-sm">
             {tenant.contact?.email && (
-              <a 
-                href={`mailto:${tenant.contact.email}`} 
-                className="group flex flex-col sm:flex-row items-center gap-4 text-2xl md:text-4xl font-semibold text-white hover:text-orange-500 transition-colors"
+              <a
+                href={`mailto:${tenant.contact.email}`}
+                className="group flex flex-col items-center gap-4 text-2xl font-semibold text-white transition-colors hover:text-orange-500 sm:flex-row md:text-4xl"
               >
-                <div className="h-16 w-16 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center group-hover:border-orange-500/50 transition-colors">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full border border-neutral-800 bg-neutral-900 transition-colors group-hover:border-orange-500/50">
                   <Mail className="h-8 w-8 text-neutral-400 group-hover:text-orange-500" />
                 </div>
                 {tenant.contact.email}
@@ -528,19 +594,19 @@ export default function TenantHomeTheme2() {
               </div>
             )}
 
-            <div className="w-24 h-[1px] bg-neutral-800 my-4" />
+            <div className="my-4 h-[1px] w-24 bg-neutral-800" />
 
             <div className="flex flex-wrap justify-center gap-4">
               {Object.entries(socials).map(([k, v]) => {
                 const Icon = socialIconMap[k];
                 if (!Icon) return null;
                 return (
-                  <a 
-                    key={k} 
-                    href={v} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="flex items-center justify-center h-14 w-14 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:bg-orange-600 hover:border-orange-600 transition-all hover:scale-110 shadow-lg" 
+                  <a
+                    key={k}
+                    href={v}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex h-14 w-14 items-center justify-center rounded-full border border-neutral-800 bg-neutral-900 text-neutral-400 shadow-lg transition-all hover:scale-110 hover:border-orange-600 hover:bg-orange-600 hover:text-white"
                     title={k}
                   >
                     <Icon className="h-6 w-6" />
@@ -548,7 +614,7 @@ export default function TenantHomeTheme2() {
                 );
               })}
               {Object.keys(socials).length === 0 && (
-                <span className="text-neutral-500 text-sm">No social links configured.</span>
+                <span className="text-sm text-neutral-500">No social links configured.</span>
               )}
             </div>
           </div>
@@ -556,22 +622,26 @@ export default function TenantHomeTheme2() {
       </section>
 
       {/* NEW ELEGANT BOTTOM CTA CARD */}
-      <section className="py-24 relative px-4 border-t border-neutral-800/50">
+      <section className="relative border-t border-neutral-800/50 px-4 py-24">
         <div className="container mx-auto max-w-5xl">
-          <div className="relative rounded-[3rem] border border-neutral-700/50 bg-gradient-to-br from-[#1c1c1c] via-[#111111] to-[#0a0a0a] overflow-hidden p-10 md:p-20 text-center shadow-[0_0_80px_rgba(234,88,12,0.05)] group">
-            
+          <div className="group relative overflow-hidden rounded-[3rem] border border-neutral-700/50 bg-gradient-to-br from-[#1c1c1c] via-[#111111] to-[#0a0a0a] p-10 text-center shadow-[0_0_80px_rgba(234,88,12,0.05)] md:p-20">
             {/* Inner subtle glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-orange-600/10 blur-[100px] pointer-events-none rounded-full transition-opacity group-hover:opacity-100 opacity-70" />
-            
+            <div className="pointer-events-none absolute left-1/2 top-1/2 h-3/4 w-3/4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-600/10 opacity-70 blur-[100px] transition-opacity group-hover:opacity-100" />
+
             <div className="relative z-10 flex flex-col items-center">
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-                Ready to Begin Your Journey <br/> at <span className="text-orange-500">{coachingName}</span>?
+              <h2 className="mb-6 text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
+                Ready to Begin Your Journey <br /> at{" "}
+                <span className="text-orange-500">{coachingName}</span>?
               </h2>
-              <p className="text-lg md:text-xl text-neutral-400 mb-10 max-w-2xl">
-                Join thousands of students who have already transformed their preparation strategy. Get instant access to our premium content.
+              <p className="mb-10 max-w-2xl text-lg text-neutral-400 md:text-xl">
+                Join thousands of students who have already transformed their preparation strategy.
+                Get instant access to our premium content.
               </p>
               <Link to="/login?role=student">
-                <Button size="lg" className="rounded-full bg-orange-600 hover:bg-orange-500 text-white px-12 py-8 text-xl border-none shadow-[0_0_40px_rgba(234,88,12,0.3)] transition-all hover:scale-105 font-semibold">
+                <Button
+                  size="lg"
+                  className="rounded-full border-none bg-orange-600 px-12 py-8 text-xl font-semibold text-white shadow-[0_0_40px_rgba(234,88,12,0.3)] transition-all hover:scale-105 hover:bg-orange-500"
+                >
                   Get Started <ArrowRight className="ml-3 h-6 w-6" />
                 </Button>
               </Link>
@@ -581,54 +651,77 @@ export default function TenantHomeTheme2() {
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-neutral-800 bg-[#050505] pt-16 pb-8">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <div className="grid gap-12 md:grid-cols-4 mb-16">
+      <footer className="border-t border-neutral-800 bg-[#050505] pb-8 pt-16">
+        <div className="container mx-auto max-w-6xl px-4">
+          <div className="mb-16 grid gap-12 md:grid-cols-4">
             <div className="md:col-span-1">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="mb-4 flex items-center gap-2">
                 {logoUrl ? (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden border border-neutral-700 bg-neutral-900 flex-shrink-0">
-                    <img src={logoUrl} alt={`${coachingName} logo`} className="h-full w-full object-contain" />
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-neutral-700 bg-neutral-900">
+                    <img
+                      src={logoUrl}
+                      alt={`${coachingName} logo`}
+                      className="h-full w-full object-contain"
+                    />
                   </div>
                 ) : (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-600 text-white flex-shrink-0">
-                    <span className="text-sm font-bold">{coachingName?.trim()?.[0]?.toUpperCase() || "U"}</span>
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-orange-600 text-white">
+                    <span className="text-sm font-bold">
+                      {coachingName?.trim()?.[0]?.toUpperCase() || "U"}
+                    </span>
                   </div>
                 )}
-                <div className="font-bold text-xl text-white">{coachingName}</div>
+                <div className="text-xl font-bold text-white">{coachingName}</div>
               </div>
-              <p className="text-sm text-neutral-500 mb-6 max-w-xs">{tagline}</p>
+              <p className="mb-6 max-w-xs text-sm text-neutral-500">{tagline}</p>
             </div>
 
             <div>
-              <div className="font-semibold text-white mb-6">Navigation</div>
+              <div className="mb-6 font-semibold text-white">Navigation</div>
               <div className="space-y-4 text-sm text-neutral-400">
                 {navLinks.map((l) => (
-                  <a key={l.label} className="block hover:text-orange-500 transition-colors" href={l.href}>{l.label}</a>
+                  <a
+                    key={l.label}
+                    className="block transition-colors hover:text-orange-500"
+                    href={l.href}
+                  >
+                    {l.label}
+                  </a>
                 ))}
               </div>
             </div>
 
             <div>
-              <div className="font-semibold text-white mb-6">Legal</div>
+              <div className="mb-6 font-semibold text-white">Legal</div>
               <div className="space-y-4 text-sm text-neutral-400">
-                  <Link to="/terms-of-use" className="block hover:text-white transition-colors">Terms of Service</Link>
-                  <Link to="/privacy-policy" className="block hover:text-white transition-colors">Privacy Policy</Link>
-                <a href="#" className="block hover:text-white transition-colors">Refund Policy</a>
+                <Link to="/terms-of-use" className="block transition-colors hover:text-white">
+                  Terms of Service
+                </Link>
+                <Link to="/privacy-policy" className="block transition-colors hover:text-white">
+                  Privacy Policy
+                </Link>
+                <a href="#" className="block transition-colors hover:text-white">
+                  Refund Policy
+                </a>
               </div>
             </div>
 
             <div>
-              <div className="font-semibold text-white mb-6">Powered By</div>
-              <div className="text-sm text-neutral-400 leading-relaxed">
-                PREPAREKARO.IN helps educators publish test series, onboard students, and track progress at scale.
+              <div className="mb-6 font-semibold text-white">Powered By</div>
+              <div className="text-sm leading-relaxed text-neutral-400">
+                PREPAREKARO.IN helps educators publish test series, onboard students, and track
+                progress at scale.
               </div>
             </div>
           </div>
 
-          <div className="border-t border-neutral-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-neutral-600">
-            <span>© {new Date().getFullYear()} {coachingName}. All rights reserved.</span>
-            <span>Built with <span className="text-neutral-500 font-medium">PREPAREKARO.IN</span></span>
+          <div className="flex flex-col items-center justify-between gap-4 border-t border-neutral-800 pt-8 text-sm text-neutral-600 md:flex-row">
+            <span>
+              © {new Date().getFullYear()} {coachingName}. All rights reserved.
+            </span>
+            <span>
+              Built with <span className="font-medium text-neutral-500">PREPAREKARO.IN</span>
+            </span>
           </div>
         </div>
       </footer>

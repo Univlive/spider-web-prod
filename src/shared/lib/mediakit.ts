@@ -46,9 +46,7 @@ export async function uploadToMediaKit(
   const a = await getMediaKitAuth();
 
   const fileName =
-    opts?.fileName ||
-    (file instanceof File && file.name) ||
-    `upload_${Date.now()}.png`;
+    opts?.fileName || (file instanceof File && file.name) || `upload_${Date.now()}.png`;
 
   const form = new FormData();
   form.append("file", file);
@@ -77,4 +75,3 @@ export async function uploadToMediaKit(
     thumbnailUrl: data?.thumbnailUrl,
   };
 }
-

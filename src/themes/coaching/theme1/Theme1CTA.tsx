@@ -19,31 +19,34 @@ export default function Theme1CTA() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary via-primary/90 to-accent p-8 md:p-12 text-white"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary via-primary/90 to-accent p-8 text-white md:p-12"
         >
           {/* Background Decorations */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+            <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
           </div>
 
-          <div className="relative grid md:grid-cols-2 gap-8 items-center">
+          <div className="relative grid items-center gap-8 md:grid-cols-2">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Ready to Crack CUET 2025?
-              </h2>
-              <p className="text-white/80 text-lg mb-6">
-                Join {stats[0]?.value || "50,000+"} students who are already preparing with {tenant.coachingName}.
-                Start your journey to your dream college today!
+              <h2 className="mb-4 text-3xl font-bold md:text-4xl">Ready to Crack CUET 2025?</h2>
+              <p className="mb-6 text-lg text-white/80">
+                Join {stats[0]?.value || "50,000+"} students who are already preparing with{" "}
+                {tenant.coachingName}. Start your journey to your dream college today!
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col gap-4 sm:flex-row">
                 <Button size="lg" variant="secondary" className="rounded-full" asChild>
                   <Link to={`/courses`}>
                     Browse Courses
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" className="rounded-full bg-white/10 border-white/30 text-white hover:bg-white/20" asChild>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full border-white/30 bg-white/10 text-white hover:bg-white/20"
+                  asChild
+                >
                   <a href={`tel:${phone}`}>
                     <Phone className="mr-2 h-5 w-5" />
                     Call Now
@@ -55,8 +58,8 @@ export default function Theme1CTA() {
             {stats.length > 0 && (
               <div className="grid grid-cols-2 gap-4">
                 {stats.slice(0, 4).map((stat, i) => (
-                  <div key={i} className="bg-white/10 backdrop-blur rounded-2xl p-6 text-center">
-                    <div className="text-3xl font-bold mb-1">{stat.value}</div>
+                  <div key={i} className="rounded-2xl bg-white/10 p-6 text-center backdrop-blur">
+                    <div className="mb-1 text-3xl font-bold">{stat.value}</div>
                     <p className="text-sm text-white/70">{stat.label}</p>
                   </div>
                 ))}
@@ -68,4 +71,3 @@ export default function Theme1CTA() {
     </section>
   );
 }
-

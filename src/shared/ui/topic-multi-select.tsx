@@ -51,10 +51,13 @@ export function TopicMultiSelect({
         setAllTopics(Array.from(topicSet).sort());
       })
       .catch(console.error)
-      .finally(() => { if (!cancelled) setLoadingTopics(false); });
-    return () => { cancelled = true; };
+      .finally(() => {
+        if (!cancelled) setLoadingTopics(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [externalTopics]);
-
 
   // Close on outside click
   useEffect(() => {
@@ -69,9 +72,7 @@ export function TopicMultiSelect({
 
   const filteredTopics = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return q
-      ? allTopics.filter((t) => t.toLowerCase().includes(q))
-      : allTopics;
+    return q ? allTopics.filter((t) => t.toLowerCase().includes(q)) : allTopics;
   }, [allTopics, search]);
 
   const toggleTopic = (topic: string) => {
@@ -91,8 +92,8 @@ export function TopicMultiSelect({
       {/* Trigger */}
       <div
         className={cn(
-          "flex flex-wrap items-center gap-1.5 p-2 min-h-[2.5rem] border rounded-md bg-background cursor-pointer transition-colors",
-          open ? "ring-1 ring-ring border-primary" : "hover:border-muted-foreground/40"
+          "flex min-h-[2.5rem] cursor-pointer flex-wrap items-center gap-1.5 rounded-md border bg-background p-2 transition-colors",
+          open ? "border-primary ring-1 ring-ring" : "hover:border-muted-foreground/40"
         )}
         onClick={() => {
           setOpen(!open);
@@ -100,15 +101,13 @@ export function TopicMultiSelect({
         }}
       >
         {selectedTopics.length === 0 && (
-          <span className="text-sm text-muted-foreground px-1 flex-1">
-            {placeholder}
-          </span>
+          <span className="flex-1 px-1 text-sm text-muted-foreground">{placeholder}</span>
         )}
         {selectedTopics.map((topic) => (
           <Badge
             key={topic}
             variant="secondary"
-            className="flex items-center gap-1 px-2 py-0.5 text-sm font-medium rounded-md"
+            className="flex items-center gap-1 rounded-md px-2 py-0.5 text-sm font-medium"
           >
             {topic}
             <X
@@ -122,7 +121,7 @@ export function TopicMultiSelect({
         ))}
         <ChevronDown
           className={cn(
-            "h-4 w-4 text-muted-foreground ml-auto shrink-0 transition-transform",
+            "ml-auto h-4 w-4 shrink-0 text-muted-foreground transition-transform",
             open && "rotate-180"
           )}
         />
@@ -130,9 +129,9 @@ export function TopicMultiSelect({
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden">
+        <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-lg border border-border bg-popover shadow-lg">
           {/* Search */}
-          <div className="p-2 border-b">
+          <div className="border-b p-2">
             <Input
               ref={searchRef}
               value={search}
@@ -147,11 +146,11 @@ export function TopicMultiSelect({
           <div className="max-h-48 overflow-y-auto">
             {loadingTopics ? (
               <div className="flex items-center justify-center py-4 text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 <span className="text-sm">Loading topics...</span>
               </div>
             ) : filteredTopics.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
+              <p className="py-4 text-center text-sm text-muted-foreground">
                 {search ? "No topics match your search" : "No topics found in question bank"}
               </p>
             ) : (
@@ -161,15 +160,15 @@ export function TopicMultiSelect({
                   <div
                     key={topic}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-muted/50 transition-colors",
+                      "flex cursor-pointer items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-muted/50",
                       isSelected && "bg-primary/5 text-primary"
                     )}
                     onClick={() => toggleTopic(topic)}
                   >
                     <div
                       className={cn(
-                        "h-4 w-4 rounded border flex items-center justify-center shrink-0",
-                        isSelected ? "bg-primary border-primary" : "border-muted-foreground/40"
+                        "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
+                        isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"
                       )}
                     >
                       {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
@@ -182,8 +181,10 @@ export function TopicMultiSelect({
           </div>
 
           {selectedTopics.length > 0 && (
-            <div className="p-2 border-t flex justify-between items-center bg-muted/20">
-              <span className="text-xs text-muted-foreground">{selectedTopics.length} selected</span>
+            <div className="flex items-center justify-between border-t bg-muted/20 p-2">
+              <span className="text-xs text-muted-foreground">
+                {selectedTopics.length} selected
+              </span>
               <button
                 className="text-xs text-destructive hover:underline"
                 onClick={() => setSelectedTopics([])}

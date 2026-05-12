@@ -15,15 +15,15 @@ function getIdToken(forceRefresh: boolean = false): Promise<string> {
     // onAuthStateChanged ensures we wait for Firebase to initialize on app launch
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       unsubscribe(); // Prevent memory leaks and duplicate calls
-      
+
       if (!user) {
         console.error("[getIdToken] User not logged in");
         return reject(new Error("Not logged in - please sign in first"));
       }
-      
+
       try {
         // Defaults to cached token unless forceRefresh is explicitly true
-        const token = await user.getIdToken(forceRefresh); 
+        const token = await user.getIdToken(forceRefresh);
         resolve(token);
       } catch (e: any) {
         console.error("[getIdToken] Failed to get token:", e?.message);
@@ -70,7 +70,8 @@ export async function uploadToImageKit(
         // Keep raw response text when it is not JSON.
       }
 
-      const shortError = parsedError.length > 250 ? `${parsedError.substring(0, 250)}...` : parsedError;
+      const shortError =
+        parsedError.length > 250 ? `${parsedError.substring(0, 250)}...` : parsedError;
       throw new Error(`ImageKit auth failed (${authScope}) [${authRes.status}]: ${shortError}`);
     }
     let parsed: ImageKitAuthParams;
@@ -107,9 +108,9 @@ export async function uploadToImageKit(
 
   const { token, expire, signature } = authParams;
   const publicKey =
-    (authParams as any).publicKey ||
-    (import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY as string);
-  if (!publicKey) throw new Error("ImageKit public key not found — set VITE_IMAGEKIT_PUBLIC_KEY in .env");
+    (authParams as any).publicKey || (import.meta.env.VITE_IMAGEKIT_PUBLIC_KEY as string);
+  if (!publicKey)
+    throw new Error("ImageKit public key not found — set VITE_IMAGEKIT_PUBLIC_KEY in .env");
 
   const form = new FormData();
   form.append("file", file);

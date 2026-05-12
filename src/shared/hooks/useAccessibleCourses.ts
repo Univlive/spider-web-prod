@@ -19,7 +19,10 @@ export function useAccessibleCourses(educatorId: string): Result {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!educatorId) { setLoading(false); return; }
+    if (!educatorId) {
+      setLoading(false);
+      return;
+    }
 
     async function load() {
       setLoading(true);
@@ -28,7 +31,11 @@ export function useAccessibleCourses(educatorId: string): Result {
         const ids: string[] = eduSnap.exists() ? (eduSnap.data().allowedSubjectIds ?? []) : [];
         setAllowedSubjectIds(ids);
 
-        if (ids.length === 0) { setCourses([]); setSubjects([]); return; }
+        if (ids.length === 0) {
+          setCourses([]);
+          setSubjects([]);
+          return;
+        }
 
         // Load allowed subjects
         const subjectSnap = await getDocs(collection(db, "subjects"));
@@ -42,10 +49,15 @@ export function useAccessibleCourses(educatorId: string): Result {
 
         // Derive unique courseIds from allowed subjects
         const courseIds = [...new Set(allowedSubjects.map((s) => s.courseId).filter(Boolean))];
-        if (courseIds.length === 0) { setCourses([]); return; }
+        if (courseIds.length === 0) {
+          setCourses([]);
+          return;
+        }
 
         // Load those courses
-        const courseSnaps = await Promise.all(courseIds.map((id) => getDoc(doc(db, "courses", id))));
+        const courseSnaps = await Promise.all(
+          courseIds.map((id) => getDoc(doc(db, "courses", id)))
+        );
         setCourses(
           courseSnaps
             .filter((d) => d.exists() && d.data()?.isActive !== false)

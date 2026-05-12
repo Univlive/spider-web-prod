@@ -9,15 +9,17 @@ export function logError(error: unknown, context: string): void {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      embeds: [{
-        title: `[${context}] ${err.message}`.slice(0, 256),
-        color: 0xe74c3c,
-        fields: [
-          { name: "Stack", value: `\`\`\`\n${stack}\n\`\`\``.slice(0, 1024) },
-          { name: "Time", value: new Date().toISOString(), inline: true },
-          { name: "URL", value: window.location.href.slice(0, 1024), inline: true },
-        ],
-      }],
+      embeds: [
+        {
+          title: `[${context}] ${err.message}`.slice(0, 256),
+          color: 0xe74c3c,
+          fields: [
+            { name: "Stack", value: `\`\`\`\n${stack}\n\`\`\``.slice(0, 1024) },
+            { name: "Time", value: new Date().toISOString(), inline: true },
+            { name: "URL", value: window.location.href.slice(0, 1024), inline: true },
+          ],
+        },
+      ],
     }),
   }).catch(() => {});
 }

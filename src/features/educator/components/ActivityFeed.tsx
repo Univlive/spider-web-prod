@@ -1,12 +1,5 @@
 import { motion } from "framer-motion";
-import {
-  UserPlus,
-  Key,
-  FileCheck,
-  CreditCard,
-  MessageSquare,
-  type LucideIcon,
-} from "lucide-react";
+import { UserPlus, Key, FileCheck, CreditCard, MessageSquare, type LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
 import { cn } from "@shared/lib/utils";
 
@@ -53,7 +46,8 @@ export default function ActivityFeed({ activities = [], delay = 0 }: ActivityFee
         <CardContent className="h-64 overflow-hidden">
           {activities.length === 0 ? (
             <div className="h-full overflow-y-auto rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-              No recent activity yet. New learner joins, attempts, access-code activity, and messages will appear here.
+              No recent activity yet. New learner joins, attempts, access-code activity, and
+              messages will appear here.
             </div>
           ) : (
             <div className="h-full space-y-4 overflow-y-auto pr-1">
@@ -67,14 +61,18 @@ export default function ActivityFeed({ activities = [], delay = 0 }: ActivityFee
                     transition={{ duration: 0.3, delay: delay + index * 0.05 }}
                     className="flex items-start gap-3"
                   >
-                    <div className={cn("p-2 rounded-lg shrink-0", colorMap[activity.type])}>
+                    <div className={cn("shrink-0 rounded-lg p-2", colorMap[activity.type])}>
                       <Icon className="h-4 w-4" />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-foreground">{activity.title}</p>
-                      <p className="text-xs text-muted-foreground line-clamp-2">{activity.description}</p>
+                      <p className="line-clamp-2 text-xs text-muted-foreground">
+                        {activity.description}
+                      </p>
                     </div>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">{activity.time}</span>
+                    <span className="whitespace-nowrap text-xs text-muted-foreground">
+                      {activity.time}
+                    </span>
                   </motion.div>
                 );
               })}

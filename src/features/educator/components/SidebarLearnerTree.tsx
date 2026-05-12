@@ -62,7 +62,10 @@ export default function SidebarLearnerTree({ educatorId, onNavigate }: SidebarLe
             .then((snap) => {
               setCourses((prev) => ({
                 ...prev,
-                [branchId]: snap.docs.map((d) => ({ id: d.id, name: (d.data() as any).name ?? d.id })),
+                [branchId]: snap.docs.map((d) => ({
+                  id: d.id,
+                  name: (d.data() as any).name ?? d.id,
+                })),
               }));
             })
             .finally(() => setLoadingCourse((lc) => ({ ...lc, [branchId]: false })));
@@ -82,11 +85,25 @@ export default function SidebarLearnerTree({ educatorId, onNavigate }: SidebarLe
         // Lazy-load batches for this course
         if (!batches[courseId]) {
           setLoadingBatch((lb) => ({ ...lb, [courseId]: true }));
-          getDocs(collection(db, "educators", educatorId, "branches", branchId, "courses", courseId, "batches"))
+          getDocs(
+            collection(
+              db,
+              "educators",
+              educatorId,
+              "branches",
+              branchId,
+              "courses",
+              courseId,
+              "batches"
+            )
+          )
             .then((snap) => {
               setBatches((prev) => ({
                 ...prev,
-                [courseId]: snap.docs.map((d) => ({ id: d.id, name: (d.data() as any).name ?? d.id })),
+                [courseId]: snap.docs.map((d) => ({
+                  id: d.id,
+                  name: (d.data() as any).name ?? d.id,
+                })),
               }));
             })
             .finally(() => setLoadingBatch((lb) => ({ ...lb, [courseId]: false })));
@@ -117,21 +134,26 @@ export default function SidebarLearnerTree({ educatorId, onNavigate }: SidebarLe
         return (
           <div key={branch.id}>
             {/* Branch row */}
-            <div className="flex items-center gap-1 group">
+            <div className="group flex items-center gap-1">
               <button
                 onClick={() => toggleBranch(branch.id)}
-                className="p-0.5 rounded text-muted-foreground hover:text-foreground flex-shrink-0"
+                className="flex-shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground"
               >
-                <ChevronRight className={cn("h-3 w-3 transition-transform duration-150", branchExpanded && "rotate-90")} />
+                <ChevronRight
+                  className={cn(
+                    "h-3 w-3 transition-transform duration-150",
+                    branchExpanded && "rotate-90"
+                  )}
+                />
               </button>
               <Link
                 to={`/educator/learners?branchId=${branch.id}`}
                 onClick={onNavigate}
                 className={cn(
-                  "flex-1 text-[11px] font-medium px-1.5 py-1 rounded truncate transition-colors",
+                  "flex-1 truncate rounded px-1.5 py-1 text-[11px] font-medium transition-colors",
                   branchActive && !activeCourse
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
                 {branch.name}
@@ -140,7 +162,7 @@ export default function SidebarLearnerTree({ educatorId, onNavigate }: SidebarLe
 
             {/* Courses */}
             {branchExpanded && (
-              <div className="ml-4 pl-2 border-l border-border space-y-0.5 mt-0.5">
+              <div className="ml-4 mt-0.5 space-y-0.5 border-l border-border pl-2">
                 {loadingCourse[branch.id] ? (
                   <div className="flex items-center gap-1 px-1 py-1 text-[10px] text-muted-foreground">
                     <Loader2 className="h-2.5 w-2.5 animate-spin" /> Loading…
@@ -158,18 +180,23 @@ export default function SidebarLearnerTree({ educatorId, onNavigate }: SidebarLe
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => toggleCourse(branch.id, course.id)}
-                            className="p-0.5 rounded text-muted-foreground hover:text-foreground flex-shrink-0"
+                            className="flex-shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground"
                           >
-                            <ChevronRight className={cn("h-2.5 w-2.5 transition-transform duration-150", courseExpanded && "rotate-90")} />
+                            <ChevronRight
+                              className={cn(
+                                "h-2.5 w-2.5 transition-transform duration-150",
+                                courseExpanded && "rotate-90"
+                              )}
+                            />
                           </button>
                           <Link
                             to={`/educator/learners?branchId=${branch.id}&courseId=${course.id}`}
                             onClick={onNavigate}
                             className={cn(
-                              "flex-1 text-[10px] font-medium px-1 py-1 rounded truncate transition-colors",
+                              "flex-1 truncate rounded px-1 py-1 text-[10px] font-medium transition-colors",
                               courseActive && !activeBatch
-                                ? "text-primary bg-primary/10"
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                ? "bg-primary/10 text-primary"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             )}
                           >
                             {course.name}
@@ -178,13 +205,15 @@ export default function SidebarLearnerTree({ educatorId, onNavigate }: SidebarLe
 
                         {/* Batches */}
                         {courseExpanded && (
-                          <div className="ml-4 pl-2 border-l border-border space-y-0.5 mt-0.5">
+                          <div className="ml-4 mt-0.5 space-y-0.5 border-l border-border pl-2">
                             {loadingBatch[course.id] ? (
                               <div className="flex items-center gap-1 px-1 py-1 text-[10px] text-muted-foreground">
                                 <Loader2 className="h-2.5 w-2.5 animate-spin" /> Loading…
                               </div>
                             ) : (batches[course.id] ?? []).length === 0 ? (
-                              <p className="px-1 py-1 text-[10px] text-muted-foreground">No batches</p>
+                              <p className="px-1 py-1 text-[10px] text-muted-foreground">
+                                No batches
+                              </p>
                             ) : (
                               (batches[course.id] ?? []).map((batch) => {
                                 const batchActive =
@@ -197,10 +226,10 @@ export default function SidebarLearnerTree({ educatorId, onNavigate }: SidebarLe
                                     to={`/educator/learners?branchId=${branch.id}&courseId=${course.id}&batchId=${batch.id}`}
                                     onClick={onNavigate}
                                     className={cn(
-                                      "block text-[10px] px-2 py-1 rounded truncate transition-colors",
+                                      "block truncate rounded px-2 py-1 text-[10px] transition-colors",
                                       batchActive
-                                        ? "text-primary bg-primary/10 font-medium"
-                                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                        ? "bg-primary/10 font-medium text-primary"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                     )}
                                   >
                                     {batch.name}

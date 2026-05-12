@@ -123,7 +123,9 @@ function difficultyBucket(q: PoolQuestion): Difficulty {
 function matchesSectionConstraints(q: PoolQuestion, s: SectionConstraints): boolean {
   // Subject hard filter
   if (s.subject) {
-    const qSub = String(q.subjectName || q.subject || "").trim().toLowerCase();
+    const qSub = String(q.subjectName || q.subject || "")
+      .trim()
+      .toLowerCase();
     if (!qSub || qSub !== s.subject.trim().toLowerCase()) return false;
   }
 
@@ -195,7 +197,13 @@ export function buildAutoFillSelection(
   for (const section of sections) {
     const needed = Math.max(0, Number(section.questionsCount) || 0);
     if (!needed) {
-      coverage.push({ sectionId: section.id, sectionName: section.name, needed: 0, found: 0, shortfall: 0 });
+      coverage.push({
+        sectionId: section.id,
+        sectionName: section.name,
+        needed: 0,
+        found: 0,
+        shortfall: 0,
+      });
       continue;
     }
 
@@ -216,7 +224,8 @@ export function buildAutoFillSelection(
         ]);
         if (![...topicFilter].some((t) => qTopics.has(t))) return false;
       }
-      if (subjectFilter?.size && !subjectFilter.has(String(q.subject || q.subjectName || ""))) return false;
+      if (subjectFilter?.size && !subjectFilter.has(String(q.subject || q.subjectName || "")))
+        return false;
 
       // Section-level hard filters
       if (!matchesSectionConstraints(q, section)) return false;
@@ -254,7 +263,9 @@ export function buildAutoFillSelection(
       const manifest = groupManifests.get(gid);
       if (!groupQs.length) continue;
       // Sort by groupOrder so passage questions appear in the right sequence
-      const sorted = [...groupQs].sort((a, b) => Number(a.groupOrder || 0) - Number(b.groupOrder || 0));
+      const sorted = [...groupQs].sort(
+        (a, b) => Number(a.groupOrder || 0) - Number(b.groupOrder || 0)
+      );
       groupAtoms.push({ groupId: gid, questions: sorted, type: manifest?.type || "comprehension" });
     }
 

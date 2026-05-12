@@ -76,7 +76,8 @@ export function normalizeQuestionType(type?: string | null): QuestionType {
   if (!type) return "MCQ";
   const upper = String(type).toUpperCase().trim();
   if (upper === "MCQ" || upper === "MULTIPLE_CHOICE") return "MCQ";
-  if (upper === "SHORT_ANSWER" || upper === "SHORT" || upper === "SUBJECTIVE") return "SHORT_ANSWER";
+  if (upper === "SHORT_ANSWER" || upper === "SHORT" || upper === "SUBJECTIVE")
+    return "SHORT_ANSWER";
   if (upper === "UPLOAD" || upper === "FILE_UPLOAD" || upper === "IMAGE_UPLOAD") return "UPLOAD";
   return "MCQ";
 }

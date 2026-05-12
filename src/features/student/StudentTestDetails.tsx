@@ -5,7 +5,13 @@ import { Clock, FileText, Award, ArrowLeft, Play, Lock, Timer } from "lucide-rea
 import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
 import { Button } from "@shared/ui/button";
 import { Badge } from "@shared/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@shared/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@shared/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@shared/ui/tabs";
 import { Input } from "@shared/ui/input";
 
@@ -161,11 +167,15 @@ export default function StudentTestDetails() {
         let data: TestDoc | null = null;
         let localTestData: any = null;
 
-        const educatorTestSnap = await getDoc(doc(db, "educators", educatorId!, "my_tests", testId!));
+        const educatorTestSnap = await getDoc(
+          doc(db, "educators", educatorId!, "my_tests", testId!)
+        );
         if (educatorTestSnap.exists()) {
           localTestData = educatorTestSnap.data();
           const localTest = localTestData as any;
-          const linkedAdminTestId = String(localTest?.linkedAdminTestId || localTest?.originalTestId || "").trim();
+          const linkedAdminTestId = String(
+            localTest?.linkedAdminTestId || localTest?.originalTestId || ""
+          ).trim();
           const isAdminLinked =
             localTest?.originSource === "admin" ||
             localTest?.source === "imported" ||
@@ -210,7 +220,10 @@ export default function StudentTestDetails() {
         const price = Math.max(0, safeNum(data?.price, 0));
         const attemptsAllowed = Math.max(
           1,
-          safeNum(data?.attemptsAllowed ?? data?.maxAttempts, tenant?.testDefaults?.attemptsAllowed ?? 3)
+          safeNum(
+            data?.attemptsAllowed ?? data?.maxAttempts,
+            tenant?.testDefaults?.attemptsAllowed ?? 3
+          )
         );
 
         const markingScheme = data?.markingScheme
@@ -279,9 +292,12 @@ export default function StudentTestDetails() {
         if (snap.exists()) {
           const d = snap.data() as any;
           const we = d?.windowExpiresAt;
-          const ms = (d?.windowMinutes === 0 || !we)
-            ? null
-            : typeof we?.toMillis === "function" ? we.toMillis() : null;
+          const ms =
+            d?.windowMinutes === 0 || !we
+              ? null
+              : typeof we?.toMillis === "function"
+                ? we.toMillis()
+                : null;
           setUnlockWindowExpiresAt(ms);
         } else {
           setUnlockWindowExpiresAt(null);
@@ -299,7 +315,10 @@ export default function StudentTestDetails() {
 
   // 2b) Live countdown for access window
   useEffect(() => {
-    if (!unlockWindowExpiresAt) { setWindowTimeLeft(null); return; }
+    if (!unlockWindowExpiresAt) {
+      setWindowTimeLeft(null);
+      return;
+    }
     const tick = () => setWindowTimeLeft(Math.max(0, unlockWindowExpiresAt - currentTime));
     tick();
   }, [unlockWindowExpiresAt, currentTime]);
@@ -325,13 +344,18 @@ export default function StudentTestDetails() {
           const a = d.data() as any;
           const score = safeNum(a?.score, 0);
           const maxScore = safeNum(a?.maxScore, 0);
-          const accuracyPct = a?.accuracy != null
-            ? (() => {
-                const n = Number(a.accuracy);
-                const pct = Number.isFinite(n) ? (n <= 1.01 ? n * 100 : n) : accuracyFrom(score, maxScore);
-                return Math.max(0, Math.min(100, Math.round(pct)));
-              })()
-            : accuracyFrom(score, maxScore);
+          const accuracyPct =
+            a?.accuracy != null
+              ? (() => {
+                  const n = Number(a.accuracy);
+                  const pct = Number.isFinite(n)
+                    ? n <= 1.01
+                      ? n * 100
+                      : n
+                    : accuracyFrom(score, maxScore);
+                  return Math.max(0, Math.min(100, Math.round(pct)));
+                })()
+              : accuracyFrom(score, maxScore);
 
           const createdAtMs = toMillis(a?.submittedAt || a?.createdAt);
 
@@ -460,12 +484,12 @@ export default function StudentTestDetails() {
   };
 
   if (loading || authLoading || tenantLoading) {
-    return <div className="text-center py-12">Loading...</div>;
+    return <div className="py-12 text-center">Loading...</div>;
   }
 
   if (!test) {
     return (
-      <div className="text-center py-12 space-y-4">
+      <div className="space-y-4 py-12 text-center">
         <p>Test not found</p>
         <Button asChild>
           <Link to="/student/tests">Back to Tests</Link>
@@ -477,39 +501,46 @@ export default function StudentTestDetails() {
   const isUpcoming = test.startTime && currentTime < test.startTime;
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="mx-auto max-w-4xl space-y-6">
       <Button variant="ghost" asChild>
         <Link to="/student/tests">
-          <ArrowLeft className="h-4 w-4 mr-2" />
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Tests
         </Link>
       </Button>
 
-      <Card className={cn(
-        "card-soft border-0",
-        isLive ? "bg-red-50 dark:bg-red-900/10 border-2 border-red-500/20" :
-        isUpcoming ? "bg-amber-50 dark:bg-amber-900/10 border-2 border-amber-400/30" :
-        "bg-pastel-mint"
-      )}>
+      <Card
+        className={cn(
+          "card-soft border-0",
+          isLive
+            ? "border-2 border-red-500/20 bg-red-50 dark:bg-red-900/10"
+            : isUpcoming
+              ? "border-2 border-amber-400/30 bg-amber-50 dark:bg-amber-900/10"
+              : "bg-pastel-mint"
+        )}
+      >
         <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div>
-              <div className="flex items-center gap-2 mb-2">
+              <div className="mb-2 flex items-center gap-2">
                 <Badge>{test.subject}</Badge>
                 {isLive && (
-                  <Badge variant="destructive" className="animate-pulse flex items-center gap-1">
+                  <Badge variant="destructive" className="flex animate-pulse items-center gap-1">
                     <div className="h-1.5 w-1.5 rounded-full bg-white" /> LIVE NOW
                   </Badge>
                 )}
                 {isUpcoming && (
-                  <Badge variant="outline" className="text-amber-600 border-amber-600/20 bg-amber-50 dark:bg-amber-900/10">
-                    <Clock className="h-3 w-3 mr-1" /> UPCOMING
+                  <Badge
+                    variant="outline"
+                    className="border-amber-600/20 bg-amber-50 text-amber-600 dark:bg-amber-900/10"
+                  >
+                    <Clock className="mr-1 h-3 w-3" /> UPCOMING
                   </Badge>
                 )}
               </div>
               <h1 className="text-2xl font-bold">{test.title}</h1>
 
-              <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
+              <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
                   {test.duration} minutes
@@ -527,7 +558,8 @@ export default function StudentTestDetails() {
               {test.startTime && (
                 <div className="mt-3 space-y-1">
                   <div className="text-xs font-medium text-muted-foreground">
-                    Schedule: {new Date(test.startTime).toLocaleString()} – {new Date(test.endTime!).toLocaleTimeString()}
+                    Schedule: {new Date(test.startTime).toLocaleString()} –{" "}
+                    {new Date(test.endTime!).toLocaleTimeString()}
                   </div>
                   {isUpcoming && (
                     <div className="flex items-center gap-1.5 text-sm font-semibold text-amber-700 dark:text-amber-400">
@@ -539,9 +571,12 @@ export default function StudentTestDetails() {
               )}
 
               <div className="mt-3 text-xs text-muted-foreground">
-                Attempts: <span className="font-medium">{attemptsUsed}</span>/<span className="font-medium">{test.attemptsAllowed}</span>{" "}
+                Attempts: <span className="font-medium">{attemptsUsed}</span>/
+                <span className="font-medium">{test.attemptsAllowed}</span>{" "}
                 {attemptsLeft > 0 ? (
-                  <span className="ml-2 text-green-700 dark:text-green-400">({attemptsLeft} left)</span>
+                  <span className="ml-2 text-green-700 dark:text-green-400">
+                    ({attemptsLeft} left)
+                  </span>
                 ) : (
                   <span className="ml-2 text-red-600">(No attempts left)</span>
                 )}
@@ -551,38 +586,50 @@ export default function StudentTestDetails() {
             <div className="flex flex-col items-end gap-2">
               {isUpcoming && !unlocked && test.price > 0 ? (
                 <div className="text-right">
-                  <p className="text-xs text-muted-foreground mb-2">Wait for live time or unlock now</p>
+                  <p className="mb-2 text-xs text-muted-foreground">
+                    Wait for live time or unlock now
+                  </p>
                   <Button className="gradient-bg rounded-xl" onClick={openUnlock}>
-                    <Lock className="h-4 w-4 mr-2" />
+                    <Lock className="mr-2 h-4 w-4" />
                     Unlock (₹{test.price})
                   </Button>
                 </div>
               ) : isLocked ? (
                 <Button className="gradient-bg rounded-xl" onClick={openUnlock}>
-                  <Lock className="h-4 w-4 mr-2" />
+                  <Lock className="mr-2 h-4 w-4" />
                   Unlock (₹{test.price})
                 </Button>
               ) : (
                 <div className="flex flex-col items-end gap-2">
                   <Button
-                    className={cn("gradient-bg rounded-xl", (attemptsLeft <= 0 || isUpcoming) && "opacity-60")}
+                    className={cn(
+                      "gradient-bg rounded-xl",
+                      (attemptsLeft <= 0 || isUpcoming) && "opacity-60"
+                    )}
                     onClick={startTest}
                     disabled={attemptsLeft <= 0 || isUpcoming}
                   >
-                    {isUpcoming ? <Clock className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
+                    {isUpcoming ? (
+                      <Clock className="mr-2 h-4 w-4" />
+                    ) : (
+                      <Play className="mr-2 h-4 w-4" />
+                    )}
                     {isUpcoming ? "Starts Soon" : "Start Test"}
                   </Button>
                   {windowTimeLeft !== null && (
-                    <span className={cn(
-                      "flex items-center gap-1 text-xs font-medium",
-                      windowTimeLeft < 5 * 60 * 1000 ? "text-red-600" : "text-amber-600"
-                    )}>
+                    <span
+                      className={cn(
+                        "flex items-center gap-1 text-xs font-medium",
+                        windowTimeLeft < 5 * 60 * 1000 ? "text-red-600" : "text-amber-600"
+                      )}
+                    >
                       <Timer className="h-3 w-3" />
-                      Access expires in {windowTimeLeft <= 0 ? "—" : formatWindowTime(windowTimeLeft)}
+                      Access expires in{" "}
+                      {windowTimeLeft <= 0 ? "—" : formatWindowTime(windowTimeLeft)}
                     </span>
                   )}
                   {isLive && (
-                    <span className="text-[10px] text-red-500 font-bold uppercase tracking-tighter">
+                    <span className="text-[10px] font-bold uppercase tracking-tighter text-red-500">
                       Unlocked via Schedule
                     </span>
                   )}
@@ -593,7 +640,7 @@ export default function StudentTestDetails() {
         </CardContent>
       </Card>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid gap-6 md:grid-cols-2">
         <Card className="card-soft border-0">
           <CardHeader>
             <CardTitle>Sections</CardTitle>
@@ -603,7 +650,7 @@ export default function StudentTestDetails() {
               <div className="text-sm text-muted-foreground">No sections configured.</div>
             ) : (
               test.sections.map((section, i) => (
-                <div key={section.id} className="flex justify-between p-3 rounded-xl bg-muted/50">
+                <div key={section.id} className="flex justify-between rounded-xl bg-muted/50 p-3">
                   <span>
                     {i + 1}. {section.name}
                   </span>
@@ -641,10 +688,15 @@ export default function StudentTestDetails() {
           </CardHeader>
           <CardContent className="space-y-3">
             {attempts.map((a, i) => (
-              <div key={a.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
+              <div
+                key={a.id}
+                className="flex items-center justify-between rounded-xl bg-muted/30 p-3"
+              >
                 <div>
                   <p className="font-medium">Attempt {attempts.length - i}</p>
-                  <p className="text-sm text-muted-foreground">{new Date(a.createdAtMs).toLocaleDateString()}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(a.createdAtMs).toLocaleDateString()}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold">
@@ -666,13 +718,19 @@ export default function StudentTestDetails() {
         <DialogContent className="rounded-2xl">
           <DialogHeader>
             <DialogTitle>Unlock Test</DialogTitle>
-            <DialogDescription>Enter an access code or pay online to unlock this test.</DialogDescription>
+            <DialogDescription>
+              Enter an access code or pay online to unlock this test.
+            </DialogDescription>
           </DialogHeader>
 
           <Tabs defaultValue="code">
             <TabsList className="grid w-full grid-cols-2 rounded-xl">
-              <TabsTrigger value="code" className="rounded-lg">Access Code</TabsTrigger>
-              <TabsTrigger value="pay" className="rounded-lg">Pay Online</TabsTrigger>
+              <TabsTrigger value="code" className="rounded-lg">
+                Access Code
+              </TabsTrigger>
+              <TabsTrigger value="pay" className="rounded-lg">
+                Pay Online
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="code" className="space-y-4 pt-4">
@@ -682,18 +740,22 @@ export default function StudentTestDetails() {
                 onChange={(e) => setAccessCode(e.target.value)}
                 className="rounded-xl"
               />
-              <Button className="w-full gradient-bg rounded-xl" onClick={redeemCode} disabled={redeeming}>
+              <Button
+                className="gradient-bg w-full rounded-xl"
+                onClick={redeemCode}
+                disabled={redeeming}
+              >
                 {redeeming ? "Redeeming..." : "Redeem Code"}
               </Button>
             </TabsContent>
 
             <TabsContent value="pay" className="space-y-4 pt-4">
-              <div className="text-center p-4 bg-pastel-mint rounded-xl">
+              <div className="rounded-xl bg-pastel-mint p-4 text-center">
                 <p className="text-2xl font-bold">₹{test.price}</p>
                 <p className="text-sm text-muted-foreground">One-time payment</p>
               </div>
               <Button
-                className="w-full gradient-bg rounded-xl"
+                className="gradient-bg w-full rounded-xl"
                 onClick={() => toast.info("Payment integration coming soon!")}
               >
                 Pay Now
@@ -705,4 +767,3 @@ export default function StudentTestDetails() {
     </div>
   );
 }
-

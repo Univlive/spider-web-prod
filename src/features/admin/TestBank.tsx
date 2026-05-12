@@ -109,30 +109,31 @@ export default function TestBank() {
   const [subjectFilters, setSubjectFilters] = useState<string[]>([]);
   const [status, setStatus] = useState<StatusFilter>("all");
   const [allCourses, setAllCourses] = useState<{ id: string; name: string }[]>([]);
-  const [allSubjects, setAllSubjects] = useState<{ id: string; name: string; courseId: string }[]>([]);
+  const [allSubjects, setAllSubjects] = useState<{ id: string; name: string; courseId: string }[]>(
+    []
+  );
 
   // 🔐 Admin guard (minimal)
   const isAdmin = profile?.role === "ADMIN";
 
   // Load courses and subjects for filter cascading
   useEffect(() => {
-    Promise.all([
-      getDocs(collection(db, "courses")),
-      getDocs(collection(db, "subjects")),
-    ]).then(([courseSnap, subjectSnap]) => {
-      setAllCourses(
-        courseSnap.docs
-          .filter((d) => d.data()?.isActive !== false)
-          .map((d) => ({ id: d.id, name: d.data().name as string }))
-      );
-      setAllSubjects(
-        subjectSnap.docs.map((d) => ({
-          id: d.id,
-          name: d.data().name as string,
-          courseId: d.data().courseId as string,
-        }))
-      );
-    });
+    Promise.all([getDocs(collection(db, "courses")), getDocs(collection(db, "subjects"))]).then(
+      ([courseSnap, subjectSnap]) => {
+        setAllCourses(
+          courseSnap.docs
+            .filter((d) => d.data()?.isActive !== false)
+            .map((d) => ({ id: d.id, name: d.data().name as string }))
+        );
+        setAllSubjects(
+          subjectSnap.docs.map((d) => ({
+            id: d.id,
+            name: d.data().name as string,
+            courseId: d.data().courseId as string,
+          }))
+        );
+      }
+    );
   }, []);
 
   // Realtime load tests
@@ -161,7 +162,11 @@ export default function TestBank() {
             id: d.id,
             title: String(data?.title || "Untitled Test"),
             subject: String(data?.subject || "General"),
-            level: data?.level ? String(data.level) : (data?.difficulty ? String(data.difficulty) : undefined),
+            level: data?.level
+              ? String(data.level)
+              : data?.difficulty
+                ? String(data.difficulty)
+                : undefined,
             description: data?.description ? String(data.description) : undefined,
 
             durationMinutes: safeNum(data?.durationMinutes ?? data?.duration, 60),
@@ -170,10 +175,7 @@ export default function TestBank() {
 
             questionsCount: Math.max(
               0,
-              safeNum(
-                data?.questionsCount ?? data?.totalQuestions ?? data?.questionCount,
-                0
-              )
+              safeNum(data?.questionsCount ?? data?.totalQuestions ?? data?.questionCount, 0)
             ),
 
             isPublished: Boolean(data?.isPublished ?? data?.published ?? false),
@@ -200,7 +202,8 @@ export default function TestBank() {
   }, [authLoading, isAdmin]);
 
   const subjectOptions = useMemo(() => {
-    const pool = courseFilter === "all" ? allSubjects : allSubjects.filter((s) => s.courseId === courseFilter);
+    const pool =
+      courseFilter === "all" ? allSubjects : allSubjects.filter((s) => s.courseId === courseFilter);
     return pool.map((s) => s.name).sort();
   }, [allSubjects, courseFilter]);
 
@@ -209,20 +212,19 @@ export default function TestBank() {
 
     return tests.filter((t) => {
       const matchesSearch =
-        !q ||
-        t.title.toLowerCase().includes(q) ||
-        (t.description || "").toLowerCase().includes(q);
+        !q || t.title.toLowerCase().includes(q) || (t.description || "").toLowerCase().includes(q);
 
       if (courseFilter !== "all") {
-        const namesInCourse = allSubjects.filter((s) => s.courseId === courseFilter).map((s) => s.name);
+        const namesInCourse = allSubjects
+          .filter((s) => s.courseId === courseFilter)
+          .map((s) => s.name);
         if (!namesInCourse.includes(t.subject)) return false;
       }
 
       if (subjectFilters.length > 0 && !subjectFilters.includes(t.subject)) return false;
 
       const matchesStatus =
-        status === "all" ||
-        (status === "published" ? t.isPublished : !t.isPublished);
+        status === "all" || (status === "published" ? t.isPublished : !t.isPublished);
 
       return matchesSearch && matchesStatus;
     });
@@ -297,7 +299,11 @@ export default function TestBank() {
       const srcRef = doc(db, "test_series", test.id);
       const srcSnap = await getDoc(srcRef);
       if (!srcSnap.exists()) {
-        toast({ title: "Not found", description: "Original test no longer exists.", variant: "destructive" });
+        toast({
+          title: "Not found",
+          description: "Original test no longer exists.",
+          variant: "destructive",
+        });
         return;
       }
 
@@ -363,14 +369,14 @@ export default function TestBank() {
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-display font-bold">Test Bank</h1>
-            <p className="text-muted-foreground text-sm">Manage global tests (Admin)</p>
+            <h1 className="font-display text-2xl font-bold">Test Bank</h1>
+            <p className="text-sm text-muted-foreground">Manage global tests (Admin)</p>
           </div>
         </div>
 
         <Card className="card-soft border-0">
-          <CardContent className="p-8 flex items-center justify-center text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          <CardContent className="flex items-center justify-center p-8 text-muted-foreground">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Loading tests...
           </CardContent>
         </Card>
@@ -382,8 +388,8 @@ export default function TestBank() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-display font-bold">Test Bank</h1>
-          <p className="text-muted-foreground text-sm">Admin access required</p>
+          <h1 className="font-display text-2xl font-bold">Test Bank</h1>
+          <p className="text-sm text-muted-foreground">Admin access required</p>
         </div>
         <EmptyState
           icon={BookOpen}
@@ -399,20 +405,20 @@ export default function TestBank() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-display font-bold">Test Bank</h1>
-          <p className="text-muted-foreground text-sm">Create and manage global tests</p>
+          <h1 className="font-display text-2xl font-bold">Test Bank</h1>
+          <p className="text-sm text-muted-foreground">Create and manage global tests</p>
         </div>
 
         <Button className="gradient-bg text-white" onClick={() => navigate("/admin/tests/new")}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="mr-2 h-4 w-4" />
           Create Test
         </Button>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
           { label: "Total Tests", value: stats.total },
           { label: "Published", value: stats.published },
@@ -428,7 +434,7 @@ export default function TestBank() {
             <Card className="card-soft border-0">
               <CardContent className="p-4">
                 <p className="text-xs text-muted-foreground">{s.label}</p>
-                <p className="text-2xl font-bold mt-1">{s.value}</p>
+                <p className="mt-1 text-2xl font-bold">{s.value}</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -437,26 +443,34 @@ export default function TestBank() {
 
       {/* Filters */}
       <Card className="card-soft border-0">
-        <CardContent className="p-4 space-y-3">
-          <div className="flex flex-col lg:flex-row gap-3 lg:items-center">
+        <CardContent className="space-y-3 p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search tests by title/description..."
-                className="pl-9 rounded-xl"
+                className="rounded-xl pl-9"
               />
             </div>
 
-            <Select value={courseFilter} onValueChange={(v) => { setCourseFilter(v); setSubjectFilters([]); }}>
+            <Select
+              value={courseFilter}
+              onValueChange={(v) => {
+                setCourseFilter(v);
+                setSubjectFilters([]);
+              }}
+            >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="All Courses" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Courses</SelectItem>
                 {allCourses.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -497,7 +511,7 @@ export default function TestBank() {
           onAction={() => navigate("/admin/tests/new")}
         />
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((t, idx) => (
             <motion.div
               key={t.id}
@@ -505,12 +519,12 @@ export default function TestBank() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(idx * 0.03, 0.25) }}
             >
-              <Card className="card-soft border-0 hover:shadow-card transition-shadow">
+              <Card className="card-soft border-0 transition-shadow hover:shadow-card">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <CardTitle className="text-base truncate">{t.title}</CardTitle>
-                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <CardTitle className="truncate text-base">{t.title}</CardTitle>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
                         <Badge variant="secondary" className="rounded-full">
                           {t.subject}
                         </Badge>
@@ -519,7 +533,10 @@ export default function TestBank() {
                             {t.level}
                           </Badge>
                         )}
-                        <Badge variant="secondary" className={cn("rounded-full", statusBadgeClass(t.isPublished))}>
+                        <Badge
+                          variant="secondary"
+                          className={cn("rounded-full", statusBadgeClass(t.isPublished))}
+                        >
                           {t.isPublished ? "published" : "draft"}
                         </Badge>
                       </div>
@@ -533,34 +550,37 @@ export default function TestBank() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="rounded-xl">
                         <DropdownMenuItem onClick={() => navigate(`/admin/tests/edit/${t.id}`)}>
-                          <Pencil className="h-4 w-4 mr-2" />
+                          <Pencil className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate(`/admin/questions/${t.id}`)}>
-                          <ListChecks className="h-4 w-4 mr-2" />
+                          <ListChecks className="mr-2 h-4 w-4" />
                           Manage Questions
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => duplicateTest(t)}>
-                          <Copy className="h-4 w-4 mr-2" />
+                          <Copy className="mr-2 h-4 w-4" />
                           Duplicate
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => togglePublish(t)}>
                           {t.isPublished ? (
                             <>
-                              <ToggleLeft className="h-4 w-4 mr-2" />
+                              <ToggleLeft className="mr-2 h-4 w-4" />
                               Unpublish
                             </>
                           ) : (
                             <>
-                              <ToggleRight className="h-4 w-4 mr-2" />
+                              <ToggleRight className="mr-2 h-4 w-4" />
                               Publish
                             </>
                           )}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive" onClick={() => deleteTest(t)}>
-                          <Trash2 className="h-4 w-4 mr-2" />
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => deleteTest(t)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -570,29 +590,29 @@ export default function TestBank() {
 
                 <CardContent className="pt-0">
                   {t.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">{t.description}</p>
+                    <p className="line-clamp-2 text-sm text-muted-foreground">{t.description}</p>
                   )}
 
-                  <div className="grid grid-cols-2 gap-2 mt-4 text-sm">
-                    <div className="p-3 rounded-xl bg-muted/40">
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                    <div className="rounded-xl bg-muted/40 p-3">
                       <p className="text-xs text-muted-foreground">Duration</p>
                       <p className="font-medium">{t.durationMinutes} min</p>
                     </div>
-                    <div className="p-3 rounded-xl bg-muted/40">
+                    <div className="rounded-xl bg-muted/40 p-3">
                       <p className="text-xs text-muted-foreground">Questions</p>
                       <p className="font-medium">{t.questionsCount}</p>
                     </div>
-                    <div className="p-3 rounded-xl bg-muted/40">
+                    <div className="rounded-xl bg-muted/40 p-3">
                       <p className="text-xs text-muted-foreground">Price</p>
                       <p className="font-medium">{t.price > 0 ? `₹${t.price}` : "Free"}</p>
                     </div>
-                    <div className="p-3 rounded-xl bg-muted/40">
+                    <div className="rounded-xl bg-muted/40 p-3">
                       <p className="text-xs text-muted-foreground">Attempts</p>
                       <p className="font-medium">{t.attemptsAllowed}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between mt-4 text-xs text-muted-foreground">
+                  <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
                     <span>Created: {fmtDate(t.createdAtTs || null)}</span>
                     <span>Updated: {fmtDate(t.updatedAtTs || null)}</span>
                   </div>
@@ -600,13 +620,13 @@ export default function TestBank() {
                   <div className="mt-4 flex gap-2">
                     <Button
                       variant="outline"
-                      className="rounded-xl flex-1"
+                      className="flex-1 rounded-xl"
                       onClick={() => navigate(`/admin/questions/${t.id}`)}
                     >
                       Manage Questions
                     </Button>
                     <Button
-                      className="gradient-bg text-white rounded-xl flex-1"
+                      className="gradient-bg flex-1 rounded-xl text-white"
                       onClick={() => navigate(`/admin/tests/edit/${t.id}`)}
                     >
                       Edit
@@ -621,4 +641,3 @@ export default function TestBank() {
     </div>
   );
 }
-

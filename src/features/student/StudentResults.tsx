@@ -145,7 +145,6 @@ function computeFromQuestionsAndResponses(
     const pos = safeNumber((d as any).marks ?? d.positiveMarks, 5);
     const neg = Math.abs(safeNumber(d.negativeMarks, 1));
 
-
     maxScore += pos;
     perSection[sectionId] = perSection[sectionId] || { score: 0, maxScore: 0 };
     perSection[sectionId].maxScore += pos;
@@ -210,7 +209,7 @@ export default function StudentResults() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // AI Analysis with streaming
   const { progress: aiProgress, error: aiError, cancel: cancelAI } = useAIStream();
   const isAiPerformanceAnalysisEnabled = aiFeatureFlags.performanceAnalysis;
@@ -220,7 +219,7 @@ export default function StudentResults() {
   const [computedScore, setComputedScore] = useState<number | null>(null);
   const [computedMaxScore, setComputedMaxScore] = useState<number | null>(null);
   const [computedAccuracyPct, setComputedAccuracyPct] = useState<number | null>(null);
-  
+
   // Store questions for AI analysis and subjective display
   const [questionsData, setQuestionsData] = useState<{ id: string; data: QuestionDoc }[]>([]);
   const [sectionNameMap, setSectionNameMap] = useState<Record<string, string>>({});
@@ -292,7 +291,10 @@ export default function StudentResults() {
         accuracy,
       };
 
-      const analysis = await requestAIAnalysis(`${import.meta.env.VITE_MONKEY_KING_API_URL}/api/ai/analyze-performance`, analysisRequest);
+      const analysis = await requestAIAnalysis(
+        `${import.meta.env.VITE_MONKEY_KING_API_URL}/api/ai/analyze-performance`,
+        analysisRequest
+      );
 
       // Update attempt with the analysis
       setAttempt((prev) =>
@@ -344,18 +346,23 @@ export default function StudentResults() {
         const a = aSnap.data() as AttemptDoc;
 
         // student can only view their own attempt
-        if (a.studentId !== firebaseUser.uid) throw new Error("You don't have permission to view this attempt.");
+        if (a.studentId !== firebaseUser.uid)
+          throw new Error("You don't have permission to view this attempt.");
 
         if (!a.educatorId || !a.testId) throw new Error("Attempt is missing test reference.");
 
         let testData: TestDoc | null = null;
         let qs: { id: string; data: QuestionDoc }[] = [];
 
-        const educatorTestSnap = await getDoc(doc(db, "educators", a.educatorId, "my_tests", a.testId));
+        const educatorTestSnap = await getDoc(
+          doc(db, "educators", a.educatorId, "my_tests", a.testId)
+        );
 
         if (educatorTestSnap.exists()) {
           const localTest = educatorTestSnap.data() as any;
-          const linkedAdminTestId = String(localTest?.linkedAdminTestId || localTest?.originalTestId || "").trim();
+          const linkedAdminTestId = String(
+            localTest?.linkedAdminTestId || localTest?.originalTestId || ""
+          ).trim();
           const isAdminLinked =
             localTest?.originSource === "admin" ||
             localTest?.source === "imported" ||
@@ -371,11 +378,15 @@ export default function StudentResults() {
               testData = localTest as TestDoc;
             }
 
-            const qSnap = await getDocs(collection(db, "test_series", linkedAdminTestId, "questions"));
+            const qSnap = await getDocs(
+              collection(db, "test_series", linkedAdminTestId, "questions")
+            );
             qs = qSnap.docs.map((d) => ({ id: d.id, data: d.data() as QuestionDoc }));
           } else {
             testData = localTest as TestDoc;
-            const qSnap = await getDocs(collection(db, "educators", a.educatorId, "my_tests", a.testId, "questions"));
+            const qSnap = await getDocs(
+              collection(db, "educators", a.educatorId, "my_tests", a.testId, "questions")
+            );
             qs = qSnap.docs.map((d) => ({ id: d.id, data: d.data() as QuestionDoc }));
           }
         }
@@ -428,12 +439,25 @@ export default function StudentResults() {
         setComputedScore(typeof a.score === "number" ? a.score : derived.score);
         setComputedMaxScore(typeof a.maxScore === "number" ? a.maxScore : derived.maxScore);
 
-        const storedAcc = typeof a.accuracy === "number" ? normalizeAccuracyPercent(a.accuracy) : null;
+        const storedAcc =
+          typeof a.accuracy === "number" ? normalizeAccuracyPercent(a.accuracy) : null;
         setComputedAccuracyPct(storedAcc ?? derived.accuracyPct);
 
         // Trigger AI analysis if not already completed
-        if (isAiPerformanceAnalysisEnabled && (!a.aiReviewStatus || a.aiReviewStatus === "queued") && !a.aiReview) {
-          triggerAIAnalysis(qs, resp, a.testTitle || testData.title || "Untitled Test", a.subject || testData.subject || "General", derived.score, derived.maxScore, derived.accuracyPct);
+        if (
+          isAiPerformanceAnalysisEnabled &&
+          (!a.aiReviewStatus || a.aiReviewStatus === "queued") &&
+          !a.aiReview
+        ) {
+          triggerAIAnalysis(
+            qs,
+            resp,
+            a.testTitle || testData.title || "Untitled Test",
+            a.subject || testData.subject || "General",
+            derived.score,
+            derived.maxScore,
+            derived.accuracyPct
+          );
         }
       } catch (e: any) {
         console.error(e);
@@ -450,9 +474,9 @@ export default function StudentResults() {
     };
   }, [attemptId, firebaseUser, authLoading, isAiPerformanceAnalysisEnabled]);
 
-  if (loading || authLoading) return <div className="text-center py-12">Loading...</div>;
-  if (error) return <div className="text-center py-12">{error}</div>;
-  if (!attempt) return <div className="text-center py-12">Attempt not found.</div>;
+  if (loading || authLoading) return <div className="py-12 text-center">Loading...</div>;
+  if (error) return <div className="py-12 text-center">{error}</div>;
+  if (!attempt) return <div className="py-12 text-center">Attempt not found.</div>;
 
   const score = computedScore ?? 0;
   const maxScore = computedMaxScore ?? 0;
@@ -460,10 +484,10 @@ export default function StudentResults() {
   const timeSpentSec = safeNumber(attempt.timeTakenSec, 0);
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="mx-auto max-w-4xl space-y-6">
       <Button variant="ghost" asChild>
         <Link to="/student/attempts">
-          <ArrowLeft className="h-4 w-4 mr-2" />
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Attempts
         </Link>
       </Button>
@@ -471,8 +495,8 @@ export default function StudentResults() {
       {/* Score Header */}
       <Card className="card-soft border-0 bg-gradient-to-r from-pastel-mint to-pastel-lavender">
         <CardContent className="p-6 text-center">
-          <h1 className="text-2xl font-bold mb-2">{attempt.testTitle || "Test"}</h1>
-          <div className="text-5xl font-bold gradient-text mb-2">
+          <h1 className="mb-2 text-2xl font-bold">{attempt.testTitle || "Test"}</h1>
+          <div className="gradient-text mb-2 text-5xl font-bold">
             {score}/{maxScore}
           </div>
           <p className="text-muted-foreground">Your Score</p>
@@ -480,10 +504,10 @@ export default function StudentResults() {
       </Card>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card className="card-soft border-0 bg-pastel-yellow">
           <CardContent className="p-4 text-center">
-            <Target className="h-6 w-6 mx-auto mb-2 text-primary" />
+            <Target className="mx-auto mb-2 h-6 w-6 text-primary" />
             <p className="text-2xl font-bold">{accuracyPct}%</p>
             <p className="text-xs text-muted-foreground">Accuracy</p>
           </CardContent>
@@ -491,7 +515,7 @@ export default function StudentResults() {
 
         <Card className="card-soft border-0 bg-pastel-lavender">
           <CardContent className="p-4 text-center">
-            <Trophy className="h-6 w-6 mx-auto mb-2 text-yellow-500" />
+            <Trophy className="mx-auto mb-2 h-6 w-6 text-yellow-500" />
             <p className="text-2xl font-bold">{rank ? `#${rank}` : "—"}</p>
             <p className="text-xs text-muted-foreground">Rank</p>
           </CardContent>
@@ -499,7 +523,7 @@ export default function StudentResults() {
 
         <Card className="card-soft border-0 bg-pastel-peach">
           <CardContent className="p-4 text-center">
-            <Clock className="h-6 w-6 mx-auto mb-2 text-primary" />
+            <Clock className="mx-auto mb-2 h-6 w-6 text-primary" />
             <p className="text-2xl font-bold">{formatTime(timeSpentSec)}</p>
             <p className="text-xs text-muted-foreground">Time Spent</p>
           </CardContent>
@@ -507,7 +531,7 @@ export default function StudentResults() {
 
         <Card className="card-soft border-0 bg-pastel-mint">
           <CardContent className="p-4 text-center">
-            <TrendingUp className="h-6 w-6 mx-auto mb-2 text-green-600" />
+            <TrendingUp className="mx-auto mb-2 h-6 w-6 text-green-600" />
             <p className="text-2xl font-bold">{percentileText}</p>
             <p className="text-xs text-muted-foreground">Percentile</p>
           </CardContent>
@@ -531,7 +555,10 @@ export default function StudentResults() {
                     {section.score}/{section.maxScore}
                   </span>
                 </div>
-                <Progress value={section.maxScore ? (section.score / section.maxScore) * 100 : 0} className="h-2" />
+                <Progress
+                  value={section.maxScore ? (section.score / section.maxScore) * 100 : 0}
+                  className="h-2"
+                />
               </div>
             ))
           )}
@@ -539,36 +566,40 @@ export default function StudentResults() {
       </Card>
 
       {/* AI-Evaluated Answers Card */}
-      {attempt.hasSubjectiveQuestions && attempt.responses && (() => {
-        if (!questionsData.length) return null;
+      {attempt.hasSubjectiveQuestions &&
+        attempt.responses &&
+        (() => {
+          if (!questionsData.length) return null;
 
-        const responsesMap = attempt.responses || {};
-        const sectionOrder = Array.from(
-          new Set(questionsData.map((q) => String(q.data.sectionId || "main")))
-        );
+          const responsesMap = attempt.responses || {};
+          const sectionOrder = Array.from(
+            new Set(questionsData.map((q) => String(q.data.sectionId || "main")))
+          );
 
-        const sections = sectionOrder
-          .map((sectionId) => {
-            let indexInSection = 0;
-            const items = questionsData
-              .filter((q) => String(q.data.sectionId || "main") === sectionId)
-              .map((q) => {
-                const resp = responsesMap[q.id];
-                if (!resp?.aiEvaluation) return null;
-                indexInSection += 1;
-                const questionType = String(q.data.questionType || "").toUpperCase();
-                return {
-                  qId: q.id,
-                  index: indexInSection,
-                  questionText: String(q.data.question || q.data.text || `Question ${indexInSection}`),
-                  questionType,
-                  score: resp.aiEvaluation.score,
-                  maxScore: resp.aiEvaluation.maxScore,
-                  confidence: resp.aiEvaluation.confidence,
-                  feedback: resp.aiEvaluation.feedback,
-                };
-              })
-              .filter(Boolean) as Array<{
+          const sections = sectionOrder
+            .map((sectionId) => {
+              let indexInSection = 0;
+              const items = questionsData
+                .filter((q) => String(q.data.sectionId || "main") === sectionId)
+                .map((q) => {
+                  const resp = responsesMap[q.id];
+                  if (!resp?.aiEvaluation) return null;
+                  indexInSection += 1;
+                  const questionType = String(q.data.questionType || "").toUpperCase();
+                  return {
+                    qId: q.id,
+                    index: indexInSection,
+                    questionText: String(
+                      q.data.question || q.data.text || `Question ${indexInSection}`
+                    ),
+                    questionType,
+                    score: resp.aiEvaluation.score,
+                    maxScore: resp.aiEvaluation.maxScore,
+                    confidence: resp.aiEvaluation.confidence,
+                    feedback: resp.aiEvaluation.feedback,
+                  };
+                })
+                .filter(Boolean) as Array<{
                 qId: string;
                 index: number;
                 questionText: string;
@@ -578,93 +609,108 @@ export default function StudentResults() {
                 confidence: number;
                 feedback: string;
               }>;
-            return { sectionId, sectionName: sectionNameMap[sectionId] || sectionId, items };
-          })
-          .filter((s) => s.items.length > 0);
+              return { sectionId, sectionName: sectionNameMap[sectionId] || sectionId, items };
+            })
+            .filter((s) => s.items.length > 0);
 
-        if (!sections.length) return null;
+          if (!sections.length) return null;
 
-        const allItems = sections.flatMap((s) => s.items);
-        const totalSubjScore = allItems.reduce((acc, e) => acc + e.score, 0);
-        const totalSubjMax = allItems.reduce((acc, e) => acc + e.maxScore, 0);
+          const allItems = sections.flatMap((s) => s.items);
+          const totalSubjScore = allItems.reduce((acc, e) => acc + e.score, 0);
+          const totalSubjMax = allItems.reduce((acc, e) => acc + e.maxScore, 0);
 
-        const confidencePill = (confidence: number) => {
-          if (confidence >= 0.8) return "bg-green-100 text-green-700";
-          if (confidence >= 0.5) return "bg-amber-100 text-amber-700";
-          return "bg-red-100 text-red-600";
-        };
+          const confidencePill = (confidence: number) => {
+            if (confidence >= 0.8) return "bg-green-100 text-green-700";
+            if (confidence >= 0.5) return "bg-amber-100 text-amber-700";
+            return "bg-red-100 text-red-600";
+          };
 
-        return (
-          <Card className="card-soft border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BrainCircuit className="h-5 w-5 text-purple-600" />
-                AI-Evaluated Answers
-                <span className="ml-auto text-base font-semibold text-purple-600">
-                  {totalSubjScore.toFixed(1)}{" "}
-                  <span className="text-muted-foreground font-normal">/ {totalSubjMax}</span>
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {sections.map((section) => (
-                <div key={section.sectionId} className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold">{section.sectionName}</p>
-                    <span className="text-xs text-muted-foreground">{section.items.length} evaluated</span>
-                  </div>
-                  <div className="space-y-3">
-                    {section.items.map((entry) => (
-                      <div key={entry.qId} className="rounded-xl border p-4 space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="text-sm font-semibold shrink-0">Q{entry.index}</span>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${
-                              entry.questionType === "UPLOAD"
-                                ? "bg-purple-100 text-purple-700 border-purple-200"
-                                : "bg-orange-100 text-orange-700 border-orange-200"
-                            }`}>
-                              {entry.questionType === "UPLOAD" ? "Upload" : "Short Answer"}
-                            </span>
+          return (
+            <Card className="card-soft border-0">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BrainCircuit className="h-5 w-5 text-purple-600" />
+                  AI-Evaluated Answers
+                  <span className="ml-auto text-base font-semibold text-purple-600">
+                    {totalSubjScore.toFixed(1)}{" "}
+                    <span className="font-normal text-muted-foreground">/ {totalSubjMax}</span>
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {sections.map((section) => (
+                  <div key={section.sectionId} className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold">{section.sectionName}</p>
+                      <span className="text-xs text-muted-foreground">
+                        {section.items.length} evaluated
+                      </span>
+                    </div>
+                    <div className="space-y-3">
+                      {section.items.map((entry) => (
+                        <div key={entry.qId} className="space-y-2 rounded-xl border p-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <span className="shrink-0 text-sm font-semibold">Q{entry.index}</span>
+                              <span
+                                className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${
+                                  entry.questionType === "UPLOAD"
+                                    ? "border-purple-200 bg-purple-100 text-purple-700"
+                                    : "border-orange-200 bg-orange-100 text-orange-700"
+                                }`}
+                              >
+                                {entry.questionType === "UPLOAD" ? "Upload" : "Short Answer"}
+                              </span>
+                            </div>
+                            <div className="flex shrink-0 items-center gap-2">
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${confidencePill(entry.confidence)}`}
+                              >
+                                {Math.round(entry.confidence * 100)}% confidence
+                              </span>
+                              <span
+                                className={`text-sm font-bold ${
+                                  entry.score >= entry.maxScore * 0.7
+                                    ? "text-green-600"
+                                    : entry.score >= entry.maxScore * 0.4
+                                      ? "text-amber-600"
+                                      : "text-red-500"
+                                }`}
+                              >
+                                {entry.score.toFixed(1)}{" "}
+                                <span className="text-xs font-normal text-muted-foreground">
+                                  / {entry.maxScore}
+                                </span>
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${confidencePill(entry.confidence)}`}>
-                              {Math.round(entry.confidence * 100)}% confidence
-                            </span>
-                            <span className={`text-sm font-bold ${
-                              entry.score >= entry.maxScore * 0.7 ? "text-green-600" :
-                              entry.score >= entry.maxScore * 0.4 ? "text-amber-600" :
-                              "text-red-500"
-                            }`}>
-                              {entry.score.toFixed(1)}{" "}
-                              <span className="text-muted-foreground font-normal text-xs">/ {entry.maxScore}</span>
-                            </span>
-                          </div>
+                          <Progress
+                            value={entry.maxScore ? (entry.score / entry.maxScore) * 100 : 0}
+                            className="h-1.5"
+                          />
+                          <details className="group">
+                            <summary className="flex cursor-pointer list-none items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground">
+                              <span className="group-open:hidden">▶ Show AI feedback</span>
+                              <span className="hidden group-open:inline">▼ Hide feedback</span>
+                            </summary>
+                            <p className="mt-2 border-l-2 border-border pl-2 text-xs leading-relaxed text-muted-foreground">
+                              {entry.feedback}
+                            </p>
+                          </details>
+                          {entry.confidence < 0.5 && (
+                            <p className="text-[10px] text-amber-600">
+                              ⚠ Low confidence — may require manual review
+                            </p>
+                          )}
                         </div>
-                        <Progress value={entry.maxScore ? (entry.score / entry.maxScore) * 100 : 0} className="h-1.5" />
-                        <details className="group">
-                          <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors list-none flex items-center gap-1">
-                            <span className="group-open:hidden">▶ Show AI feedback</span>
-                            <span className="hidden group-open:inline">▼ Hide feedback</span>
-                          </summary>
-                          <p className="text-xs text-muted-foreground leading-relaxed mt-2 pl-2 border-l-2 border-border">
-                            {entry.feedback}
-                          </p>
-                        </details>
-                        {entry.confidence < 0.5 && (
-                          <p className="text-[10px] text-amber-600">
-                            ⚠ Low confidence — may require manual review
-                          </p>
-                        )}
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        );
-      })()}
+                ))}
+              </CardContent>
+            </Card>
+          );
+        })()}
 
       {/* AI Review */}
       {isAiPerformanceAnalysisEnabled ? (
@@ -692,16 +738,15 @@ export default function StudentResults() {
       <div className="flex gap-4">
         <Button variant="outline" className="flex-1 rounded-xl" asChild>
           <Link to={`/student/attempts/${attemptId}`}>
-            <Eye className="h-4 w-4 mr-2" />
+            <Eye className="mr-2 h-4 w-4" />
             Review Answers
           </Link>
         </Button>
 
-        <Button className="flex-1 rounded-xl gradient-bg" asChild>
+        <Button className="gradient-bg flex-1 rounded-xl" asChild>
           <Link to="/student/tests">Take Another Test</Link>
         </Button>
       </div>
     </div>
   );
 }
-

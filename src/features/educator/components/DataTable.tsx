@@ -1,12 +1,5 @@
 import { motion } from "framer-motion";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@shared/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/ui/table";
 import { Card } from "@shared/ui/card";
 
 interface Column<T> {
@@ -38,10 +31,7 @@ export default function DataTable<T extends { id: string | number }>({
           <TableHeader>
             <TableRow className="bg-muted/50">
               {columns.map((column) => (
-                <TableHead
-                  key={String(column.key)}
-                  className={column.className}
-                >
+                <TableHead key={String(column.key)} className={column.className}>
                   {column.header}
                 </TableHead>
               ))}

@@ -1,13 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
 
 interface ChartCardProps {
   title: string;
@@ -48,7 +42,7 @@ export default function ChartCard({
           <CardTitle className="text-base font-semibold">{title}</CardTitle>
           {showPeriodSelect && (
             <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
-              <SelectTrigger className="w-32 h-8 text-xs">
+              <SelectTrigger className="h-8 w-32 text-xs">
                 <SelectValue placeholder="Select period" />
               </SelectTrigger>
               <SelectContent>

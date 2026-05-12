@@ -32,21 +32,20 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-    <QueryClientProvider client={queryClient}>
-      {/* <ReactQueryDevtools initialIsOpen={false} /> */}
-      <AuthProvider>
-        <TenantProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-              <AppRoutes />
-            </BrowserRouter>
-          </TooltipProvider>
-        </TenantProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        {/* <ReactQueryDevtools initialIsOpen={false} /> */}
+        <AuthProvider>
+          <TenantProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <AppRoutes />
+              </BrowserRouter>
+            </TooltipProvider>
+          </TenantProvider>
+        </AuthProvider>
+      </QueryClientProvider>
     </ThemeProvider>
   );
 }
-

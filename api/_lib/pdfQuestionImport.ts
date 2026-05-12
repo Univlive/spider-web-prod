@@ -222,10 +222,18 @@ function looksLikeQuestionStart(line: string) {
 
 function looksLikeMcqSegment(segment: string) {
   const normalized = segment.replace(/\r/g, "");
-  const lines = normalized.split("\n").map((line) => line.trim()).filter(Boolean);
+  const lines = normalized
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
   const firstLine = lines[0] || "";
-  const optionCount = (normalized.match(/(?:^|\n)\s*(?:[A-Da-d][\).:-]|\([A-Da-d]\)|[1-4][\).:-])\s+/gm) || []).length;
-  const hasAnswerHint = /(ans(?:wer)?|correct(?: answer| option| choice)?|right option|final answer|the correct choice)/i.test(normalized);
+  const optionCount = (
+    normalized.match(/(?:^|\n)\s*(?:[A-Da-d][\).:-]|\([A-Da-d]\)|[1-4][\).:-])\s+/gm) || []
+  ).length;
+  const hasAnswerHint =
+    /(ans(?:wer)?|correct(?: answer| option| choice)?|right option|final answer|the correct choice)/i.test(
+      normalized
+    );
   const hasQuestionMarker = looksLikeQuestionStart(firstLine) || /\?/.test(firstLine);
   return optionCount >= 2 && (hasQuestionMarker || hasAnswerHint);
 }
@@ -267,10 +275,8 @@ export function segmentQuestionCandidates(text: string) {
 }
 
 export function parseJsonResponse<T>(content: string): T {
-  const jsonMatch =
-    content.match(/```json\s*([\s\S]*?)\s*```/i) ||
-    content.match(/```\s*([\s\S]*?)\s*```/i) ||
-    [null, content];
+  const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/i) ||
+    content.match(/```\s*([\s\S]*?)\s*```/i) || [null, content];
   const jsonString = (jsonMatch[1] || content || "").trim();
   return JSON.parse(jsonString) as T;
 }
@@ -306,14 +312,20 @@ function normalizeQuestionText(input: string) {
 
   if (!lines.length) return "";
 
-  const optionLinePattern = /^\s*(?:(?:option|choice)\s*)?(?:[A-D]\s*[)\].:\-]|[1-4]\s*[)\].-])\s+/i;
-  const answerHintLinePattern = /^\s*(?:ans(?:wer)?|correct(?:\s+answer|\s+option|\s+choice)?|solution)\b/i;
+  const optionLinePattern =
+    /^\s*(?:(?:option|choice)\s*)?(?:[A-D]\s*[)\].:\-]|[1-4]\s*[)\].-])\s+/i;
+  const answerHintLinePattern =
+    /^\s*(?:ans(?:wer)?|correct(?:\s+answer|\s+option|\s+choice)?|solution)\b/i;
 
   const looksMathHeavyLine = (line: string) => {
     const value = String(line || "").trim();
     if (!value) return false;
 
-    if (/\\(?:frac|dfrac|tfrac|sqrt|sum|int|prod|lim|log|ln|sin|cos|tan|cot|sec|csc|alpha|beta|gamma|delta|epsilon|theta|lambda|mu|nu|pi|rho|sigma|tau|phi|omega|xi|psi|zeta|eta|kappa|upsilon|varsigma|Delta|Omega|pm|times|div|leq|geq|neq|infty|partial)\b/.test(value)) {
+    if (
+      /\\(?:frac|dfrac|tfrac|sqrt|sum|int|prod|lim|log|ln|sin|cos|tan|cot|sec|csc|alpha|beta|gamma|delta|epsilon|theta|lambda|mu|nu|pi|rho|sigma|tau|phi|omega|xi|psi|zeta|eta|kappa|upsilon|varsigma|Delta|Omega|pm|times|div|leq|geq|neq|infty|partial)\b/.test(
+        value
+      )
+    ) {
       return true;
     }
 
@@ -377,7 +389,8 @@ function normalizeMathNotationToLatex(input: string) {
       // Convert simple slash fractions to LaTeX fractions.
       out = out.replace(
         /(^|[^\\\w])([A-Za-z0-9]+)\s*\/\s*([A-Za-z0-9]+)(?=$|[^\w])/g,
-        (_match: string, prefix: string, num: string, den: string) => `${prefix}\\frac{${num}}{${den}}`
+        (_match: string, prefix: string, num: string, den: string) =>
+          `${prefix}\\frac{${num}}{${den}}`
       );
 
       // Ensure LaTeX fractions are wrapped in inline math mode.
@@ -432,7 +445,11 @@ function hasLikelyQuestionSignal(question: string) {
   if (!q) return false;
 
   if (/\?/.test(q)) return true;
-  if (/\b(find|determine|evaluate|calculate|compute|solve|identify|which|what|who|when|where|why|how)\b/i.test(q)) {
+  if (
+    /\b(find|determine|evaluate|calculate|compute|solve|identify|which|what|who|when|where|why|how)\b/i.test(
+      q
+    )
+  ) {
     return true;
   }
   if (/_{2,}/.test(q)) return true;
@@ -504,9 +521,10 @@ export function normalizeImportedItem(item: any, fallbackIndex: number): Importe
     ? item.reasons.map((reason: any) => String(reason || "").trim()).filter(Boolean)
     : [];
 
-  let status: ImportedQuestionStatus = item?.status === "ready" || item?.status === "partial" || item?.status === "rejected"
-    ? item.status
-    : "partial";
+  let status: ImportedQuestionStatus =
+    item?.status === "ready" || item?.status === "partial" || item?.status === "rejected"
+      ? item.status
+      : "partial";
 
   if (!question) reasons.push("Question text could not be extracted.");
   if (question && looksLikeInstructionOrMetaText(question)) {
@@ -527,14 +545,23 @@ export function normalizeImportedItem(item: any, fallbackIndex: number): Importe
   }
 
   if ((!question && !options.length) || isInstructionLike) status = "rejected";
-  else if (!question || !shouldTreatAsQuestionLike || options.length < 2 || correctOption == null || correctOption < 0 || correctOption >= options.length) {
+  else if (
+    !question ||
+    !shouldTreatAsQuestionLike ||
+    options.length < 2 ||
+    correctOption == null ||
+    correctOption < 0 ||
+    correctOption >= options.length
+  ) {
     status = status === "rejected" ? "rejected" : "partial";
   } else {
     status = "ready";
   }
 
   return {
-    sourceIndex: Number.isFinite(Number(item?.sourceIndex)) ? Number(item.sourceIndex) : fallbackIndex,
+    sourceIndex: Number.isFinite(Number(item?.sourceIndex))
+      ? Number(item.sourceIndex)
+      : fallbackIndex,
     status,
     question,
     options,
@@ -543,8 +570,6 @@ export function normalizeImportedItem(item: any, fallbackIndex: number): Importe
     marks: 5,
     negativeMarks: -1,
     rawBlock:
-      typeof item?.rawBlock === "string"
-        ? normalizeSpecialMathSymbolsToLatex(item.rawBlock)
-        : "",
+      typeof item?.rawBlock === "string" ? normalizeSpecialMathSymbolsToLatex(item.rawBlock) : "",
   };
 }

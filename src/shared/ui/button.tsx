@@ -10,16 +10,20 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/90 rounded-md",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-md",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         // Custom variants for Univ
         hero: "bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-full shadow-soft hover:shadow-elevated hover:-translate-y-0.5",
-        heroOutline: "border-2 border-primary text-primary bg-transparent rounded-full hover:bg-primary/5",
+        heroOutline:
+          "border-2 border-primary text-primary bg-transparent rounded-full hover:bg-primary/5",
         pill: "bg-primary text-primary-foreground rounded-full",
-        pillOutline: "border-2 border-primary text-primary bg-transparent rounded-full hover:bg-primary/5",
+        pillOutline:
+          "border-2 border-primary text-primary bg-transparent rounded-full hover:bg-primary/5",
         nav: "text-muted-foreground hover:text-primary bg-transparent",
         navActive: "text-primary bg-transparent font-semibold",
       },
@@ -40,15 +44,16 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
-    return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
+    return (
+      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
+    );
   }
 );
 Button.displayName = "Button";
@@ -68,7 +73,7 @@ const ButtonWithIcon = React.forwardRef<HTMLButtonElement, ButtonWithIconProps>(
       return (
         <button
           className={cn(
-            "inline-flex items-center gap-2 font-semibold transition-all duration-300 rounded-full text-muted-foreground hover:text-foreground",
+            "inline-flex items-center gap-2 rounded-full font-semibold text-muted-foreground transition-all duration-300 hover:text-foreground",
             size === "xl" && "px-6 py-4 text-lg",
             size === "lg" && "px-4 py-2.5",
             size === "default" && "px-4 py-2 text-sm",
@@ -85,10 +90,10 @@ const ButtonWithIcon = React.forwardRef<HTMLButtonElement, ButtonWithIconProps>(
     return (
       <button
         className={cn(
-          "inline-flex items-center gap-3 font-semibold transition-all duration-300 rounded-full",
+          "inline-flex items-center gap-3 rounded-full font-semibold transition-all duration-300",
           isOutline
-            ? "border-2 border-primary text-primary bg-transparent hover:bg-primary/5 px-5 py-3"
-            : "bg-gradient-to-r from-primary to-accent text-primary-foreground px-5 py-3 shadow-soft hover:shadow-elevated hover:-translate-y-0.5",
+            ? "border-2 border-primary bg-transparent px-5 py-3 text-primary hover:bg-primary/5"
+            : "hover:shadow-elevated bg-gradient-to-r from-primary to-accent px-5 py-3 text-primary-foreground shadow-soft hover:-translate-y-0.5",
           size === "xl" && "px-6 py-4 text-lg",
           size === "default" && "px-4 py-2.5 text-sm",
           className
@@ -104,7 +109,7 @@ const ButtonWithIcon = React.forwardRef<HTMLButtonElement, ButtonWithIconProps>(
           )}
         >
           <ChevronRight className={cn(size === "default" ? "h-3 w-3" : "h-4 w-4")} />
-          <ChevronRight className={cn(size === "default" ? "h-3 w-3 -ml-1.5" : "h-4 w-4 -ml-2")} />
+          <ChevronRight className={cn(size === "default" ? "-ml-1.5 h-3 w-3" : "-ml-2 h-4 w-4")} />
         </span>
         {children}
       </button>

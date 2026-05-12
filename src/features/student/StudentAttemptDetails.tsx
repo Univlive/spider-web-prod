@@ -106,14 +106,14 @@ function mapQuestion(id: string, data: any): AttemptQuestion {
   };
 }
 
-
 function isAnswered(val: any) {
   return val !== null && val !== undefined && String(val).trim() !== "";
 }
 
 function isCorrectAnswer(q: AttemptQuestion, userAnswer: string | null) {
   if (!isAnswered(userAnswer)) return false;
-  if (q.type === "integer") return String(userAnswer).trim() === String(q.correctAnswer ?? "").trim();
+  if (q.type === "integer")
+    return String(userAnswer).trim() === String(q.correctAnswer ?? "").trim();
   return String(userAnswer) === String(q.correctAnswer ?? "");
 }
 
@@ -158,7 +158,8 @@ export default function StudentAttemptDetails() {
         const a = aSnap.data() as AttemptDoc;
 
         // Security: student can only see their own attempts
-        if (a.studentId !== firebaseUser.uid) throw new Error("You don't have permission to view this attempt.");
+        if (a.studentId !== firebaseUser.uid)
+          throw new Error("You don't have permission to view this attempt.");
 
         const educatorId = a.educatorId;
         const testId = a.testId;
@@ -173,8 +174,10 @@ export default function StudentAttemptDetails() {
         if (educatorTestSnap.exists()) {
           const localTest = educatorTestSnap.data() as any;
           testSections = Array.isArray(localTest?.sections) ? localTest.sections : [];
-          
-          const linkedAdminTestId = String(localTest?.linkedAdminTestId || localTest?.originalTestId || "").trim();
+
+          const linkedAdminTestId = String(
+            localTest?.linkedAdminTestId || localTest?.originalTestId || ""
+          ).trim();
           const isAdminLinked =
             localTest?.originSource === "admin" ||
             localTest?.source === "imported" ||
@@ -191,19 +194,23 @@ export default function StudentAttemptDetails() {
           qs = qSnap.docs
             .map((d) => mapQuestion(d.id, d.data()))
             .sort((a, b) => a.sortOrder - b.sortOrder);
-            
+
           if (isAdminLinked && linkedAdminTestId && testSections.length === 0) {
-              const adminTestSnap = await getDoc(doc(db, "test_series", linkedAdminTestId));
-              if (adminTestSnap.exists()) {
-                  testSections = Array.isArray(adminTestSnap.data()?.sections) ? adminTestSnap.data()?.sections : [];
-              }
+            const adminTestSnap = await getDoc(doc(db, "test_series", linkedAdminTestId));
+            if (adminTestSnap.exists()) {
+              testSections = Array.isArray(adminTestSnap.data()?.sections)
+                ? adminTestSnap.data()?.sections
+                : [];
+            }
           }
         }
 
         if (!qs.length) {
           const globalTestSnap = await getDoc(doc(db, "test_series", testId));
           if (!globalTestSnap.exists()) throw new Error("Test not found for this attempt.");
-          testSections = Array.isArray(globalTestSnap.data()?.sections) ? globalTestSnap.data()?.sections : [];
+          testSections = Array.isArray(globalTestSnap.data()?.sections)
+            ? globalTestSnap.data()?.sections
+            : [];
 
           const qSnap = await getDocs(collection(db, "test_series", testId, "questions"));
           qs = qSnap.docs
@@ -218,7 +225,9 @@ export default function StudentAttemptDetails() {
         setAttempt(a);
         setQuestions(qs);
         setResponses(a.responses || {});
-        setSections(testSections.length > 0 ? testSections : [{ id: "main", name: a.subject || "General" }]);
+        setSections(
+          testSections.length > 0 ? testSections : [{ id: "main", name: a.subject || "General" }]
+        );
       } catch (e: any) {
         console.error(e);
         logError(e, "attempt-details:load");
@@ -237,8 +246,8 @@ export default function StudentAttemptDetails() {
 
   const questionsBySection = useMemo(() => {
     const map: Record<string, AttemptQuestion[]> = {};
-    sections.forEach(s => map[s.id] = []);
-    questions.forEach(q => {
+    sections.forEach((s) => (map[s.id] = []));
+    questions.forEach((q) => {
       const sid = q.sectionId || "main";
       if (!map[sid]) map[sid] = [];
       map[sid].push(q);
@@ -246,15 +255,15 @@ export default function StudentAttemptDetails() {
     return map;
   }, [questions, sections]);
 
-  if (loading || authLoading) return <div className="text-center py-12">Loading...</div>;
-  if (error) return <div className="text-center py-12">{error}</div>;
-  if (!attempt) return <div className="text-center py-12">Attempt not found.</div>;
+  if (loading || authLoading) return <div className="py-12 text-center">Loading...</div>;
+  if (error) return <div className="py-12 text-center">{error}</div>;
+  if (!attempt) return <div className="py-12 text-center">Attempt not found.</div>;
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-12">
+    <div className="mx-auto max-w-4xl space-y-6 pb-12">
       <Button variant="ghost" asChild>
         <Link to={`/student/results/${attemptId}`}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Results
         </Link>
       </Button>
@@ -274,9 +283,11 @@ export default function StudentAttemptDetails() {
           return (
             <div key={section.id} className="space-y-4">
               <div className="flex items-center gap-3 px-1">
-                <div className="h-6 w-1 bg-primary rounded-full" />
+                <div className="h-6 w-1 rounded-full bg-primary" />
                 <h2 className="text-lg font-bold">{section.name}</h2>
-                <Badge variant="outline" className="rounded-full">{sectionQs.length} Questions</Badge>
+                <Badge variant="outline" className="rounded-full">
+                  {sectionQs.length} Questions
+                </Badge>
               </div>
 
               <div className="space-y-4">
@@ -284,14 +295,22 @@ export default function StudentAttemptDetails() {
                   const userAnswer = responses[q.id]?.answer ?? null;
                   const answered = isAnswered(userAnswer);
                   const correct = isCorrectAnswer(q, userAnswer);
-                  const awarded = !answered ? 0 : correct ? q.marks.correct : -Math.abs(q.marks.incorrect);
+                  const awarded = !answered
+                    ? 0
+                    : correct
+                      ? q.marks.correct
+                      : -Math.abs(q.marks.incorrect);
 
                   return (
                     <Card
                       key={q.id}
                       className={cn(
                         "card-soft border-0",
-                        !answered ? "bg-slate-50 dark:bg-slate-900/10" : correct ? "bg-green-50 dark:bg-green-900/10" : "bg-red-50 dark:bg-red-900/10"
+                        !answered
+                          ? "bg-slate-50 dark:bg-slate-900/10"
+                          : correct
+                            ? "bg-green-50 dark:bg-green-900/10"
+                            : "bg-red-50 dark:bg-red-900/10"
                       )}
                     >
                       <CardHeader className="pb-2">
@@ -319,8 +338,8 @@ export default function StudentAttemptDetails() {
                                 !answered
                                   ? "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
                                   : correct
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-red-100 text-red-700"
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-red-100 text-red-700"
                               )}
                             >
                               {!answered ? "0" : awarded > 0 ? `+${awarded}` : `${awarded}`}
@@ -331,9 +350,11 @@ export default function StudentAttemptDetails() {
 
                       <CardContent className="space-y-4">
                         {!!q.passage && (
-                          <div className="p-4 bg-pastel-cream rounded-xl">
-                            <p className="font-semibold mb-2">{q.passage.title}</p>
-                            <p className="text-sm text-muted-foreground whitespace-pre-line">{q.passage.content}</p>
+                          <div className="rounded-xl bg-pastel-cream p-4">
+                            <p className="mb-2 font-semibold">{q.passage.title}</p>
+                            <p className="whitespace-pre-line text-sm text-muted-foreground">
+                              {q.passage.content}
+                            </p>
                           </div>
                         )}
 
@@ -349,22 +370,36 @@ export default function StudentAttemptDetails() {
                                 <div
                                   key={opt.id}
                                   className={cn(
-                                    "p-3 rounded-xl border-2",
+                                    "rounded-xl border-2 p-3",
                                     isOptCorrect
                                       ? "border-green-500 bg-green-100/50 dark:bg-green-900/20"
                                       : isUser && !isOptCorrect
-                                      ? "border-red-500 bg-red-100/50 dark:bg-red-900/20"
-                                      : "border-transparent bg-background/50"
+                                        ? "border-red-500 bg-red-100/50 dark:bg-red-900/20"
+                                        : "border-transparent bg-background/50"
                                   )}
                                 >
-                                  <div className="flex gap-2 items-start">
-                                    <span className="font-medium shrink-0">{String.fromCharCode(65 + j)}.</span>
+                                  <div className="flex items-start gap-2">
+                                    <span className="shrink-0 font-medium">
+                                      {String.fromCharCode(65 + j)}.
+                                    </span>
                                     <HtmlView html={opt.text} className="flex-1" />
                                   </div>
 
-                                  {isOptCorrect && <Badge className="ml-2 rounded-full bg-green-500">Correct</Badge>}
-                                  {isUser && !isOptCorrect && <Badge className="ml-2 rounded-full bg-red-500">Your Answer</Badge>}
-                                  {isUser && isOptCorrect && <Badge className="ml-2 rounded-full bg-green-500">Your Answer</Badge>}
+                                  {isOptCorrect && (
+                                    <Badge className="ml-2 rounded-full bg-green-500">
+                                      Correct
+                                    </Badge>
+                                  )}
+                                  {isUser && !isOptCorrect && (
+                                    <Badge className="ml-2 rounded-full bg-red-500">
+                                      Your Answer
+                                    </Badge>
+                                  )}
+                                  {isUser && isOptCorrect && (
+                                    <Badge className="ml-2 rounded-full bg-green-500">
+                                      Your Answer
+                                    </Badge>
+                                  )}
                                 </div>
                               );
                             })}
@@ -372,24 +407,29 @@ export default function StudentAttemptDetails() {
                         )}
 
                         {q.type === "integer" && (
-                          <div className="flex gap-4 flex-wrap">
-                            <div className="p-3 rounded-xl bg-background/50">
+                          <div className="flex flex-wrap gap-4">
+                            <div className="rounded-xl bg-background/50 p-3">
                               <span className="text-muted-foreground">Your answer:</span>{" "}
                               <span className="font-bold">{answered ? userAnswer : "—"}</span>
                             </div>
-                            <div className="p-3 rounded-xl bg-green-100/50 dark:bg-green-900/20">
+                            <div className="rounded-xl bg-green-100/50 p-3 dark:bg-green-900/20">
                               <span className="text-muted-foreground">Correct:</span>{" "}
                               <span className="font-bold text-green-600">{q.correctAnswer}</span>
                             </div>
                           </div>
                         )}
 
-                        <div className="p-4 rounded-xl bg-pastel-cream">
-                          <p className="text-sm font-medium mb-1">Explanation</p>
+                        <div className="rounded-xl bg-pastel-cream p-4">
+                          <p className="mb-1 text-sm font-medium">Explanation</p>
                           {q.explanation?.trim() ? (
-                            <HtmlView html={q.explanation} className="text-sm text-muted-foreground" />
+                            <HtmlView
+                              html={q.explanation}
+                              className="text-sm text-muted-foreground"
+                            />
                           ) : (
-                            <p className="text-sm text-muted-foreground">No explanation available.</p>
+                            <p className="text-sm text-muted-foreground">
+                              No explanation available.
+                            </p>
                           )}
                         </div>
                       </CardContent>
@@ -404,4 +444,3 @@ export default function StudentAttemptDetails() {
     </div>
   );
 }
-

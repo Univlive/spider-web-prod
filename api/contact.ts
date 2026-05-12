@@ -24,7 +24,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     email ? `Email: ${email}` : null,
     `Exam Focus: ${exam}`,
     date ? `Preferred Date: ${date}` : null,
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   await Promise.allSettled([
     transporter.sendMail({
@@ -33,25 +35,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       subject: `Demo Request — ${coaching}`,
       text: body,
     }),
-    fetch("https://discord.com/api/webhooks/1503100318580478134/SpG-_TAk08MrcJgpEeP3NX7vxPWyIEdpsZ3HMkihme2HwadPlEiBAr5wSacR1yDEWVLz", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        embeds: [{
-          title: `🎯 New Demo Request — ${coaching}`,
-          color: 0x6c47ff,
-          fields: [
-            { name: "Name", value: name, inline: true },
-            { name: "Coaching", value: coaching, inline: true },
-            { name: "Phone", value: phone, inline: true },
-            { name: "Exam Focus", value: exam, inline: true },
-            email ? { name: "Email", value: email, inline: true } : null,
-            date ? { name: "Preferred Date", value: date, inline: true } : null,
-          ].filter(Boolean),
-          timestamp: new Date().toISOString(),
-        }],
-      }),
-    }),
+    fetch(
+      "https://discord.com/api/webhooks/1503100318580478134/SpG-_TAk08MrcJgpEeP3NX7vxPWyIEdpsZ3HMkihme2HwadPlEiBAr5wSacR1yDEWVLz",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          embeds: [
+            {
+              title: `🎯 New Demo Request — ${coaching}`,
+              color: 0x6c47ff,
+              fields: [
+                { name: "Name", value: name, inline: true },
+                { name: "Coaching", value: coaching, inline: true },
+                { name: "Phone", value: phone, inline: true },
+                { name: "Exam Focus", value: exam, inline: true },
+                email ? { name: "Email", value: email, inline: true } : null,
+                date ? { name: "Preferred Date", value: date, inline: true } : null,
+              ].filter(Boolean),
+              timestamp: new Date().toISOString(),
+            },
+          ],
+        }),
+      }
+    ),
   ]);
 
   res.status(200).json({ ok: true });

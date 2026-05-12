@@ -9,7 +9,12 @@ interface TimerChipProps {
   className?: string;
 }
 
-export function TimerChip({ initialSeconds, onTimeUp, isPaused = false, className }: TimerChipProps) {
+export function TimerChip({
+  initialSeconds,
+  onTimeUp,
+  isPaused = false,
+  className,
+}: TimerChipProps) {
   const [seconds, setSeconds] = useState(initialSeconds);
 
   useEffect(() => {
@@ -41,18 +46,20 @@ export function TimerChip({ initialSeconds, onTimeUp, isPaused = false, classNam
   return (
     <div
       className={cn(
-        "flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-lg font-semibold transition-colors",
+        "flex items-center gap-2 rounded-xl px-4 py-2 font-mono text-lg font-semibold transition-colors",
         isCritical
-          ? "bg-destructive text-destructive-foreground animate-pulse"
+          ? "animate-pulse bg-destructive text-destructive-foreground"
           : isLow
-          ? "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400"
-          : "bg-primary/10 text-primary",
+            ? "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400"
+            : "bg-primary/10 text-primary",
         className
       )}
     >
       <Clock className="h-5 w-5" />
       {hours > 0 && <span>{formatTime(hours)}:</span>}
-      <span>{formatTime(minutes)}:{formatTime(secs)}</span>
+      <span>
+        {formatTime(minutes)}:{formatTime(secs)}
+      </span>
     </div>
   );
 }

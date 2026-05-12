@@ -52,23 +52,25 @@ export function TestimonialsSection() {
     <section className="section-padding section-4 overflow-hidden">
       <div className="container-main">
         <motion.div
-          className="text-center max-w-2xl mx-auto mb-16"
+          className="mx-auto mb-16 max-w-2xl text-center"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <span className="inline-block px-4 py-1.5 bg-primary/10 text-primary text-sm font-semibold rounded-full mb-4">
+          <span className="mb-4 inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary">
             Testimonials
           </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+          <h2 className="mb-4 text-3xl font-bold sm:text-4xl lg:text-5xl">
             What Coaching Centers Say About{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Preparekaro.in</span>
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Preparekaro.in
+            </span>
           </h2>
         </motion.div>
 
         {/* Carousel */}
-        <div className="relative max-w-4xl mx-auto">
+        <div className="relative mx-auto max-w-4xl">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentIndex}
@@ -76,45 +78,47 @@ export function TestimonialsSection() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
               transition={{ duration: 0.3 }}
-              className="bg-card rounded-3xl p-8 lg:p-12 border-2 border-border shadow-card relative"
+              className="relative rounded-3xl border-2 border-border bg-card p-8 shadow-card lg:p-12"
             >
               {/* Large quote icon */}
-              <Quote className="absolute top-6 right-6 h-16 w-16 text-primary/10" />
-              
+              <Quote className="absolute right-6 top-6 h-16 w-16 text-primary/10" />
+
               {/* Header */}
-              <div className="flex items-center gap-5 mb-6">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-                  <span className="text-xl font-bold text-primary-foreground">{testimonials[currentIndex].avatar}</span>
+              <div className="mb-6 flex items-center gap-5">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent shadow-lg">
+                  <span className="text-xl font-bold text-primary-foreground">
+                    {testimonials[currentIndex].avatar}
+                  </span>
                 </div>
                 <div>
-                  <div className="font-bold text-lg">{testimonials[currentIndex].name}</div>
+                  <div className="text-lg font-bold">{testimonials[currentIndex].name}</div>
                   <div className="text-muted-foreground">{testimonials[currentIndex].role}</div>
                 </div>
               </div>
 
               {/* Rating */}
-              <div className="flex gap-1 mb-6">
+              <div className="mb-6 flex gap-1">
                 {[...Array(testimonials[currentIndex].rating)].map((_, i) => (
                   <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
 
               {/* Quote */}
-              <p className="text-lg lg:text-xl text-foreground leading-relaxed">
+              <p className="text-lg leading-relaxed text-foreground lg:text-xl">
                 "{testimonials[currentIndex].quote}"
               </p>
             </motion.div>
           </AnimatePresence>
 
           {/* Dots indicator */}
-          <div className="flex items-center justify-center gap-2 mt-8">
+          <div className="mt-8 flex items-center justify-center gap-2">
             {testimonials.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  index === currentIndex 
-                    ? "bg-gradient-to-r from-primary to-accent w-8" 
+                className={`h-3 w-3 rounded-full transition-all duration-300 ${
+                  index === currentIndex
+                    ? "w-8 bg-gradient-to-r from-primary to-accent"
                     : "bg-muted hover:bg-muted-foreground/30"
                 }`}
               />
@@ -122,16 +126,16 @@ export function TestimonialsSection() {
           </div>
 
           {/* Navigation */}
-          <div className="flex items-center justify-center gap-4 mt-6">
+          <div className="mt-6 flex items-center justify-center gap-4">
             <button
               onClick={prevSlide}
-              className="w-12 h-12 rounded-full bg-card border-2 border-border flex items-center justify-center text-foreground shadow-soft hover:shadow-elevated hover:border-primary transition-all hover:-translate-y-0.5"
+              className="hover:shadow-elevated flex h-12 w-12 items-center justify-center rounded-full border-2 border-border bg-card text-foreground shadow-soft transition-all hover:-translate-y-0.5 hover:border-primary"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             <button
               onClick={nextSlide}
-              className="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center text-primary-foreground shadow-soft hover:shadow-elevated transition-all hover:-translate-y-0.5"
+              className="hover:shadow-elevated flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-soft transition-all hover:-translate-y-0.5"
             >
               <ChevronRight className="h-5 w-5" />
             </button>

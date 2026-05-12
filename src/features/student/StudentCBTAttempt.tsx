@@ -14,13 +14,7 @@ import { useAuth } from "@app/providers/AuthProvider";
 import { useTenant } from "@app/providers/TenantProvider";
 import { db } from "@shared/lib/firebase";
 import { logError } from "@shared/lib/errorLogger";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@shared/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@shared/ui/sheet";
 import {
   addDoc,
   collection,
@@ -40,10 +34,13 @@ import {
  * One Firestore read per unique groupId — cached in a Map.
  */
 async function enrichQuestionsWithPassages(qs: AttemptQuestion[]): Promise<AttemptQuestion[]> {
-  const uniqueGroupIds = [...new Set(qs.map(q => q.groupId).filter(Boolean) as string[])];
+  const uniqueGroupIds = [...new Set(qs.map((q) => q.groupId).filter(Boolean) as string[])];
   if (!uniqueGroupIds.length) return qs;
 
-  const cache = new Map<string, { title: string; content: string; contentFormat: "html" | "latex" }>();
+  const cache = new Map<
+    string,
+    { title: string; content: string; contentFormat: "html" | "latex" }
+  >();
 
   await Promise.all(
     uniqueGroupIds.map(async (gid) => {
@@ -162,7 +159,9 @@ const parseMcqCorrectIndex = (value: any, optionCount: number): number | null =>
 
 const buildInitResponses = (qs: AttemptQuestion[]) => {
   const init: Record<string, AttemptResponse> = {};
-  qs.forEach((q) => (init[q.id] = { answer: null, markedForReview: false, visited: false, answered: false }));
+  qs.forEach(
+    (q) => (init[q.id] = { answer: null, markedForReview: false, visited: false, answered: false })
+  );
   return init;
 };
 
@@ -188,8 +187,10 @@ const mapQuestion = (id: string, data: any): AttemptQuestion => {
     sectionId: data.sectionId || "main",
     type: mappedType,
     stem: data.question || "",
-    options: mappedType === "mcq" ? opts.map((t, i) => ({ id: String(i), text: String(t) })) : undefined,
-    correctAnswer: mappedType === "mcq" || mappedType === "integer" ? String(correctIndex) : undefined,
+    options:
+      mappedType === "mcq" ? opts.map((t, i) => ({ id: String(i), text: String(t) })) : undefined,
+    correctAnswer:
+      mappedType === "mcq" || mappedType === "integer" ? String(correctIndex) : undefined,
     referenceAnswer: data.referenceAnswer || "",
     referenceKeywords: Array.isArray(data.referenceKeywords) ? data.referenceKeywords : [],
     referenceAnswerFileUrl: data.referenceAnswerFileUrl ? String(data.referenceAnswerFileUrl) : "",
@@ -198,14 +199,17 @@ const mapQuestion = (id: string, data: any): AttemptQuestion => {
     marks: { correct: positive, incorrect: negative },
     // Passage resolved later via enrichQuestionsWithPassages()
     passage: data.passage
-      ? { title: data.passage.title || "", content: data.passage.content || "", contentFormat: data.passage.contentFormat }
+      ? {
+          title: data.passage.title || "",
+          content: data.passage.content || "",
+          contentFormat: data.passage.contentFormat,
+        }
       : null,
     groupId: data.groupId ? String(data.groupId) : undefined,
     groupOrder: data.groupOrder != null ? Number(data.groupOrder) : undefined,
     sortOrder: safeNumber(data.questionOrder, Number.MAX_SAFE_INTEGER),
   };
 };
-
 
 const computeRemainingSeconds = (startedAtMs: number | null, totalSec: number) => {
   if (!totalSec) return 0;
@@ -281,7 +285,10 @@ export default function StudentCBTAttempt() {
     [tenantSlug, testId]
   );
 
-  const attemptRef = useMemo(() => (attemptId ? doc(db, "attempts", attemptId) : null), [attemptId]);
+  const attemptRef = useMemo(
+    () => (attemptId ? doc(db, "attempts", attemptId) : null),
+    [attemptId]
+  );
 
   // Debounced Firestore updates (reduces write spam)
   const saveTimerRef = useRef<number | null>(null);
@@ -320,14 +327,14 @@ export default function StudentCBTAttempt() {
   // Derived: questions in current active section
   const sectionQuestions = useMemo(() => {
     if (!currentSectionId) return questions;
-    return questions.filter(q => q.sectionId === currentSectionId);
+    return questions.filter((q) => q.sectionId === currentSectionId);
   }, [questions, currentSectionId]);
 
   // Derived: current question index WITHIN the active section
   const currentSectionIndex = useMemo(() => {
     const q = questions[currentIndex];
     if (!q) return 0;
-    const idx = sectionQuestions.findIndex(sq => sq.id === q.id);
+    const idx = sectionQuestions.findIndex((sq) => sq.id === q.id);
     return idx >= 0 ? idx : 0;
   }, [questions, currentIndex, sectionQuestions]);
 
@@ -343,7 +350,10 @@ export default function StudentCBTAttempt() {
       answered: false,
     };
 
-    const nextAnswered = selectedAnswer !== null && selectedAnswer !== undefined && String(selectedAnswer).trim() !== "";
+    const nextAnswered =
+      selectedAnswer !== null &&
+      selectedAnswer !== undefined &&
+      String(selectedAnswer).trim() !== "";
 
     // Include current in-progress selection in stats/submission even before explicit save.
     if (current.answer === selectedAnswer && Boolean(current.answered) === nextAnswered) {
@@ -374,7 +384,10 @@ export default function StudentCBTAttempt() {
         const response = responseMap[q.id];
         const visited = Boolean(response?.visited);
         const markedForReview = Boolean(response?.markedForReview);
-        const answered = response?.answer !== null && response?.answer !== undefined && String(response.answer).trim() !== "";
+        const answered =
+          response?.answer !== null &&
+          response?.answer !== undefined &&
+          String(response.answer).trim() !== "";
 
         if (!visited) notVisitedCount += 1;
         if (answered) answeredCount += 1;
@@ -449,7 +462,9 @@ export default function StudentCBTAttempt() {
         if (educatorTestSnap.exists()) {
           localTestData = educatorTestSnap.data();
           const localTest = localTestData as any;
-          const linkedAdminTestId = String(localTest?.linkedAdminTestId || localTest?.originalTestId || "").trim();
+          const linkedAdminTestId = String(
+            localTest?.linkedAdminTestId || localTest?.originalTestId || ""
+          ).trim();
           const isAdminLinked =
             localTest?.originSource === "admin" ||
             localTest?.source === "imported" ||
@@ -458,7 +473,14 @@ export default function StudentCBTAttempt() {
             Boolean(linkedAdminTestId);
 
           let resolvedTest = localTest;
-          let questionSource = collection(db, "educators", educatorId, "my_tests", testId, "questions");
+          let questionSource = collection(
+            db,
+            "educators",
+            educatorId,
+            "my_tests",
+            testId,
+            "questions"
+          );
 
           if (isAdminLinked && linkedAdminTestId) {
             const adminTestSnap = await getDoc(doc(db, "test_series", linkedAdminTestId));
@@ -469,7 +491,9 @@ export default function StudentCBTAttempt() {
           }
 
           const durationMinutes = safeNumber(resolvedTest?.durationMinutes, 60);
-          const computedSections = [{ id: "main", name: resolvedTest?.subject || localTest?.subject || "General" }];
+          const computedSections = [
+            { id: "main", name: resolvedTest?.subject || localTest?.subject || "General" },
+          ];
 
           meta = {
             id: testId,
@@ -532,8 +556,16 @@ export default function StudentCBTAttempt() {
           }
         }
 
-        const startTime = localTestData?.startTime ? (typeof localTestData.startTime.toMillis === "function" ? localTestData.startTime.toMillis() : localTestData.startTime) : null;
-        const endTime = localTestData?.endTime ? (typeof localTestData.endTime.toMillis === "function" ? localTestData.endTime.toMillis() : localTestData.endTime) : null;
+        const startTime = localTestData?.startTime
+          ? typeof localTestData.startTime.toMillis === "function"
+            ? localTestData.startTime.toMillis()
+            : localTestData.startTime
+          : null;
+        const endTime = localTestData?.endTime
+          ? typeof localTestData.endTime.toMillis === "function"
+            ? localTestData.endTime.toMillis()
+            : localTestData.endTime
+          : null;
         const isLive = startTime && endTime && Date.now() >= startTime && Date.now() <= endTime;
         const isFree = (meta as any).price <= 0;
 
@@ -553,7 +585,7 @@ export default function StudentCBTAttempt() {
         const init = buildInitResponses(qs);
         setResponses(init);
         setCurrentIndex(0);
-        
+
         // Find section of first question
         const firstSectionId = qs[0]?.sectionId || meta.sections[0]?.id || "main";
         setCurrentSectionId(firstSectionId);
@@ -589,9 +621,7 @@ export default function StudentCBTAttempt() {
               .map((d) => ({ id: d.id, ...(d.data() as AttemptDoc) }))
               .filter(
                 (a) =>
-                  a.testId === testId &&
-                  a.educatorId === educatorId &&
-                  a.status === "in_progress"
+                  a.testId === testId && a.educatorId === educatorId && a.status === "in_progress"
               )
               .sort((a, b) => {
                 const aStarted = safeNumber((a as any).startedAtMs, 0);
@@ -676,7 +706,6 @@ export default function StudentCBTAttempt() {
     };
   }, [testId, authLoading, tenantLoading, firebaseUser, educatorId, attemptIdStorageKey]);
 
-  
   // Always show instructions gate before starting / resuming
   useEffect(() => {
     if (loading || authLoading || tenantLoading) return;
@@ -686,7 +715,7 @@ export default function StudentCBTAttempt() {
     }
   }, [loading, authLoading, tenantLoading, isStarted, testId]);
 
-// Keep section in sync and load saved answer into local state
+  // Keep section in sync and load saved answer into local state
   useEffect(() => {
     const q = questions[currentIndex];
     if (q) {
@@ -736,7 +765,6 @@ export default function StudentCBTAttempt() {
     };
   }, []);
 
-
   const goToIndex = (idx: number) => {
     const next = Math.max(0, Math.min(idx, questions.length - 1));
     setCurrentIndex(next);
@@ -746,14 +774,14 @@ export default function StudentCBTAttempt() {
   const goToSectionIndex = (sectionIdx: number) => {
     const q = sectionQuestions[sectionIdx];
     if (!q) return;
-    const globalIdx = questions.findIndex(globalQ => globalQ.id === q.id);
+    const globalIdx = questions.findIndex((globalQ) => globalQ.id === q.id);
     if (globalIdx >= 0) goToIndex(globalIdx);
   };
 
   const switchSection = (sectionId: string) => {
     setCurrentSectionId(sectionId);
     // Find first question of this section
-    const firstQIdx = questions.findIndex(q => (q.sectionId || "main") === sectionId);
+    const firstQIdx = questions.findIndex((q) => (q.sectionId || "main") === sectionId);
     if (firstQIdx >= 0) {
       goToIndex(firstQIdx);
     }
@@ -763,7 +791,8 @@ export default function StudentCBTAttempt() {
     if (!firebaseUser || !testId || !educatorId || !testMeta) return;
 
     const fullscreenOk = await requestFullscreenSafe();
-    if (!fullscreenOk) toast.message("Fullscreen was blocked by browser. Continuing in normal mode.");
+    if (!fullscreenOk)
+      toast.message("Fullscreen was blocked by browser. Continuing in normal mode.");
 
     let id = attemptId;
     let startedAtMs = attemptStartedAtMs;
@@ -834,17 +863,17 @@ export default function StudentCBTAttempt() {
 
   const handleSaveAndNext = () => {
     if (!currentQuestion || !attemptId || !isStarted) return;
-    
+
     const answer = selectedAnswer;
     const hasAnswer = answer !== null && answer !== undefined && String(answer).trim() !== "";
     setResponses((prev) => ({
       ...prev,
-      [currentQuestion.id]: { 
-        ...prev[currentQuestion.id], 
+      [currentQuestion.id]: {
+        ...prev[currentQuestion.id],
         answer: hasAnswer ? answer : null,
         answered: hasAnswer,
         visited: true,
-        markedForReview: false 
+        markedForReview: false,
       },
     }));
 
@@ -855,13 +884,13 @@ export default function StudentCBTAttempt() {
       [`responses.${currentQuestion.id}.markedForReview`]: false,
       currentIndex,
     });
-    
+
     // Move to next in section, or first of next section if available
     if (currentSectionIndex < sectionQuestions.length - 1) {
       goToSectionIndex(currentSectionIndex + 1);
     } else {
       // Find next section
-      const currentSectionIdx = sections.findIndex(s => s.id === currentSectionId);
+      const currentSectionIdx = sections.findIndex((s) => s.id === currentSectionId);
       if (currentSectionIdx >= 0 && currentSectionIdx < sections.length - 1) {
         switchSection(sections[currentSectionIdx + 1].id);
       } else {
@@ -872,17 +901,17 @@ export default function StudentCBTAttempt() {
 
   const handleSaveAndMarkForReview = () => {
     if (!currentQuestion || !attemptId || !isStarted) return;
-    
+
     const answer = selectedAnswer;
     const hasAnswer = answer !== null && answer !== undefined && String(answer).trim() !== "";
     setResponses((prev) => ({
       ...prev,
-      [currentQuestion.id]: { 
-        ...prev[currentQuestion.id], 
+      [currentQuestion.id]: {
+        ...prev[currentQuestion.id],
         answer: hasAnswer ? answer : null,
         answered: hasAnswer,
         visited: true,
-        markedForReview: true 
+        markedForReview: true,
       },
     }));
 
@@ -893,13 +922,13 @@ export default function StudentCBTAttempt() {
       [`responses.${currentQuestion.id}.markedForReview`]: true,
       currentIndex,
     });
-    
+
     // Move to next in section, or first of next section if available
     if (currentSectionIndex < sectionQuestions.length - 1) {
       goToSectionIndex(currentSectionIndex + 1);
     } else {
       // Find next section
-      const currentSectionIdx = sections.findIndex(s => s.id === currentSectionId);
+      const currentSectionIdx = sections.findIndex((s) => s.id === currentSectionId);
       if (currentSectionIdx >= 0 && currentSectionIdx < sections.length - 1) {
         switchSection(sections[currentSectionIdx + 1].id);
       } else {
@@ -910,20 +939,20 @@ export default function StudentCBTAttempt() {
 
   const handleMarkForReviewAndNext = () => {
     if (!currentQuestion || !attemptId || !isStarted) return;
-    
+
     setResponses((prev) => ({
       ...prev,
       [currentQuestion.id]: { ...prev[currentQuestion.id], markedForReview: true },
     }));
 
     queueAttemptUpdate({ [`responses.${currentQuestion.id}.markedForReview`]: true, currentIndex });
-    
+
     // Move to next in section, or first of next section if available
     if (currentSectionIndex < sectionQuestions.length - 1) {
       goToSectionIndex(currentSectionIndex + 1);
     } else {
       // Find next section
-      const currentSectionIdx = sections.findIndex(s => s.id === currentSectionId);
+      const currentSectionIdx = sections.findIndex((s) => s.id === currentSectionId);
       if (currentSectionIdx >= 0 && currentSectionIdx < sections.length - 1) {
         switchSection(sections[currentSectionIdx + 1].id);
       } else {
@@ -941,7 +970,10 @@ export default function StudentCBTAttempt() {
       [currentQuestion.id]: { ...prev[currentQuestion.id], markedForReview: nextVal },
     }));
 
-    queueAttemptUpdate({ [`responses.${currentQuestion.id}.markedForReview`]: nextVal, currentIndex });
+    queueAttemptUpdate({
+      [`responses.${currentQuestion.id}.markedForReview`]: nextVal,
+      currentIndex,
+    });
   };
 
   const handleClearResponse = () => {
@@ -950,7 +982,12 @@ export default function StudentCBTAttempt() {
     setSelectedAnswer(null);
     setResponses((prev) => ({
       ...prev,
-      [currentQuestion.id]: { ...prev[currentQuestion.id], answer: null, answered: false, markedForReview: false },
+      [currentQuestion.id]: {
+        ...prev[currentQuestion.id],
+        answer: null,
+        answered: false,
+        markedForReview: false,
+      },
     }));
 
     queueAttemptUpdate({
@@ -1010,7 +1047,8 @@ export default function StudentCBTAttempt() {
     if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
     const pending = pendingUpdateRef.current;
     pendingUpdateRef.current = {};
-    if (Object.keys(pending).length > 0) await updateDoc(attemptRef, { ...pending, updatedAt: serverTimestamp() });
+    if (Object.keys(pending).length > 0)
+      await updateDoc(attemptRef, { ...pending, updatedAt: serverTimestamp() });
   };
 
   const handleSubmit = async (isAutoSubmit = false) => {
@@ -1044,14 +1082,16 @@ export default function StudentCBTAttempt() {
         setSaving(false);
         setSubmitDialogOpen(false);
         setEvaluatingSubjective(true);
-        setEvaluationProgress(`Evaluating ${subjectiveToEvaluate.length} subjective answer${subjectiveToEvaluate.length > 1 ? "s" : ""}...`);
+        setEvaluationProgress(
+          `Evaluating ${subjectiveToEvaluate.length} subjective answer${subjectiveToEvaluate.length > 1 ? "s" : ""}...`
+        );
         await exitFullscreenSafe();
 
         try {
           const evaluations = subjectiveToEvaluate.map((q) => ({
             questionId: q.id,
             questionText: q.stem,
-            questionType: q.type === "upload" ? "UPLOAD" as const : "SHORT_ANSWER" as const,
+            questionType: q.type === "upload" ? ("UPLOAD" as const) : ("SHORT_ANSWER" as const),
             referenceAnswer: q.referenceAnswer || "",
             referenceKeywords: q.referenceKeywords || [],
             referenceAnswerImageUrl: q.referenceAnswerFileUrl || "",
@@ -1060,7 +1100,9 @@ export default function StudentCBTAttempt() {
             maxScore: safeNumber(q.marks.correct, 5),
           }));
 
-          setEvaluationProgress(`AI is analyzing your answers... (0/${subjectiveToEvaluate.length})`);
+          setEvaluationProgress(
+            `AI is analyzing your answers... (0/${subjectiveToEvaluate.length})`
+          );
 
           const res = await fetch("/api/ai/evaluate-subjective", {
             method: "POST",
@@ -1088,17 +1130,23 @@ export default function StudentCBTAttempt() {
                 };
                 finalScore += safeNumber(aiResult.score, 0);
                 evaluatedCount += 1;
-                setEvaluationProgress(`AI is analyzing your answers... (${evaluatedCount}/${subjectiveToEvaluate.length})`);
+                setEvaluationProgress(
+                  `AI is analyzing your answers... (${evaluatedCount}/${subjectiveToEvaluate.length})`
+                );
               }
             }
           } else {
             console.error("AI evaluation failed:", res.status);
-            setEvaluationProgress("AI evaluation encountered an issue. Saving with partial scores...");
+            setEvaluationProgress(
+              "AI evaluation encountered an issue. Saving with partial scores..."
+            );
             await new Promise((r) => setTimeout(r, 1500));
           }
         } catch (evalErr) {
           console.error("AI evaluation error:", evalErr);
-          setEvaluationProgress("AI evaluation encountered an issue. Saving with partial scores...");
+          setEvaluationProgress(
+            "AI evaluation encountered an issue. Saving with partial scores..."
+          );
           await new Promise((r) => setTimeout(r, 1500));
         }
       }
@@ -1127,7 +1175,9 @@ export default function StudentCBTAttempt() {
         accuracy: finalAccuracy,
         timeTakenSec,
         hasSubjectiveQuestions: subjectiveToEvaluate.length > 0,
-        subjectiveEvaluatedCount: subjectiveToEvaluate.filter((q) => submissionResponses[q.id]?.aiEvaluation).length,
+        subjectiveEvaluatedCount: subjectiveToEvaluate.filter(
+          (q) => submissionResponses[q.id]?.aiEvaluation
+        ).length,
       });
 
       localStorage.removeItem(attemptIdStorageKey);
@@ -1161,7 +1211,7 @@ export default function StudentCBTAttempt() {
     if (!isStarted) return;
 
     const preventDefault = (e: Event) => e.preventDefault();
-    
+
     document.addEventListener("copy", preventDefault);
     document.addEventListener("cut", preventDefault);
     document.addEventListener("paste", preventDefault);
@@ -1176,9 +1226,21 @@ export default function StudentCBTAttempt() {
   }, [isStarted]);
 
   // Use a ref to access latest values in the violation effect
-  const proctorStateRef = useRef({ isStarted, exitCount, submitDialogOpen, violationModalOpen, instructionsOpen });
+  const proctorStateRef = useRef({
+    isStarted,
+    exitCount,
+    submitDialogOpen,
+    violationModalOpen,
+    instructionsOpen,
+  });
   useEffect(() => {
-    proctorStateRef.current = { isStarted, exitCount, submitDialogOpen, violationModalOpen, instructionsOpen };
+    proctorStateRef.current = {
+      isStarted,
+      exitCount,
+      submitDialogOpen,
+      violationModalOpen,
+      instructionsOpen,
+    };
   }, [isStarted, exitCount, submitDialogOpen, violationModalOpen, instructionsOpen]);
 
   const handleViolation = useCallback(() => {
@@ -1207,7 +1269,12 @@ export default function StudentCBTAttempt() {
 
     const handleFullscreenChange = () => {
       if (ignoreProctoringRef.current) return;
-      const { isStarted: started, submitDialogOpen: subOpen, violationModalOpen: violOpen, instructionsOpen: instOpen } = proctorStateRef.current;
+      const {
+        isStarted: started,
+        submitDialogOpen: subOpen,
+        violationModalOpen: violOpen,
+        instructionsOpen: instOpen,
+      } = proctorStateRef.current;
       if (!document.fullscreenElement && started && !subOpen && !violOpen && !instOpen) {
         handleViolation();
       }
@@ -1244,8 +1311,10 @@ export default function StudentCBTAttempt() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [isStarted]);
 
-  if (loading || authLoading || tenantLoading) return <div className="text-center py-12">Loading...</div>;
-  if (loadError || !testMeta || !currentQuestion) return <div className="text-center py-12">{loadError || "Failed to load test"}</div>;
+  if (loading || authLoading || tenantLoading)
+    return <div className="py-12 text-center">Loading...</div>;
+  if (loadError || !testMeta || !currentQuestion)
+    return <div className="py-12 text-center">{loadError || "Failed to load test"}</div>;
 
   // AI Evaluation Overlay — shown while Gemini grades subjective answers
   if (evaluatingSubjective) {
@@ -1277,8 +1346,18 @@ export default function StudentCBTAttempt() {
         <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8, letterSpacing: "-0.02em" }}>
           Evaluating Your Answers
         </h2>
-        <p style={{ fontSize: 14, color: "#94a3b8", maxWidth: 400, textAlign: "center", lineHeight: 1.6, marginBottom: 16 }}>
-          AI is reviewing your subjective answers to provide accurate scoring. This may take a moment.
+        <p
+          style={{
+            fontSize: 14,
+            color: "#94a3b8",
+            maxWidth: 400,
+            textAlign: "center",
+            lineHeight: 1.6,
+            marginBottom: 16,
+          }}
+        >
+          AI is reviewing your subjective answers to provide accurate scoring. This may take a
+          moment.
         </p>
         <div
           style={{
@@ -1318,7 +1397,11 @@ export default function StudentCBTAttempt() {
       return { background: "#3b82f6", color: "#ffffff", border: "2px solid #1e40af" };
     }
     if (r?.answered && r?.markedForReview) {
-      return { background: "linear-gradient(135deg, #7c3aed 60%, #22c55e 100%)", color: "#ffffff", border: "1px solid #7c3aed" };
+      return {
+        background: "linear-gradient(135deg, #7c3aed 60%, #22c55e 100%)",
+        color: "#ffffff",
+        border: "1px solid #7c3aed",
+      };
     }
     if (r?.answered) {
       return { background: "#22c55e", color: "#ffffff", border: "1px solid #16a34a" };
@@ -1338,34 +1421,141 @@ export default function StudentCBTAttempt() {
       <div style={{ padding: "8px 10px", borderBottom: "1px solid #d1d5db" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", fontSize: 11 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#e5e7eb", border: "1px solid #d1d5db", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 10, color: "#374151" }}>{notVisitedCount}</span>
+            <span
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: "50%",
+                background: "#e5e7eb",
+                border: "1px solid #d1d5db",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: 700,
+                fontSize: 10,
+                color: "#374151",
+              }}
+            >
+              {notVisitedCount}
+            </span>
             <span style={{ color: "#374151" }}>Not Visited</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#ef4444", border: "1px solid #dc2626", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 10, color: "#fff" }}>{notAnsweredCount}</span>
+            <span
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: "50%",
+                background: "#ef4444",
+                border: "1px solid #dc2626",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: 700,
+                fontSize: 10,
+                color: "#fff",
+              }}
+            >
+              {notAnsweredCount}
+            </span>
             <span style={{ color: "#374151" }}>Not Answered</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#22c55e", border: "1px solid #16a34a", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 10, color: "#fff" }}>{answeredCount}</span>
+            <span
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: "50%",
+                background: "#22c55e",
+                border: "1px solid #16a34a",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: 700,
+                fontSize: 10,
+                color: "#fff",
+              }}
+            >
+              {answeredCount}
+            </span>
             <span style={{ color: "#374151" }}>Answered</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#7c3aed", border: "1px solid #6d28d9", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 10, color: "#fff" }}>{markedForReviewCount}</span>
+            <span
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: "50%",
+                background: "#7c3aed",
+                border: "1px solid #6d28d9",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: 700,
+                fontSize: 10,
+                color: "#fff",
+              }}
+            >
+              {markedForReviewCount}
+            </span>
             <span style={{ color: "#374151" }}>Marked for Review</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, gridColumn: "span 2" }}>
-            <span style={{ position: "relative", width: 22, height: 22, borderRadius: "50%", background: "#7c3aed", border: "1px solid #6d28d9", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 10, color: "#fff" }}>
-              <span style={{ position: "absolute", bottom: -3, right: -3, width: 11, height: 11, borderRadius: "50%", background: "#22c55e", border: "1px solid #fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7, color: "#fff" }}>✓</span>
+            <span
+              style={{
+                position: "relative",
+                width: 22,
+                height: 22,
+                borderRadius: "50%",
+                background: "#7c3aed",
+                border: "1px solid #6d28d9",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: 700,
+                fontSize: 10,
+                color: "#fff",
+              }}
+            >
+              <span
+                style={{
+                  position: "absolute",
+                  bottom: -3,
+                  right: -3,
+                  width: 11,
+                  height: 11,
+                  borderRadius: "50%",
+                  background: "#22c55e",
+                  border: "1px solid #fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 7,
+                  color: "#fff",
+                }}
+              >
+                ✓
+              </span>
               {answeredAndMarkedCount}
             </span>
-            <span style={{ color: "#374151" }}>Answered &amp; Marked for Review <span style={{ fontSize: 9, color: "#6b7280" }}>(will be considered)</span></span>
+            <span style={{ color: "#374151" }}>
+              Answered &amp; Marked for Review{" "}
+              <span style={{ fontSize: 9, color: "#6b7280" }}>(will be considered)</span>
+            </span>
           </div>
         </div>
       </div>
 
       {/* Section tabs if multiple */}
       {sections.length > 1 && (
-        <div style={{ display: "flex", overflowX: "auto", borderBottom: "1px solid #d1d5db", padding: "0 8px" }}>
+        <div
+          style={{
+            display: "flex",
+            overflowX: "auto",
+            borderBottom: "1px solid #d1d5db",
+            padding: "0 8px",
+          }}
+        >
           {sections.map((section) => (
             <button
               key={section.id}
@@ -1374,7 +1564,8 @@ export default function StudentCBTAttempt() {
                 padding: "6px 12px",
                 fontSize: 12,
                 fontWeight: currentSectionId === section.id ? 700 : 400,
-                borderBottom: currentSectionId === section.id ? "3px solid #2563eb" : "3px solid transparent",
+                borderBottom:
+                  currentSectionId === section.id ? "3px solid #2563eb" : "3px solid transparent",
                 color: currentSectionId === section.id ? "#2563eb" : "#374151",
                 background: "none",
                 border: "none",
@@ -1406,15 +1597,23 @@ export default function StudentCBTAttempt() {
                   position: "relative",
                   ...(isGrouped && {
                     borderLeft: "3px solid #f59e0b",
-                    ...(isGroupStart && { borderTop: "3px solid #f59e0b", borderTopLeftRadius: 4, marginTop: 4 }),
-                    ...(isGroupEnd && { borderBottom: "3px solid #f59e0b", borderBottomLeftRadius: 4, marginBottom: 4 }),
+                    ...(isGroupStart && {
+                      borderTop: "3px solid #f59e0b",
+                      borderTopLeftRadius: 4,
+                      marginTop: 4,
+                    }),
+                    ...(isGroupEnd && {
+                      borderBottom: "3px solid #f59e0b",
+                      borderBottomLeftRadius: 4,
+                      marginBottom: 4,
+                    }),
                     paddingLeft: 2,
                   }),
                 }}
               >
                 <button
                   onClick={() => {
-                    const globalIdx = questions.findIndex(q => q.id === sq.id);
+                    const globalIdx = questions.findIndex((q) => q.id === sq.id);
                     if (globalIdx >= 0) goToIndex(globalIdx);
                     onClose?.();
                   }}
@@ -1439,7 +1638,16 @@ export default function StudentCBTAttempt() {
                   onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
                   title={isGrouped ? "Part of passage/case-study group" : undefined}
                 >
-                  <span style={{ display: "block", width: "100%", textAlign: "center", color: "inherit" }}>{idx + 1}</span>
+                  <span
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      textAlign: "center",
+                      color: "inherit",
+                    }}
+                  >
+                    {idx + 1}
+                  </span>
                 </button>
               </div>
             );
@@ -1465,49 +1673,218 @@ export default function StudentCBTAttempt() {
       }}
     >
       {/* ─── INSTITUTE WATERMARK ─── */}
-      {tenant?.coachingName && (() => {
-        const name = tenant.coachingName!.replace(/[<>&"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[c] ?? c));
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="rgba(0,0,0,0.055)" transform="rotate(-30,160,90)" letter-spacing="3">${name}</text></svg>`;
-        return (
-          <div
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              inset: 0,
-              pointerEvents: "none",
-              zIndex: 102,
-              backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(svg)}")`,
-              backgroundRepeat: "repeat",
-              backgroundSize: "320px 180px",
-            }}
-          />
-        );
-      })()}
+      {tenant?.coachingName &&
+        (() => {
+          const name = tenant.coachingName!.replace(
+            /[<>&"]/g,
+            (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c] ?? c
+          );
+          const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="rgba(0,0,0,0.055)" transform="rotate(-30,160,90)" letter-spacing="3">${name}</text></svg>`;
+          return (
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                inset: 0,
+                pointerEvents: "none",
+                zIndex: 102,
+                backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(svg)}")`,
+                backgroundRepeat: "repeat",
+                backgroundSize: "320px 180px",
+              }}
+            />
+          );
+        })()}
 
       {/* ─── INSTRUCTIONS GATE ─── */}
       {!isStarted && instructionsOpen && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 110, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ width: "100%", maxWidth: 680, borderRadius: 12, background: "#fff", boxShadow: "0 8px 40px rgba(0,0,0,0.25)", overflow: "hidden" }}>
-            <div style={{ padding: "14px 20px", borderBottom: "1px solid #e5e7eb", background: "#1e3a8a", color: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 110,
+            background: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 680,
+              borderRadius: 12,
+              background: "#fff",
+              boxShadow: "0 8px 40px rgba(0,0,0,0.25)",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                padding: "14px 20px",
+                borderBottom: "1px solid #e5e7eb",
+                background: "#1e3a8a",
+                color: "#fff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div>
                 <div style={{ fontSize: 13, opacity: 0.8 }}>Computer Based Test</div>
                 <div style={{ fontSize: 17, fontWeight: 700 }}>{testMeta?.title || "Test"}</div>
               </div>
-              <div style={{ fontSize: 12, background: "rgba(255,255,255,0.15)", padding: "4px 12px", borderRadius: 20 }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  background: "rgba(255,255,255,0.15)",
+                  padding: "4px 12px",
+                  borderRadius: 20,
+                }}
+              >
                 Duration: {testMeta?.durationMinutes ?? 60} min
               </div>
             </div>
 
             <div style={{ padding: "20px 24px" }}>
-              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, color: "#1e3a8a" }}>General Instructions</div>
-              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10, fontSize: 13, color: "#374151" }}>
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, color: "#1e3a8a" }}>
+                General Instructions
+              </div>
+              <ul
+                style={{
+                  listStyle: "none",
+                  padding: 0,
+                  margin: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10,
+                  fontSize: 13,
+                  color: "#374151",
+                }}
+              >
                 {[
-                  { icon: <span style={{ width: 22, height: 22, borderRadius: 3, background: "#e5e7eb", border: "1.5px solid #9ca3af", display: "inline-block", flexShrink: 0 }} />, text: "This is a computer-based test with a timer; it will auto-submit when time ends." },
-                  { icon: <span style={{ width: 0, height: 0, borderTop: "10px solid transparent", borderBottom: "10px solid transparent", borderLeft: "16px solid #f97316", display: "inline-block", flexShrink: 0 }} />, text: `The time duration for the test is ${testMeta?.durationMinutes ?? 60} minutes.` },
-                  { icon: <span style={{ width: 0, height: 0, borderTop: "10px solid transparent", borderBottom: "10px solid transparent", borderLeft: "16px solid #22c55e", display: "inline-block", flexShrink: 0 }} />, text: "Use Save & Next to move forward and Previous to go back." },
-                  { icon: <span style={{ width: 22, height: 22, borderRadius: "50%", background: "#7c3aed", display: "inline-block", flexShrink: 0 }} />, text: "You can change or clear your answer anytime before submission." },
-                  { icon: <span style={{ position: "relative", width: 22, height: 22, borderRadius: "50%", background: "#7c3aed", display: "inline-block", flexShrink: 0 }}><span style={{ position: "absolute", bottom: -3, right: -3, width: 11, height: 11, borderRadius: "50%", background: "#22c55e", border: "1.5px solid #fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, color: "#fff" }}>✓</span></span>, text: "Use Mark for Review & Next to revisit questions later (answered & marked will be evaluated)." },
-                  { icon: <span style={{ width: 22, height: 22, borderRadius: 3, background: "#f3f4f6", border: "1.5px solid #9ca3af", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>1</span>, text: "Check question status using the Question Palette on the right." },
+                  {
+                    icon: (
+                      <span
+                        style={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: 3,
+                          background: "#e5e7eb",
+                          border: "1.5px solid #9ca3af",
+                          display: "inline-block",
+                          flexShrink: 0,
+                        }}
+                      />
+                    ),
+                    text: "This is a computer-based test with a timer; it will auto-submit when time ends.",
+                  },
+                  {
+                    icon: (
+                      <span
+                        style={{
+                          width: 0,
+                          height: 0,
+                          borderTop: "10px solid transparent",
+                          borderBottom: "10px solid transparent",
+                          borderLeft: "16px solid #f97316",
+                          display: "inline-block",
+                          flexShrink: 0,
+                        }}
+                      />
+                    ),
+                    text: `The time duration for the test is ${testMeta?.durationMinutes ?? 60} minutes.`,
+                  },
+                  {
+                    icon: (
+                      <span
+                        style={{
+                          width: 0,
+                          height: 0,
+                          borderTop: "10px solid transparent",
+                          borderBottom: "10px solid transparent",
+                          borderLeft: "16px solid #22c55e",
+                          display: "inline-block",
+                          flexShrink: 0,
+                        }}
+                      />
+                    ),
+                    text: "Use Save & Next to move forward and Previous to go back.",
+                  },
+                  {
+                    icon: (
+                      <span
+                        style={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: "50%",
+                          background: "#7c3aed",
+                          display: "inline-block",
+                          flexShrink: 0,
+                        }}
+                      />
+                    ),
+                    text: "You can change or clear your answer anytime before submission.",
+                  },
+                  {
+                    icon: (
+                      <span
+                        style={{
+                          position: "relative",
+                          width: 22,
+                          height: 22,
+                          borderRadius: "50%",
+                          background: "#7c3aed",
+                          display: "inline-block",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <span
+                          style={{
+                            position: "absolute",
+                            bottom: -3,
+                            right: -3,
+                            width: 11,
+                            height: 11,
+                            borderRadius: "50%",
+                            background: "#22c55e",
+                            border: "1.5px solid #fff",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 8,
+                            color: "#fff",
+                          }}
+                        >
+                          ✓
+                        </span>
+                      </span>
+                    ),
+                    text: "Use Mark for Review & Next to revisit questions later (answered & marked will be evaluated).",
+                  },
+                  {
+                    icon: (
+                      <span
+                        style={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: 3,
+                          background: "#f3f4f6",
+                          border: "1.5px solid #9ca3af",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          flexShrink: 0,
+                        }}
+                      >
+                        1
+                      </span>
+                    ),
+                    text: "Check question status using the Question Palette on the right.",
+                  },
                 ].map((item, i) => (
                   <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                     <span style={{ marginTop: 1 }}>{item.icon}</span>
@@ -1517,7 +1894,16 @@ export default function StudentCBTAttempt() {
               </ul>
 
               <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid #e5e7eb" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "#1f2937", cursor: "pointer" }}>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    fontSize: 13,
+                    color: "#1f2937",
+                    cursor: "pointer",
+                  }}
+                >
                   <input
                     type="checkbox"
                     style={{ width: 16, height: 16, cursor: "pointer" }}
@@ -1530,7 +1916,12 @@ export default function StudentCBTAttempt() {
                   <button
                     disabled={!instructionsChecked}
                     onClick={async () => {
-                      try { await handleStart(); setInstructionsOpen(false); } catch { /* noop */ }
+                      try {
+                        await handleStart();
+                        setInstructionsOpen(false);
+                      } catch {
+                        /* noop */
+                      }
                     }}
                     style={{
                       padding: "9px 32px",
@@ -1553,44 +1944,104 @@ export default function StudentCBTAttempt() {
         </div>
       )}
 
-            {/* ─── TOP HEADER BAR ─── */}
-            <div style={{ background: "#1e3a8a", color: "#fff", padding: "0 12px", height: 44, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-              <div style={{ fontWeight: 700, fontSize: 15, letterSpacing: 0.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {testMeta.title}
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ fontSize: 12, padding: "0", borderRadius: 20, whiteSpace: "nowrap" }}>
-                  {isStarted ? (
-                    <TimerChip 
-                      key={timerKey} 
-                      initialSeconds={timerStartSeconds} 
-                      onTimeUp={handleTimeUp} 
-                      className="bg-white/20 text-white border border-white/30 h-8 py-0 px-3 text-sm font-bold"
-                    />
-                  ) : (
-                    <span style={{ background: "rgba(255,255,255,0.15)", padding: "3px 10px", borderRadius: 20 }}>{testMeta.durationMinutes} min</span>
-                  )}
-                </div>
-                {/* Mobile palette button */}
-                <button
-                  onClick={(e) => { e.stopPropagation(); setMobilePaletteOpen(true); }}
-                  style={{ display: "none", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.2)", border: "none", borderRadius: 6, color: "#fff", padding: "5px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer", pointerEvents: "auto" }}
-                  className="mobile-palette-btn"
-                >
-                  <LayoutGrid size={14} /> Palette
-                </button>
-              </div>
-            </div>
+      {/* ─── TOP HEADER BAR ─── */}
+      <div
+        style={{
+          background: "#1e3a8a",
+          color: "#fff",
+          padding: "0 12px",
+          height: 44,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            fontWeight: 700,
+            fontSize: 15,
+            letterSpacing: 0.5,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {testMeta.title}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ fontSize: 12, padding: "0", borderRadius: 20, whiteSpace: "nowrap" }}>
+            {isStarted ? (
+              <TimerChip
+                key={timerKey}
+                initialSeconds={timerStartSeconds}
+                onTimeUp={handleTimeUp}
+                className="h-8 border border-white/30 bg-white/20 px-3 py-0 text-sm font-bold text-white"
+              />
+            ) : (
+              <span
+                style={{
+                  background: "rgba(255,255,255,0.15)",
+                  padding: "3px 10px",
+                  borderRadius: 20,
+                }}
+              >
+                {testMeta.durationMinutes} min
+              </span>
+            )}
+          </div>
+          {/* Mobile palette button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setMobilePaletteOpen(true);
+            }}
+            style={{
+              display: "none",
+              alignItems: "center",
+              gap: 4,
+              background: "rgba(255,255,255,0.2)",
+              border: "none",
+              borderRadius: 6,
+              color: "#fff",
+              padding: "5px 10px",
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: "pointer",
+              pointerEvents: "auto",
+            }}
+            className="mobile-palette-btn"
+          >
+            <LayoutGrid size={14} /> Palette
+          </button>
+        </div>
+      </div>
 
       {/* ─── MAIN BODY ─── */}
-      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "row", overflow: "hidden" }}>
-
+      <div
+        style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "row", overflow: "hidden" }}
+      >
         {/* LEFT: Question Panel */}
-        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-
+        <div
+          style={{
+            flex: 1,
+            minWidth: 0,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+          }}
+        >
           {/* Section tabs */}
           {sections.length > 1 && (
-            <div style={{ background: "#e5e7eb", borderBottom: "1px solid #d1d5db", display: "flex", overflowX: "auto", flexShrink: 0 }}>
+            <div
+              style={{
+                background: "#e5e7eb",
+                borderBottom: "1px solid #d1d5db",
+                display: "flex",
+                overflowX: "auto",
+                flexShrink: 0,
+              }}
+            >
               {sections.map((section) => (
                 <button
                   key={section.id}
@@ -1599,7 +2050,10 @@ export default function StudentCBTAttempt() {
                     padding: "7px 16px",
                     fontSize: 13,
                     fontWeight: currentSectionId === section.id ? 700 : 400,
-                    borderBottom: currentSectionId === section.id ? "3px solid #1e3a8a" : "3px solid transparent",
+                    borderBottom:
+                      currentSectionId === section.id
+                        ? "3px solid #1e3a8a"
+                        : "3px solid transparent",
                     color: currentSectionId === section.id ? "#1e3a8a" : "#374151",
                     background: "none",
                     border: "none",
@@ -1616,7 +2070,20 @@ export default function StudentCBTAttempt() {
           {/* Question number + scroll area */}
           <div style={{ flex: 1, overflowY: "auto", padding: "0" }}>
             {/* Question header bar */}
-            <div style={{ background: "#dbeafe", borderBottom: "1px solid #bfdbfe", padding: "6px 14px", fontSize: 13, fontWeight: 700, color: "#1e3a8a", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+            <div
+              style={{
+                background: "#dbeafe",
+                borderBottom: "1px solid #bfdbfe",
+                padding: "6px 14px",
+                fontSize: 13,
+                fontWeight: 700,
+                color: "#1e3a8a",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexShrink: 0,
+              }}
+            >
               <span>Question {currentSectionIndex + 1}:</span>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 11, fontWeight: 400, color: "#3b82f6" }}>
@@ -1626,14 +2093,33 @@ export default function StudentCBTAttempt() {
                   onClick={() => setSubmitDialogOpen(true)}
                   disabled={!isStarted}
                   className="mobile-submit-btn"
-                  style={{ display: "none", background: isStarted ? "#22c55e" : "#9ca3af", color: "#fff", border: "none", borderRadius: 4, padding: "4px 12px", fontSize: 12, fontWeight: 700, cursor: isStarted ? "pointer" : "not-allowed" }}
+                  style={{
+                    display: "none",
+                    background: isStarted ? "#22c55e" : "#9ca3af",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 4,
+                    padding: "4px 12px",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: isStarted ? "pointer" : "not-allowed",
+                  }}
                 >
                   SUBMIT
                 </button>
                 {!isStarted && (
                   <button
                     onClick={handleStart}
-                    style={{ background: "#1e3a8a", color: "#fff", border: "none", borderRadius: 5, padding: "4px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                    style={{
+                      background: "#1e3a8a",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 5,
+                      padding: "4px 14px",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
                   >
                     {attemptId ? "Resume" : "Start Test"}
                   </button>
@@ -1643,30 +2129,33 @@ export default function StudentCBTAttempt() {
 
             <div style={{ padding: "12px 16px" }}>
               {/* Passage / Case Study block */}
-              {!!currentQuestion.passage && (() => {
-                const p = currentQuestion.passage!;
-                const isTable = p.content.trimStart().startsWith("<table");
-                return (
-                  <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
-                    {p.title && (
-                      <div className="flex items-center gap-1.5 border-b border-amber-200 dark:border-amber-800 px-3 py-2">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
-                          {isTable ? "Case Study" : "Passage"}
-                        </span>
-                        <span className="text-xs text-amber-600 dark:text-amber-500 truncate">{p.title}</span>
-                      </div>
-                    )}
-                    <div
-                      className={cn(
-                        "p-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300",
-                        isTable && "overflow-x-auto"
+              {!!currentQuestion.passage &&
+                (() => {
+                  const p = currentQuestion.passage!;
+                  const isTable = p.content.trimStart().startsWith("<table");
+                  return (
+                    <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
+                      {p.title && (
+                        <div className="flex items-center gap-1.5 border-b border-amber-200 px-3 py-2 dark:border-amber-800">
+                          <span className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
+                            {isTable ? "Case Study" : "Passage"}
+                          </span>
+                          <span className="truncate text-xs text-amber-600 dark:text-amber-500">
+                            {p.title}
+                          </span>
+                        </div>
                       )}
-                    >
-                      <HtmlView html={p.content} />
+                      <div
+                        className={cn(
+                          "p-3 text-sm leading-relaxed text-gray-700 dark:text-gray-300",
+                          isTable && "overflow-x-auto"
+                        )}
+                      >
+                        <HtmlView html={p.content} />
+                      </div>
                     </div>
-                  </div>
-                );
-              })()}
+                  );
+                })()}
 
               {/* Question stem */}
               <div style={{ fontSize: 13, color: "#1f2937", lineHeight: 1.7, marginBottom: 16 }}>
@@ -1676,7 +2165,18 @@ export default function StudentCBTAttempt() {
               {/* Options – MCQ */}
               {currentQuestion.type === "mcq" && currentQuestion.options && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: "#6b7280", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>Options :</div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "#6b7280",
+                      marginBottom: 6,
+                      textTransform: "uppercase",
+                      letterSpacing: 0.5,
+                    }}
+                  >
+                    Options :
+                  </div>
                   {currentQuestion.options.map((option, i) => {
                     const isSelected = selectedAnswer === option.id;
                     return (
@@ -1702,10 +2202,16 @@ export default function StudentCBTAttempt() {
                           checked={isSelected}
                           disabled={!isStarted}
                           onChange={() => handleSelectOption(option.id)}
-                          style={{ marginTop: 2, accentColor: "#1e3a8a", cursor: isStarted ? "pointer" : "not-allowed" }}
+                          style={{
+                            marginTop: 2,
+                            accentColor: "#1e3a8a",
+                            cursor: isStarted ? "pointer" : "not-allowed",
+                          }}
                         />
                         <span style={{ fontSize: 13, color: "#1f2937", lineHeight: 1.6 }}>
-                          <span style={{ fontWeight: 700, marginRight: 4 }}>{String.fromCharCode(65 + i)}.</span>
+                          <span style={{ fontWeight: 700, marginRight: 4 }}>
+                            {String.fromCharCode(65 + i)}.
+                          </span>
                           <HtmlView html={option.text} className="inline" />
                         </span>
                       </label>
@@ -1717,14 +2223,31 @@ export default function StudentCBTAttempt() {
               {/* Integer type */}
               {currentQuestion.type === "integer" && (
                 <div style={{ marginTop: 8 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: "#6b7280", marginBottom: 6, textTransform: "uppercase" }}>Your Answer :</div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "#6b7280",
+                      marginBottom: 6,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Your Answer :
+                  </div>
                   <input
                     type="number"
                     placeholder="Enter integer answer"
                     value={selectedAnswer || ""}
                     onChange={(e) => handleSelectOption(e.target.value)}
                     disabled={!isStarted}
-                    style={{ padding: "8px 12px", border: "1.5px solid #d1d5db", borderRadius: 5, fontSize: 14, width: 200, outline: "none" }}
+                    style={{
+                      padding: "8px 12px",
+                      border: "1.5px solid #d1d5db",
+                      borderRadius: 5,
+                      fontSize: 14,
+                      width: 200,
+                      outline: "none",
+                    }}
                   />
                 </div>
               )}
@@ -1732,7 +2255,17 @@ export default function StudentCBTAttempt() {
               {/* Short Answer type */}
               {currentQuestion.type === "short_answer" && (
                 <div style={{ marginTop: 8 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: "#6b7280", marginBottom: 6, textTransform: "uppercase" }}>Your Answer :</div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "#6b7280",
+                      marginBottom: 6,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Your Answer :
+                  </div>
                   <textarea
                     placeholder="Type your answer here..."
                     value={selectedAnswer || ""}
@@ -1753,142 +2286,195 @@ export default function StudentCBTAttempt() {
                     }}
                   />
                   <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-                    <span style={{ fontSize: 11, color: "#9ca3af" }}>Write a clear, complete answer. This will be evaluated by AI.</span>
-                    <span style={{ fontSize: 11, color: "#9ca3af" }}>{(selectedAnswer || "").length} chars</span>
+                    <span style={{ fontSize: 11, color: "#9ca3af" }}>
+                      Write a clear, complete answer. This will be evaluated by AI.
+                    </span>
+                    <span style={{ fontSize: 11, color: "#9ca3af" }}>
+                      {(selectedAnswer || "").length} chars
+                    </span>
                   </div>
                 </div>
               )}
 
               {/* Upload Answer type */}
-              {currentQuestion.type === "upload" && (() => {
-                const isUploading = saving && selectedAnswer === "__uploading__";
-                return (
-                  <div style={{ marginTop: 8 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: "#6b7280", marginBottom: 6, textTransform: "uppercase" }}>Upload Your Answer :</div>
-                    {selectedAnswer && selectedAnswer !== "__uploading__" ? (
-                      <div style={{ position: "relative", display: "inline-block" }}>
-                        <img
-                          src={selectedAnswer}
-                          alt="Uploaded answer"
-                          style={{ maxWidth: "100%", maxHeight: 300, borderRadius: 8, border: "1.5px solid #d1d5db", objectFit: "contain" }}
-                        />
-                        <button
-                          onClick={() => handleSelectOption("")}
-                          disabled={!isStarted}
-                          style={{
-                            position: "absolute",
-                            top: 4,
-                            right: 4,
-                            background: "#ef4444",
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: "50%",
-                            width: 28,
-                            height: 28,
-                            fontSize: 14,
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ) : (
-                      <label
+              {currentQuestion.type === "upload" &&
+                (() => {
+                  const isUploading = saving && selectedAnswer === "__uploading__";
+                  return (
+                    <div style={{ marginTop: 8 }}>
+                      <div
                         style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          padding: "32px 16px",
-                          border: isUploading ? "2px solid #6366f1" : "2px dashed #d1d5db",
-                          borderRadius: 12,
-                          cursor: isStarted && !isUploading ? "pointer" : "not-allowed",
-                          background: isUploading ? "#eef2ff" : "#f9fafb",
-                          transition: "all 0.2s",
-                          opacity: isUploading ? 0.8 : 1,
-                        }}
-                        onClick={() => {
-                          if (!isStarted || isUploading) return;
-                          resumeFullscreenRef.current = Boolean(document.fullscreenElement);
-                          ignoreProctoringRef.current = true;
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: "#6b7280",
+                          marginBottom: 6,
+                          textTransform: "uppercase",
                         }}
                       >
-                        {isUploading ? (
-                          <>
-                            <div style={{
-                              width: 36, height: 36, borderRadius: "50%",
-                              border: "3px solid #c7d2fe", borderTopColor: "#6366f1",
-                              animation: "cbt-eval-spin 0.8s linear infinite",
-                              marginBottom: 8,
-                            }} />
-                            <span style={{ fontSize: 13, color: "#6366f1", fontWeight: 600 }}>Uploading your answer...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Upload size={32} style={{ color: "#9ca3af", marginBottom: 8 }} />
-                            <span style={{ fontSize: 13, color: "#6b7280", fontWeight: 600 }}>Click to upload image</span>
-                            <span style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>JPG, PNG up to 10MB</span>
-                          </>
-                        )}
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp"
-                          disabled={!isStarted || isUploading}
-                          style={{ display: "none" }}
-                          onChange={async (e) => {
-                            ignoreProctoringRef.current = false;
-                            const file = e.target.files?.[0];
-                            e.target.value = "";
-                            if (!file) return;
-                            if (file.size > 10 * 1024 * 1024) {
-                              toast.error("File too large. Max 10MB.");
-                              return;
-                            }
-                            if (!file.type.startsWith("image/")) {
-                              toast.error("Only image files are allowed.");
-                              return;
-                            }
-                            try {
-                              handleSelectOption("__uploading__");
-                              setSaving(true);
-                              const { url } = await uploadToImageKit(
-                                file,
-                                `student_ans_${currentQuestion.id}_${Date.now()}.${file.name.split(".").pop() || "jpg"}`,
-                                "/student-answers",
-                                "student"
-                              );
-                              handleSelectOption(url);
-                              toast.success("Image uploaded successfully");
-                            } catch (err: any) {
-                              console.error("[StudentCBT] Upload failed:", err);
-                              handleSelectOption("");
-                              toast.error(err?.message || "Upload failed. Please try again.");
-                            } finally {
-                              setSaving(false);
-                            }
+                        Upload Your Answer :
+                      </div>
+                      {selectedAnswer && selectedAnswer !== "__uploading__" ? (
+                        <div style={{ position: "relative", display: "inline-block" }}>
+                          <img
+                            src={selectedAnswer}
+                            alt="Uploaded answer"
+                            style={{
+                              maxWidth: "100%",
+                              maxHeight: 300,
+                              borderRadius: 8,
+                              border: "1.5px solid #d1d5db",
+                              objectFit: "contain",
+                            }}
+                          />
+                          <button
+                            onClick={() => handleSelectOption("")}
+                            disabled={!isStarted}
+                            style={{
+                              position: "absolute",
+                              top: 4,
+                              right: 4,
+                              background: "#ef4444",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: "50%",
+                              width: 28,
+                              height: 28,
+                              fontSize: 14,
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <label
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "32px 16px",
+                            border: isUploading ? "2px solid #6366f1" : "2px dashed #d1d5db",
+                            borderRadius: 12,
+                            cursor: isStarted && !isUploading ? "pointer" : "not-allowed",
+                            background: isUploading ? "#eef2ff" : "#f9fafb",
+                            transition: "all 0.2s",
+                            opacity: isUploading ? 0.8 : 1,
                           }}
-                        />
-                      </label>
-                    )}
-                    <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>
-                      Upload a clear photo of your handwritten answer.
+                          onClick={() => {
+                            if (!isStarted || isUploading) return;
+                            resumeFullscreenRef.current = Boolean(document.fullscreenElement);
+                            ignoreProctoringRef.current = true;
+                          }}
+                        >
+                          {isUploading ? (
+                            <>
+                              <div
+                                style={{
+                                  width: 36,
+                                  height: 36,
+                                  borderRadius: "50%",
+                                  border: "3px solid #c7d2fe",
+                                  borderTopColor: "#6366f1",
+                                  animation: "cbt-eval-spin 0.8s linear infinite",
+                                  marginBottom: 8,
+                                }}
+                              />
+                              <span style={{ fontSize: 13, color: "#6366f1", fontWeight: 600 }}>
+                                Uploading your answer...
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload size={32} style={{ color: "#9ca3af", marginBottom: 8 }} />
+                              <span style={{ fontSize: 13, color: "#6b7280", fontWeight: 600 }}>
+                                Click to upload image
+                              </span>
+                              <span style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>
+                                JPG, PNG up to 10MB
+                              </span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            disabled={!isStarted || isUploading}
+                            style={{ display: "none" }}
+                            onChange={async (e) => {
+                              ignoreProctoringRef.current = false;
+                              const file = e.target.files?.[0];
+                              e.target.value = "";
+                              if (!file) return;
+                              if (file.size > 10 * 1024 * 1024) {
+                                toast.error("File too large. Max 10MB.");
+                                return;
+                              }
+                              if (!file.type.startsWith("image/")) {
+                                toast.error("Only image files are allowed.");
+                                return;
+                              }
+                              try {
+                                handleSelectOption("__uploading__");
+                                setSaving(true);
+                                const { url } = await uploadToImageKit(
+                                  file,
+                                  `student_ans_${currentQuestion.id}_${Date.now()}.${file.name.split(".").pop() || "jpg"}`,
+                                  "/student-answers",
+                                  "student"
+                                );
+                                handleSelectOption(url);
+                                toast.success("Image uploaded successfully");
+                              } catch (err: any) {
+                                console.error("[StudentCBT] Upload failed:", err);
+                                handleSelectOption("");
+                                toast.error(err?.message || "Upload failed. Please try again.");
+                              } finally {
+                                setSaving(false);
+                              }
+                            }}
+                          />
+                        </label>
+                      )}
+                      <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>
+                        Upload a clear photo of your handwritten answer.
+                      </div>
                     </div>
-                  </div>
-                );
-              })()}
+                  );
+                })()}
             </div>
           </div>
 
           {/* ─── ACTION BUTTONS ROW ─── */}
-          <div style={{ flexShrink: 0, borderTop: "1px solid #e5e7eb", background: "#f9fafb", padding: "8px 12px", display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+          <div
+            style={{
+              flexShrink: 0,
+              borderTop: "1px solid #e5e7eb",
+              background: "#f9fafb",
+              padding: "8px 12px",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 6,
+              alignItems: "center",
+            }}
+          >
             {/* Save & Next */}
             <button
               onClick={handleSaveAndNext}
               disabled={!isStarted}
-              style={{ background: isStarted ? "#22c55e" : "#9ca3af", color: "#fff", border: "none", borderRadius: 4, padding: "7px 14px", fontSize: 12, fontWeight: 700, cursor: isStarted ? "pointer" : "not-allowed", whiteSpace: "nowrap" }}
+              style={{
+                background: isStarted ? "#22c55e" : "#9ca3af",
+                color: "#fff",
+                border: "none",
+                borderRadius: 4,
+                padding: "7px 14px",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: isStarted ? "pointer" : "not-allowed",
+                whiteSpace: "nowrap",
+              }}
             >
               SAVE &amp; NEXT
             </button>
@@ -1897,7 +2483,17 @@ export default function StudentCBTAttempt() {
             <button
               onClick={handleClearResponse}
               disabled={!isStarted}
-              style={{ background: "#fff", color: "#374151", border: "1.5px solid #d1d5db", borderRadius: 4, padding: "6px 14px", fontSize: 12, fontWeight: 700, cursor: isStarted ? "pointer" : "not-allowed", whiteSpace: "nowrap" }}
+              style={{
+                background: "#fff",
+                color: "#374151",
+                border: "1.5px solid #d1d5db",
+                borderRadius: 4,
+                padding: "6px 14px",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: isStarted ? "pointer" : "not-allowed",
+                whiteSpace: "nowrap",
+              }}
             >
               CLEAR
             </button>
@@ -1906,7 +2502,17 @@ export default function StudentCBTAttempt() {
             <button
               onClick={handleSaveAndMarkForReview}
               disabled={!isStarted}
-              style={{ background: isStarted ? "#7c3aed" : "#9ca3af", color: "#fff", border: "none", borderRadius: 4, padding: "7px 14px", fontSize: 12, fontWeight: 700, cursor: isStarted ? "pointer" : "not-allowed", whiteSpace: "nowrap" }}
+              style={{
+                background: isStarted ? "#7c3aed" : "#9ca3af",
+                color: "#fff",
+                border: "none",
+                borderRadius: 4,
+                padding: "7px 14px",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: isStarted ? "pointer" : "not-allowed",
+                whiteSpace: "nowrap",
+              }}
             >
               SAVE &amp; MARK FOR REVIEW
             </button>
@@ -1915,14 +2521,34 @@ export default function StudentCBTAttempt() {
             <button
               onClick={handleMarkForReviewAndNext}
               disabled={!isStarted}
-              style={{ background: isStarted ? "#2563eb" : "#9ca3af", color: "#fff", border: "none", borderRadius: 4, padding: "7px 14px", fontSize: 12, fontWeight: 700, cursor: isStarted ? "pointer" : "not-allowed", whiteSpace: "nowrap" }}
+              style={{
+                background: isStarted ? "#2563eb" : "#9ca3af",
+                color: "#fff",
+                border: "none",
+                borderRadius: 4,
+                padding: "7px 14px",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: isStarted ? "pointer" : "not-allowed",
+                whiteSpace: "nowrap",
+              }}
             >
               MARK FOR REVIEW &amp; NEXT
             </button>
           </div>
 
           {/* ─── NAVIGATION ROW ─── */}
-          <div style={{ flexShrink: 0, borderTop: "1px solid #e5e7eb", background: "#fff", padding: "8px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div
+            style={{
+              flexShrink: 0,
+              borderTop: "1px solid #e5e7eb",
+              background: "#fff",
+              padding: "8px 12px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <div style={{ display: "flex", gap: 6 }}>
               <button
                 onClick={() => {
@@ -1930,19 +2556,32 @@ export default function StudentCBTAttempt() {
                     goToSectionIndex(currentSectionIndex - 1);
                   } else {
                     // Try to go to previous section
-                    const currentSectionIdx = sections.findIndex(s => s.id === currentSectionId);
+                    const currentSectionIdx = sections.findIndex((s) => s.id === currentSectionId);
                     if (currentSectionIdx > 0) {
                       const prevSection = sections[currentSectionIdx - 1];
                       setCurrentSectionId(prevSection.id);
                       // Go to last question of previous section
-                      const prevSectionQs = questions.filter(q => (q.sectionId || "main") === prevSection.id);
-                      const globalIdx = questions.findIndex(q => q.id === prevSectionQs[prevSectionQs.length - 1]?.id);
+                      const prevSectionQs = questions.filter(
+                        (q) => (q.sectionId || "main") === prevSection.id
+                      );
+                      const globalIdx = questions.findIndex(
+                        (q) => q.id === prevSectionQs[prevSectionQs.length - 1]?.id
+                      );
                       if (globalIdx >= 0) goToIndex(globalIdx);
                     }
                   }
                 }}
                 disabled={currentIndex === 0}
-                style={{ background: currentIndex === 0 ? "#e5e7eb" : "#fff", color: currentIndex === 0 ? "#9ca3af" : "#374151", border: "1.5px solid #d1d5db", borderRadius: 4, padding: "6px 16px", fontSize: 12, fontWeight: 700, cursor: currentIndex === 0 ? "not-allowed" : "pointer" }}
+                style={{
+                  background: currentIndex === 0 ? "#e5e7eb" : "#fff",
+                  color: currentIndex === 0 ? "#9ca3af" : "#374151",
+                  border: "1.5px solid #d1d5db",
+                  borderRadius: 4,
+                  padding: "6px 16px",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: currentIndex === 0 ? "not-allowed" : "pointer",
+                }}
               >
                 &lt;&lt; BACK
               </button>
@@ -1952,14 +2591,23 @@ export default function StudentCBTAttempt() {
                     goToSectionIndex(currentSectionIndex + 1);
                   } else {
                     // Try to go to next section
-                    const currentSectionIdx = sections.findIndex(s => s.id === currentSectionId);
+                    const currentSectionIdx = sections.findIndex((s) => s.id === currentSectionId);
                     if (currentSectionIdx >= 0 && currentSectionIdx < sections.length - 1) {
                       switchSection(sections[currentSectionIdx + 1].id);
                     }
                   }
                 }}
                 disabled={currentIndex === questions.length - 1}
-                style={{ background: currentIndex === questions.length - 1 ? "#e5e7eb" : "#fff", color: currentIndex === questions.length - 1 ? "#9ca3af" : "#374151", border: "1.5px solid #d1d5db", borderRadius: 4, padding: "6px 16px", fontSize: 12, fontWeight: 700, cursor: currentIndex === questions.length - 1 ? "not-allowed" : "pointer" }}
+                style={{
+                  background: currentIndex === questions.length - 1 ? "#e5e7eb" : "#fff",
+                  color: currentIndex === questions.length - 1 ? "#9ca3af" : "#374151",
+                  border: "1.5px solid #d1d5db",
+                  borderRadius: 4,
+                  padding: "6px 16px",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: currentIndex === questions.length - 1 ? "not-allowed" : "pointer",
+                }}
               >
                 NEXT &gt;&gt;
               </button>
@@ -1969,7 +2617,16 @@ export default function StudentCBTAttempt() {
               onClick={() => setSubmitDialogOpen(true)}
               disabled={!isStarted}
               className="bottom-submit-btn"
-              style={{ background: isStarted ? "#22c55e" : "#9ca3af", color: "#fff", border: "none", borderRadius: 4, padding: "7px 22px", fontSize: 13, fontWeight: 700, cursor: isStarted ? "pointer" : "not-allowed" }}
+              style={{
+                background: isStarted ? "#22c55e" : "#9ca3af",
+                color: "#fff",
+                border: "none",
+                borderRadius: 4,
+                padding: "7px 22px",
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: isStarted ? "pointer" : "not-allowed",
+              }}
             >
               SUBMIT
             </button>
@@ -1989,7 +2646,16 @@ export default function StudentCBTAttempt() {
             overflow: "hidden",
           }}
         >
-          <div style={{ padding: "8px 12px", borderBottom: "1px solid #e5e7eb", background: "#f9fafb", fontWeight: 700, fontSize: 13, color: "#1e3a8a" }}>
+          <div
+            style={{
+              padding: "8px 12px",
+              borderBottom: "1px solid #e5e7eb",
+              background: "#f9fafb",
+              fontWeight: 700,
+              fontSize: 13,
+              color: "#1e3a8a",
+            }}
+          >
             Question Palette
           </div>
           <div style={{ flex: 1, overflowY: "auto" }}>
@@ -2000,8 +2666,14 @@ export default function StudentCBTAttempt() {
 
       {/* ─── MOBILE PALETTE SHEET ─── */}
       <Sheet open={mobilePaletteOpen} onOpenChange={setMobilePaletteOpen}>
-        <SheetContent side="bottom" className="lg:hidden h-[80dvh] rounded-t-2xl px-0 pb-0 z-[200] mobile-palette-sheet">
-          <SheetHeader className="px-4 pt-6 pb-4 border-b text-left relative" style={{ background: "#1e3a8a" }}>
+        <SheetContent
+          side="bottom"
+          className="mobile-palette-sheet z-[200] h-[80dvh] rounded-t-2xl px-0 pb-0 lg:hidden"
+        >
+          <SheetHeader
+            className="relative border-b px-4 pb-4 pt-6 text-left"
+            style={{ background: "#1e3a8a" }}
+          >
             <SheetTitle style={{ color: "#fff", fontSize: 14 }}>Question Palette</SheetTitle>
             <SheetDescription className="sr-only">
               Quickly navigate between questions and view your attempt status.
@@ -2015,18 +2687,52 @@ export default function StudentCBTAttempt() {
 
       {/* ─── PROCTORING VIOLATION WARNING MODAL ─── */}
       {violationModalOpen && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, backdropFilter: "blur(5px)" }}>
-          <div style={{ width: "100%", maxWidth: 480, borderRadius: 16, background: "#fff", boxShadow: "0 20px 60px rgba(0,0,0,0.4)", overflow: "hidden", textAlign: "center", padding: "35px 25px" }}>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1000,
+            background: "rgba(0,0,0,0.85)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+            backdropFilter: "blur(5px)",
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 480,
+              borderRadius: 16,
+              background: "#fff",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
+              overflow: "hidden",
+              textAlign: "center",
+              padding: "35px 25px",
+            }}
+          >
             <div style={{ color: "#ef4444", marginBottom: 20 }}>
               <AlertTriangle size={64} style={{ margin: "0 auto" }} />
             </div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, color: "#111827", marginBottom: 12 }}>Proctoring Warning!</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: "#111827", marginBottom: 12 }}>
+              Proctoring Warning!
+            </h2>
             <div style={{ marginBottom: 28 }}>
               <p style={{ fontSize: 15, color: "#4b5563", lineHeight: 1.6 }}>
                 You have left the test environment (Tab Switch or Full-screen Exit). <br />
                 This is a violation of the test rules.
               </p>
-              <div style={{ marginTop: 20, padding: "12px", background: "#fee2e2", borderRadius: 8, color: "#991b1b", fontWeight: 700 }}>
+              <div
+                style={{
+                  marginTop: 20,
+                  padding: "12px",
+                  background: "#fee2e2",
+                  borderRadius: 8,
+                  color: "#991b1b",
+                  fontWeight: 700,
+                }}
+              >
                 Warning {exitCount} of 3
               </div>
               <p style={{ fontSize: 13, color: "#6b7280", marginTop: 12 }}>
@@ -2039,7 +2745,18 @@ export default function StudentCBTAttempt() {
                   handleSubmit(true);
                   setViolationModalOpen(false);
                 }}
-                style={{ flex: 1, padding: "12px 20px", background: "#ef4444", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", boxShadow: "0 4px 10px rgba(239,68,68,0.2)" }}
+                style={{
+                  flex: 1,
+                  padding: "12px 20px",
+                  background: "#ef4444",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 8,
+                  fontWeight: 700,
+                  fontSize: 14,
+                  cursor: "pointer",
+                  boxShadow: "0 4px 10px rgba(239,68,68,0.2)",
+                }}
               >
                 Submit &amp; Exit
               </button>
@@ -2048,7 +2765,18 @@ export default function StudentCBTAttempt() {
                   await requestFullscreenSafe();
                   setViolationModalOpen(false);
                 }}
-                style={{ flex: 1, padding: "12px 20px", background: "#1e3a8a", color: "#fff", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", boxShadow: "0 4px 10px rgba(30,58,138,0.2)" }}
+                style={{
+                  flex: 1,
+                  padding: "12px 20px",
+                  background: "#1e3a8a",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 8,
+                  fontWeight: 700,
+                  fontSize: 14,
+                  cursor: "pointer",
+                  boxShadow: "0 4px 10px rgba(30,58,138,0.2)",
+                }}
               >
                 Return to Test
               </button>
@@ -2059,46 +2787,125 @@ export default function StudentCBTAttempt() {
 
       {/* ─── SUBMIT DIALOG ─── */}
       {submitDialogOpen && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 120, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ width: "100%", maxWidth: 420, borderRadius: 10, background: "#fff", boxShadow: "0 8px 40px rgba(0,0,0,0.25)", overflow: "hidden" }}>
-            <div style={{ padding: "14px 18px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "flex-start", gap: 12 }}>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 120,
+            background: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 420,
+              borderRadius: 10,
+              background: "#fff",
+              boxShadow: "0 8px 40px rgba(0,0,0,0.25)",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                padding: "14px 18px",
+                borderBottom: "1px solid #e5e7eb",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 12,
+              }}
+            >
               <AlertTriangle size={20} style={{ color: "#f59e0b", flexShrink: 0, marginTop: 2 }} />
               <div>
                 <div style={{ fontWeight: 700, fontSize: 15, color: "#1f2937" }}>Submit Test?</div>
-                <div style={{ fontSize: 13, color: "#6b7280", marginTop: 2 }}>Are you sure? You won't be able to change your answers after submission.</div>
+                <div style={{ fontSize: 13, color: "#6b7280", marginTop: 2 }}>
+                  Are you sure? You won't be able to change your answers after submission.
+                </div>
               </div>
             </div>
 
-            <div style={{ padding: "14px 18px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <div style={{ padding: 12, borderRadius: 8, background: "#dcfce7", textAlign: "center" }}>
-                <div style={{ fontWeight: 700, fontSize: 22, color: "#16a34a" }}>{answeredCount}</div>
+            <div
+              style={{
+                padding: "14px 18px",
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 10,
+              }}
+            >
+              <div
+                style={{ padding: 12, borderRadius: 8, background: "#dcfce7", textAlign: "center" }}
+              >
+                <div style={{ fontWeight: 700, fontSize: 22, color: "#16a34a" }}>
+                  {answeredCount}
+                </div>
                 <div style={{ fontSize: 12, color: "#374151" }}>Answered</div>
               </div>
-              <div style={{ padding: 12, borderRadius: 8, background: "#fee2e2", textAlign: "center" }}>
-                <div style={{ fontWeight: 700, fontSize: 22, color: "#dc2626" }}>{unansweredVisitedCount}</div>
+              <div
+                style={{ padding: 12, borderRadius: 8, background: "#fee2e2", textAlign: "center" }}
+              >
+                <div style={{ fontWeight: 700, fontSize: 22, color: "#dc2626" }}>
+                  {unansweredVisitedCount}
+                </div>
                 <div style={{ fontSize: 12, color: "#374151" }}>Not Answered</div>
               </div>
-              <div style={{ padding: 12, borderRadius: 8, background: "#ede9fe", textAlign: "center" }}>
-                <div style={{ fontWeight: 700, fontSize: 22, color: "#7c3aed" }}>{submissionCounts.markedForReviewCount}</div>
+              <div
+                style={{ padding: 12, borderRadius: 8, background: "#ede9fe", textAlign: "center" }}
+              >
+                <div style={{ fontWeight: 700, fontSize: 22, color: "#7c3aed" }}>
+                  {submissionCounts.markedForReviewCount}
+                </div>
                 <div style={{ fontSize: 12, color: "#374151" }}>Marked for Review</div>
               </div>
-              <div style={{ padding: 12, borderRadius: 8, background: "#f3f4f6", textAlign: "center" }}>
-                <div style={{ fontWeight: 700, fontSize: 22, color: "#4b5563" }}>{submissionCounts.notVisitedCount}</div>
+              <div
+                style={{ padding: 12, borderRadius: 8, background: "#f3f4f6", textAlign: "center" }}
+              >
+                <div style={{ fontWeight: 700, fontSize: 22, color: "#4b5563" }}>
+                  {submissionCounts.notVisitedCount}
+                </div>
                 <div style={{ fontSize: 12, color: "#374151" }}>Not Visited</div>
               </div>
             </div>
 
-            <div style={{ padding: "12px 18px", borderTop: "1px solid #e5e7eb", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+            <div
+              style={{
+                padding: "12px 18px",
+                borderTop: "1px solid #e5e7eb",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 8,
+              }}
+            >
               <button
                 onClick={() => setSubmitDialogOpen(false)}
-                style={{ background: "#fff", color: "#374151", border: "1.5px solid #d1d5db", borderRadius: 6, padding: "7px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                style={{
+                  background: "#fff",
+                  color: "#374151",
+                  border: "1.5px solid #d1d5db",
+                  borderRadius: 6,
+                  padding: "7px 18px",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleSubmit(false)}
                 disabled={!isStarted || saving}
-                style={{ background: isStarted ? "#22c55e" : "#9ca3af", color: "#fff", border: "none", borderRadius: 6, padding: "7px 20px", fontSize: 13, fontWeight: 700, cursor: isStarted ? "pointer" : "not-allowed" }}
+                style={{
+                  background: isStarted ? "#22c55e" : "#9ca3af",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 6,
+                  padding: "7px 20px",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: isStarted ? "pointer" : "not-allowed",
+                }}
               >
                 {saving ? "Submitting..." : "Submit Test"}
               </button>

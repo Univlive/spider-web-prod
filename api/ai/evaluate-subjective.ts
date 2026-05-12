@@ -1,9 +1,5 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
-import {
-  GoogleGenerativeAI,
-  SchemaType,
-  type GenerationConfig,
-} from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType, type GenerationConfig } from "@google/generative-ai";
 import { getGeminiModelNameFromEnv } from "../_lib/geminiModel.js";
 import { notifyDiscord } from "../_lib/discordLogger.js";
 
@@ -67,12 +63,7 @@ const SYSTEM_INSTRUCTION = [
   "- keywordMatches: Which of the expected keywords were found in the student's answer.",
 ].join("\n");
 
-const ALLOWED_IMAGE_MIME = new Set([
-  "image/png",
-  "image/jpeg",
-  "image/jpg",
-  "image/webp",
-]);
+const ALLOWED_IMAGE_MIME = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp"]);
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
@@ -110,7 +101,8 @@ async function buildRequestParts(req: EvaluationRequest) {
   const referenceAnswer = String(req.referenceAnswer || "").trim();
   const hasReferenceText = Boolean(referenceAnswer);
   const hasReferenceImage = Boolean(String(req.referenceAnswerImageUrl || "").trim());
-  const hasStudentImage = req.questionType === "UPLOAD" && Boolean(String(req.studentAnswer || "").trim());
+  const hasStudentImage =
+    req.questionType === "UPLOAD" && Boolean(String(req.studentAnswer || "").trim());
 
   const lines = [
     "EVALUATE THIS STUDENT ANSWER:",
@@ -136,20 +128,29 @@ async function buildRequestParts(req: EvaluationRequest) {
   lines.push("");
 
   if (req.questionType === "UPLOAD") {
-    lines.push(hasStudentImage ? "Student Answer Image is attached." : "Student Answer Image: (not provided)");
+    lines.push(
+      hasStudentImage ? "Student Answer Image is attached." : "Student Answer Image: (not provided)"
+    );
   } else {
     lines.push(`Student Answer: ${req.studentAnswer}`);
   }
 
   lines.push("");
-  lines.push("Evaluate the student's answer and provide a score, confidence level, and constructive feedback.");
-  lines.push("In feedback, explicitly mention the awarded score and why marks were deducted (if any).");
+  lines.push(
+    "Evaluate the student's answer and provide a score, confidence level, and constructive feedback."
+  );
+  lines.push(
+    "In feedback, explicitly mention the awarded score and why marks were deducted (if any)."
+  );
 
   const parts: any[] = [lines.join("\n")];
 
   if (hasReferenceImage) {
     try {
-      const referenceImagePart = await fetchImageInlinePart(req.referenceAnswerImageUrl || "", "reference");
+      const referenceImagePart = await fetchImageInlinePart(
+        req.referenceAnswerImageUrl || "",
+        "reference"
+      );
       if (referenceImagePart) parts.push(referenceImagePart);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -210,10 +211,7 @@ interface BatchEvaluationResponse {
   results: Record<string, EvaluationResponse>;
 }
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }

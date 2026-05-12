@@ -18,12 +18,7 @@ import { toast } from "sonner";
 
 import { useAuth } from "@app/providers/AuthProvider";
 import { db } from "@shared/lib/firebase";
-import {
-  collection,
-  getCountFromServer,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, getCountFromServer, query, where } from "firebase/firestore";
 
 const API = import.meta.env.VITE_MONKEY_KING_API_URL;
 const ADMIN_KEY = import.meta.env.VITE_MONKEY_KING_ADMIN_KEY;
@@ -111,11 +106,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!canView) return;
     loadStats();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canView]);
 
   if (authLoading) {
-    return <div className="text-center py-12 text-muted-foreground">Loading…</div>;
+    return <div className="py-12 text-center text-muted-foreground">Loading…</div>;
   }
 
   if (!firebaseUser?.uid) {
@@ -181,17 +175,32 @@ export default function AdminDashboard() {
 
   const quickActions = [
     { label: "Create Test", icon: Plus, path: "/admin/tests/new", variant: "default" as const },
-    { label: "Manage Educators", icon: Users, path: "/admin/educators", variant: "outline" as const },
-    { label: "Payment Logs", icon: Receipt, path: "/admin/payment-logs", variant: "outline" as const },
-    { label: "View Analytics", icon: BarChart3, path: "/admin/analytics", variant: "outline" as const },
+    {
+      label: "Manage Educators",
+      icon: Users,
+      path: "/admin/educators",
+      variant: "outline" as const,
+    },
+    {
+      label: "Payment Logs",
+      icon: Receipt,
+      path: "/admin/payment-logs",
+      variant: "outline" as const,
+    },
+    {
+      label: "View Analytics",
+      icon: BarChart3,
+      path: "/admin/analytics",
+      variant: "outline" as const,
+    },
   ];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Admin Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Platform overview</p>
+          <h1 className="text-2xl font-bold text-foreground md:text-3xl">Admin Dashboard</h1>
+          <p className="mt-1 text-muted-foreground">Platform overview</p>
         </div>
         <Button variant="outline" className="gap-2 self-start" onClick={loadStats}>
           <RefreshCcw className="h-4 w-4" />
@@ -199,17 +208,19 @@ export default function AdminDashboard() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {statCards.map((stat) => (
           <Card key={stat.title} className="border-border/50">
             <CardContent className="p-6">
-              <div className={`w-10 h-10 rounded-xl ${stat.bgColor} flex items-center justify-center mb-4`}>
+              <div
+                className={`h-10 w-10 rounded-xl ${stat.bgColor} mb-4 flex items-center justify-center`}
+              >
                 <stat.icon className={`h-5 w-5 ${stat.color}`} />
               </div>
               <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-              <p className="text-sm text-muted-foreground mt-1">{stat.title}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{stat.title}</p>
               {stat.subtitle && (
-                <p className="text-xs text-muted-foreground/70 mt-1">{stat.subtitle}</p>
+                <p className="mt-1 text-xs text-muted-foreground/70">{stat.subtitle}</p>
               )}
             </CardContent>
           </Card>

@@ -40,8 +40,14 @@ export default function AdminBroadcastModal({ open, onOpenChange }: AdminBroadca
   const handleSend = async () => {
     const trimTitle = title.trim();
     const trimBody = body.trim();
-    if (!trimTitle) { toast({ title: "Title required", variant: "destructive" }); return; }
-    if (!trimBody) { toast({ title: "Message body required", variant: "destructive" }); return; }
+    if (!trimTitle) {
+      toast({ title: "Title required", variant: "destructive" });
+      return;
+    }
+    if (!trimBody) {
+      toast({ title: "Message body required", variant: "destructive" });
+      return;
+    }
 
     setSending(true);
     try {
@@ -72,8 +78,14 @@ export default function AdminBroadcastModal({ open, onOpenChange }: AdminBroadca
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
-      <DialogContent className="sm:max-w-md rounded-2xl">
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        onOpenChange(v);
+        if (!v) reset();
+      }}
+    >
+      <DialogContent className="rounded-2xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Megaphone className="h-5 w-5 text-primary" />
@@ -86,7 +98,9 @@ export default function AdminBroadcastModal({ open, onOpenChange }: AdminBroadca
 
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label>Title <span className="text-muted-foreground text-xs">({title.length}/100)</span></Label>
+            <Label>
+              Title <span className="text-xs text-muted-foreground">({title.length}/100)</span>
+            </Label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value.slice(0, 100))}
@@ -96,45 +110,66 @@ export default function AdminBroadcastModal({ open, onOpenChange }: AdminBroadca
           </div>
 
           <div className="space-y-1.5">
-            <Label>Message <span className="text-muted-foreground text-xs">({body.length}/500)</span></Label>
+            <Label>
+              Message <span className="text-xs text-muted-foreground">({body.length}/500)</span>
+            </Label>
             <Textarea
               value={body}
               onChange={(e) => setBody(e.target.value.slice(0, 500))}
               placeholder="Write your notification message here…"
               rows={4}
-              className="rounded-xl resize-none"
+              className="resize-none rounded-xl"
             />
           </div>
 
           <div className="space-y-2">
             <Label>Send to</Label>
-            <RadioGroup value={targetType} onValueChange={(v) => setTargetType(v as AdminTarget)} className="space-y-2">
+            <RadioGroup
+              value={targetType}
+              onValueChange={(v) => setTargetType(v as AdminTarget)}
+              className="space-y-2"
+            >
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="admin_all" id="t-all" />
-                <Label htmlFor="t-all" className="cursor-pointer font-normal">All users (educators + students)</Label>
+                <Label htmlFor="t-all" className="cursor-pointer font-normal">
+                  All users (educators + students)
+                </Label>
               </div>
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="admin_students" id="t-students" />
-                <Label htmlFor="t-students" className="cursor-pointer font-normal">Students only</Label>
+                <Label htmlFor="t-students" className="cursor-pointer font-normal">
+                  Students only
+                </Label>
               </div>
               <div className="flex items-center gap-2">
                 <RadioGroupItem value="admin_educators" id="t-educators" />
-                <Label htmlFor="t-educators" className="cursor-pointer font-normal">Educators only</Label>
+                <Label htmlFor="t-educators" className="cursor-pointer font-normal">
+                  Educators only
+                </Label>
               </div>
             </RadioGroup>
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl" disabled={sending}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="rounded-xl"
+            disabled={sending}
+          >
             Cancel
           </Button>
           <Button
             onClick={handleSend}
             disabled={sending || !title.trim() || !body.trim()}
-            className="rounded-xl gradient-bg text-white"
+            className="gradient-bg rounded-xl text-white"
           >
-            {sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Megaphone className="h-4 w-4 mr-2" />}
+            {sending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Megaphone className="mr-2 h-4 w-4" />
+            )}
             Send
           </Button>
         </DialogFooter>

@@ -1,12 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  collection,
-  getDocs,
-  onSnapshot,
-  orderBy,
-  query,
-  limit,
-} from "firebase/firestore";
+import { collection, getDocs, onSnapshot, orderBy, query, limit } from "firebase/firestore";
 import { db } from "@shared/lib/firebase";
 import { useAuth } from "@app/providers/AuthProvider";
 import { useEducatorFeatures } from "@shared/hooks/useEducatorFeatures";
@@ -253,10 +246,10 @@ export default function DppGenerator() {
 
   if (!featuresLoading && !features.dpp) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 p-8 text-center">
         <Lock className="h-12 w-12 text-muted-foreground" />
         <h2 className="text-xl font-semibold">DPP Generator not included in your plan</h2>
-        <p className="text-muted-foreground max-w-sm">
+        <p className="max-w-sm text-muted-foreground">
           Upgrade your plan to generate AI-powered daily practice papers for your students.
         </p>
       </div>
@@ -277,7 +270,8 @@ export default function DppGenerator() {
   const courseIds = [...new Set(selectedContent.map((c) => c.courseId))];
   const courseId = courseIds.length === 1 ? courseIds[0] : "";
   const branchId = selectedContent[0]?.branchId || "";
-  const canGenerate = selectedIds.size > 0 && courseIds.length === 1 && !generating && usageToday < dailyLimit;
+  const canGenerate =
+    selectedIds.size > 0 && courseIds.length === 1 && !generating && usageToday < dailyLimit;
 
   const handleGenerate = async () => {
     if (!canGenerate || !firebaseUser) return;
@@ -445,14 +439,15 @@ export default function DppGenerator() {
     grouped[key].items.push(item);
   }
 
-  const scheduleDates = schedStartDate && schedEndDate && schedStartDate <= schedEndDate
-    ? dateRange(schedStartDate, schedEndDate)
-    : [];
+  const scheduleDates =
+    schedStartDate && schedEndDate && schedStartDate <= schedEndDate
+      ? dateRange(schedStartDate, schedEndDate)
+      : [];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
+        <h1 className="flex items-center gap-2 text-2xl font-bold">
           <Zap className="h-6 w-6 text-primary" /> DPP Generator
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -472,7 +467,7 @@ export default function DppGenerator() {
 
         {/* ── Generate Now Tab ── */}
         <TabsContent value="generate" className="mt-4">
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid gap-6 lg:grid-cols-2">
             <div className="space-y-4">
               <Card>
                 <CardHeader>
@@ -485,38 +480,38 @@ export default function DppGenerator() {
                     )}
                   </div>
                   {selectedContent.length > 0 && courseIds.length > 1 && (
-                    <p className="text-xs text-destructive mt-1">
+                    <p className="mt-1 text-xs text-destructive">
                       Select content from the same course only
                     </p>
                   )}
                 </CardHeader>
-                <CardContent className="space-y-4 max-h-96 overflow-y-auto">
+                <CardContent className="max-h-96 space-y-4 overflow-y-auto">
                   {loadingContent ? (
                     <div className="flex justify-center py-8">
                       <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                     </div>
                   ) : content.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-8">
+                    <p className="py-8 text-center text-sm text-muted-foreground">
                       No content uploaded yet.
                     </p>
                   ) : (
                     Object.entries(grouped).map(([key, group]) => (
                       <div key={key} className="space-y-2">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           {group.courseName}
                         </p>
                         {group.items.map((item) => (
                           <label
                             key={item.id}
-                            className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted cursor-pointer"
+                            className="flex cursor-pointer items-center gap-3 rounded-lg p-2 hover:bg-muted"
                           >
                             <Checkbox
                               checked={selectedIds.has(item.id)}
                               onCheckedChange={() => toggleSelect(item.id)}
                             />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{item.title}</p>
-                              <p className="text-xs text-muted-foreground capitalize">
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium">{item.title}</p>
+                              <p className="text-xs capitalize text-muted-foreground">
                                 {item.type}
                               </p>
                             </div>
@@ -529,7 +524,7 @@ export default function DppGenerator() {
               </Card>
 
               <Card>
-                <CardContent className="pt-6 space-y-4">
+                <CardContent className="space-y-4 pt-6">
                   <div className="space-y-1">
                     <Label>Difficulty</Label>
                     <Select value={difficulty} onValueChange={setDifficulty}>
@@ -560,7 +555,7 @@ export default function DppGenerator() {
                   </div>
 
                   {selectedContent.length > 0 && (
-                    <div className="text-sm text-muted-foreground space-y-1">
+                    <div className="space-y-1 text-sm text-muted-foreground">
                       <p className="font-medium text-foreground">
                         Selected: {selectedContent.length} item
                         {selectedContent.length !== 1 ? "s" : ""}
@@ -582,11 +577,11 @@ export default function DppGenerator() {
                   <Button className="w-full" onClick={handleGenerate} disabled={!canGenerate}>
                     {generating ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" /> Generating…
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating…
                       </>
                     ) : (
                       <>
-                        <Zap className="h-4 w-4 mr-2" /> Generate DPP
+                        <Zap className="mr-2 h-4 w-4" /> Generate DPP
                       </>
                     )}
                   </Button>
@@ -598,17 +593,17 @@ export default function DppGenerator() {
               <h2 className="text-base font-semibold">Generated DPPs</h2>
               {dpps.length === 0 ? (
                 <Card>
-                  <CardContent className="py-12 text-center text-muted-foreground text-sm">
+                  <CardContent className="py-12 text-center text-sm text-muted-foreground">
                     No DPPs generated yet. Select content and click Generate.
                   </CardContent>
                 </Card>
               ) : (
                 dpps.map((dpp) => (
                   <Card key={dpp.id}>
-                    <CardContent className="pt-4 pb-4 space-y-2">
+                    <CardContent className="space-y-2 pb-4 pt-4">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="font-medium truncate">{dpp.title}</p>
+                          <p className="truncate font-medium">{dpp.title}</p>
                           <p className="text-xs text-muted-foreground">
                             {dpp.contentTitles?.join(", ") || ""}
                           </p>
@@ -616,7 +611,7 @@ export default function DppGenerator() {
                         <StatusBadge status={dpp.status} />
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <Badge variant="outline" className="capitalize text-xs">
+                        <Badge variant="outline" className="text-xs capitalize">
                           {dpp.difficulty}
                         </Badge>
                         <span>{new Date(dpp.generatedAt).toLocaleString()}</span>
@@ -642,7 +637,7 @@ export default function DppGenerator() {
 
         {/* ── Schedule Series Tab ── */}
         <TabsContent value="schedule" className="mt-4 space-y-6">
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid gap-6 lg:grid-cols-2">
             {/* Left: Schedule form */}
             <div className="space-y-4">
               {/* Content picker */}
@@ -655,7 +650,7 @@ export default function DppGenerator() {
                     </p>
                   )}
                 </CardHeader>
-                <CardContent className="max-h-52 overflow-y-auto space-y-4">
+                <CardContent className="max-h-52 space-y-4 overflow-y-auto">
                   {loadingContent ? (
                     <div className="flex justify-center py-6">
                       <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -663,19 +658,19 @@ export default function DppGenerator() {
                   ) : (
                     Object.entries(grouped).map(([key, group]) => (
                       <div key={key} className="space-y-2">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           {group.courseName}
                         </p>
                         {group.items.map((item) => (
                           <label
                             key={item.id}
-                            className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted cursor-pointer"
+                            className="flex cursor-pointer items-center gap-3 rounded-lg p-2 hover:bg-muted"
                           >
                             <Checkbox
                               checked={schedSelectedIds.has(item.id)}
                               onCheckedChange={() => toggleSchedContent(item.id)}
                             />
-                            <p className="text-sm font-medium truncate flex-1">{item.title}</p>
+                            <p className="flex-1 truncate text-sm font-medium">{item.title}</p>
                           </label>
                         ))}
                       </div>
@@ -749,11 +744,11 @@ export default function DppGenerator() {
                         No batches found for selected course
                       </p>
                     ) : (
-                      <div className="space-y-1 max-h-32 overflow-y-auto border rounded-md p-2">
+                      <div className="max-h-32 space-y-1 overflow-y-auto rounded-md border p-2">
                         {batches.map((b) => (
                           <label
                             key={b.id}
-                            className="flex items-center gap-2 p-1.5 rounded hover:bg-muted cursor-pointer"
+                            className="flex cursor-pointer items-center gap-2 rounded p-1.5 hover:bg-muted"
                           >
                             <Checkbox
                               checked={selectedBatchIds.has(b.id)}
@@ -786,10 +781,10 @@ export default function DppGenerator() {
                         Apply all
                       </Button>
                     </div>
-                    <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                    <div className="max-h-52 space-y-1.5 overflow-y-auto pr-1">
                       {scheduleDates.map((d) => (
                         <div key={d} className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground w-24 shrink-0">
+                          <span className="w-24 shrink-0 text-xs text-muted-foreground">
                             {new Date(d + "T00:00:00").toLocaleDateString(undefined, {
                               weekday: "short",
                               month: "short",
@@ -802,7 +797,7 @@ export default function DppGenerator() {
                             onChange={(e) =>
                               setDailyTopics((prev) => ({ ...prev, [d]: e.target.value }))
                             }
-                            className="text-xs h-8"
+                            className="h-8 text-xs"
                           />
                         </div>
                       ))}
@@ -818,11 +813,11 @@ export default function DppGenerator() {
               >
                 {savingSchedule ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" /> Saving…
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…
                   </>
                 ) : (
                   <>
-                    <CalendarClock className="h-4 w-4 mr-2" /> Activate Schedule
+                    <CalendarClock className="mr-2 h-4 w-4" /> Activate Schedule
                   </>
                 )}
               </Button>
@@ -837,17 +832,17 @@ export default function DppGenerator() {
                 </div>
               ) : schedules.length === 0 ? (
                 <Card>
-                  <CardContent className="py-12 text-center text-muted-foreground text-sm">
+                  <CardContent className="py-12 text-center text-sm text-muted-foreground">
                     No schedules yet. Create one to auto-publish DPPs daily.
                   </CardContent>
                 </Card>
               ) : (
                 schedules.map((s) => (
                   <Card key={s.id}>
-                    <CardContent className="pt-4 pb-4 space-y-2">
+                    <CardContent className="space-y-2 pb-4 pt-4">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="font-medium text-sm truncate">
+                          <p className="truncate text-sm font-medium">
                             {s.contentTitles?.join(", ") || "—"}
                           </p>
                           <p className="text-xs text-muted-foreground">
@@ -862,7 +857,7 @@ export default function DppGenerator() {
                         </Badge>
                       </div>
                       <div className="flex flex-wrap gap-1.5 text-xs text-muted-foreground">
-                        <Badge variant="outline" className="capitalize text-xs">
+                        <Badge variant="outline" className="text-xs capitalize">
                           {s.difficulty}
                         </Badge>
                         <span>{s.targetBatches?.length ?? 0} batch(es)</span>
@@ -872,26 +867,26 @@ export default function DppGenerator() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="text-xs h-7"
+                          className="h-7 text-xs"
                           onClick={() => toggleScheduleActive(s.id, s.isActive)}
                         >
                           {s.isActive ? (
                             <>
-                              <Pause className="h-3 w-3 mr-1" /> Pause
+                              <Pause className="mr-1 h-3 w-3" /> Pause
                             </>
                           ) : (
                             <>
-                              <Play className="h-3 w-3 mr-1" /> Resume
+                              <Play className="mr-1 h-3 w-3" /> Resume
                             </>
                           )}
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          className="text-xs h-7 text-destructive hover:text-destructive"
+                          className="h-7 text-xs text-destructive hover:text-destructive"
                           onClick={() => deleteSchedule(s.id)}
                         >
-                          <Trash2 className="h-3 w-3 mr-1" /> Delete
+                          <Trash2 className="mr-1 h-3 w-3" /> Delete
                         </Button>
                       </div>
                     </CardContent>
@@ -909,20 +904,20 @@ export default function DppGenerator() {
 function StatusBadge({ status }: { status: DppRecord["status"] }) {
   if (status === "generating") {
     return (
-      <Badge variant="secondary" className="gap-1 shrink-0">
+      <Badge variant="secondary" className="shrink-0 gap-1">
         <Loader2 className="h-3 w-3 animate-spin" /> Generating
       </Badge>
     );
   }
   if (status === "ready") {
     return (
-      <Badge variant="default" className="gap-1 shrink-0 bg-green-600">
+      <Badge variant="default" className="shrink-0 gap-1 bg-green-600">
         <CheckCircle2 className="h-3 w-3" /> Ready
       </Badge>
     );
   }
   return (
-    <Badge variant="destructive" className="gap-1 shrink-0">
+    <Badge variant="destructive" className="shrink-0 gap-1">
       <AlertCircle className="h-3 w-3" /> Failed
     </Badge>
   );

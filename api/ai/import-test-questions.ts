@@ -16,14 +16,14 @@ export const config = {
 
 // NOTE: GoogleGenerativeAI is lazy-loaded to prevent module load crashes
 // Type imports are OK at top-level since they're erased at runtime
-import type {
-  GenerationConfig,
-} from "@google/generative-ai";
+import type { GenerationConfig } from "@google/generative-ai";
+import { normalizeImportedItem, type ImportedQuestionItem } from "../_lib/pdfQuestionImport.js";
 import {
-  normalizeImportedItem,
-  type ImportedQuestionItem,
-} from "../_lib/pdfQuestionImport.js";
-import { initializeStreaming, sendStreamEvent, endStreaming, streamError } from "../_lib/aiStreamingUtils.js";
+  initializeStreaming,
+  sendStreamEvent,
+  endStreaming,
+  streamError,
+} from "../_lib/aiStreamingUtils.js";
 import { getGeminiModelNameFromEnv } from "../_lib/geminiModel.js";
 import ImageKit from "imagekit";
 
@@ -47,18 +47,18 @@ type ImportRequest = {
   educatorId?: string;
 };
 
-
-
 type GeminiMcqItem = {
   sourceIndex: number;
   status: "ready" | "partial" | "rejected";
   question: string;
-  options: {
-    a?: string;
-    b?: string;
-    c?: string;
-    d?: string;
-  } | string[];
+  options:
+    | {
+        a?: string;
+        b?: string;
+        c?: string;
+        d?: string;
+      }
+    | string[];
   correctOption: number | null;
   reasons: string[];
   rawBlock: string;
@@ -73,12 +73,7 @@ type GeminiResponse = {
 // Constants
 // ---------------------------------------------------------------------------
 
-const ALLOWED_MIME_TYPES = new Set([
-  "image/png",
-  "image/jpeg",
-  "image/jpg",
-  "image/webp",
-]);
+const ALLOWED_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp"]);
 
 /** Maximum decoded image size: ~15 MB (Base64 encodes ~33% larger) */
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
@@ -155,7 +150,7 @@ async function getSchemaType() {
 // Build MCQ response schema dynamically to avoid top-level async
 async function buildMcqSchema() {
   const SchemaType = await getSchemaType();
-  
+
   return {
     type: SchemaType.OBJECT,
     properties: {
@@ -236,7 +231,7 @@ function buildSystemInstruction(context: {
     "3. Question text must contain only the question statement.",
     "   - Do NOT append non-question notes, unrelated passage lines, answer keys, or commentary into question text.",
     "4. For each valid item, extract options in this exact structure:",
-    "   options: { \"a\": \"...\", \"b\": \"...\", \"c\": \"...\", \"d\": \"...\" }",
+    '   options: { "a": "...", "b": "...", "c": "...", "d": "..." }',
     "   - Option values must be answer text only (remove labels like A), B., Option C).",
     "5. All mathematical expressions in question and options must be represented in standard LaTeX.",
     "   - Preserve the exact mathematical structure from the image.",
@@ -413,7 +408,8 @@ function parseGeminiJsonText(text: string): GeminiResponse {
   const candidates = new Set<string>();
   candidates.add(raw);
 
-  const fencedMatch = raw.match(/```json\s*([\s\S]*?)\s*```/i) || raw.match(/```\s*([\s\S]*?)\s*```/i);
+  const fencedMatch =
+    raw.match(/```json\s*([\s\S]*?)\s*```/i) || raw.match(/```\s*([\s\S]*?)\s*```/i);
   if (fencedMatch?.[1]) candidates.add(fencedMatch[1].trim());
 
   const firstBrace = raw.indexOf("{");
@@ -439,7 +435,7 @@ function parseGeminiJsonText(text: string): GeminiResponse {
   //   { "items": [ { ... }, { "question": "some trun
   // Strategy: find the last complete item boundary, close the array/object.
   if (firstBrace >= 0) {
-    let truncated = raw.slice(firstBrace);
+    const truncated = raw.slice(firstBrace);
     // Remove any trailing incomplete string value (text after last complete quote)
     // Then brute-force close brackets/braces
     for (let trimEnd = truncated.length; trimEnd > 0; trimEnd--) {
@@ -455,7 +451,9 @@ function parseGeminiJsonText(text: string): GeminiResponse {
       try {
         const parsed = JSON.parse(normalized) as GeminiResponse;
         if (parsed && Array.isArray(parsed.items) && parsed.items.length > 0) {
-          console.warn(`[parseGeminiJsonText] Recovered ${parsed.items.length} items from truncated JSON (trimmed ${truncated.length - trimEnd} trailing chars)`);
+          console.warn(
+            `[parseGeminiJsonText] Recovered ${parsed.items.length} items from truncated JSON (trimmed ${truncated.length - trimEnd} trailing chars)`
+          );
           return parsed;
         }
       } catch {
@@ -522,7 +520,9 @@ function parseGeminiJsonText(text: string): GeminiResponse {
       }
 
       if (recovered.length > 0) {
-        console.warn(`[parseGeminiJsonText] Recovered ${recovered.length} complete item(s) via object-by-object extraction`);
+        console.warn(
+          `[parseGeminiJsonText] Recovered ${recovered.length} complete item(s) via object-by-object extraction`
+        );
         return { items: recovered };
       }
     }
@@ -544,15 +544,33 @@ function getRequiredClosers(json: string): string | null {
   for (let i = 0; i < json.length; i++) {
     const ch = json[i];
     if (inString) {
-      if (escaped) { escaped = false; continue; }
-      if (ch === "\\") { escaped = true; continue; }
-      if (ch === '"') { inString = false; continue; }
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+      if (ch === "\\") {
+        escaped = true;
+        continue;
+      }
+      if (ch === '"') {
+        inString = false;
+        continue;
+      }
       continue;
     }
-    if (ch === '"') { inString = true; continue; }
-    if (ch === '{') { stack.push('}'); continue; }
-    if (ch === '[') { stack.push(']'); continue; }
-    if (ch === '}' || ch === ']') {
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+    if (ch === "{") {
+      stack.push("}");
+      continue;
+    }
+    if (ch === "[") {
+      stack.push("]");
+      continue;
+    }
+    if (ch === "}" || ch === "]") {
       if (stack.length > 0 && stack[stack.length - 1] === ch) {
         stack.pop();
       }
@@ -586,7 +604,7 @@ async function processWithGemini(
 
     // Lazy-load GoogleGenerativeAI
     const { GoogleGenerativeAI } = await getGeminiAI();
-    
+
     const genAI = new GoogleGenerativeAI(apiKey);
 
     // Build schema dynamically
@@ -619,11 +637,11 @@ async function processWithGemini(
 
     const requestParts: any[] = [
       "Extract all MCQs from this exam page image. " +
-      "Preserve every visible mathematical token in LaTeX without dropping symbols or terms. " +
-      "For any question that has an associated diagram, figure, or graph, " +
-      "return its bounding box in questionImageBox with an 8%-12% loose margin around the full visual element (include outer edges, axes, ticks, labels, legends, and arrowheads). " +
-      "Avoid tight crops; if uncertain, expand the box slightly. " +
-      "Return the results as structured JSON.",
+        "Preserve every visible mathematical token in LaTeX without dropping symbols or terms. " +
+        "For any question that has an associated diagram, figure, or graph, " +
+        "return its bounding box in questionImageBox with an 8%-12% loose margin around the full visual element (include outer edges, axes, ticks, labels, legends, and arrowheads). " +
+        "Avoid tight crops; if uncertain, expand the box slightly. " +
+        "Return the results as structured JSON.",
     ];
 
     if (context.pageText && context.pageText.trim()) {
@@ -649,25 +667,25 @@ async function processWithGemini(
       const jsonErr2 = jsonErr instanceof Error ? jsonErr.message : String(jsonErr);
       console.error(`[processWithGemini] JSON parsing error: ${jsonErr2}`);
       console.error(`[processWithGemini] Attempted to parse: ${text.substring(0, 1000)}...`);
-      throw new Error(`Gemini returned invalid JSON: ${jsonErr2}. Response was: ${text.substring(0, 200)}`);
+      throw new Error(
+        `Gemini returned invalid JSON: ${jsonErr2}. Response was: ${text.substring(0, 200)}`
+      );
     }
 
     // Validate the top-level shape
     if (!parsed || !Array.isArray(parsed.items)) {
-      throw new Error(
-        "Gemini response did not match expected schema (missing 'items' array)"
-      );
+      throw new Error("Gemini response did not match expected schema (missing 'items' array)");
     }
 
     return parsed;
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     const errorStack = err instanceof Error ? err.stack : "No stack";
-    
+
     console.error(`[processWithGemini] Error:`, errorMsg);
     console.error(`[processWithGemini] Stack:`, errorStack);
     console.error(`[processWithGemini] Full error:`, err);
-    
+
     // Re-throw with context
     if (errorMsg.includes("INVALID_ARGUMENT")) {
       throw new Error("Invalid PDF image sent to AI service. Please try a clearer image.");
@@ -707,18 +725,15 @@ async function extractAndCropImage(
 
     const padX = Math.max(boxWidth * BBOX_PAD_PERCENT, (MIN_PAD_PX / imgWidth) * 1000);
     const padTop = Math.max(boxHeight * BBOX_TOP_PAD_PERCENT, (MIN_PAD_PX / imgHeight) * 1000);
-    const padBottom = Math.max(boxHeight * BBOX_BOTTOM_PAD_PERCENT, (MIN_PAD_PX / imgHeight) * 1000);
+    const padBottom = Math.max(
+      boxHeight * BBOX_BOTTOM_PAD_PERCENT,
+      (MIN_PAD_PX / imgHeight) * 1000
+    );
 
     const left = Math.max(0, Math.floor(((xmin - padX) / 1000) * imgWidth));
     const top = Math.max(0, Math.floor(((ymin - padTop) / 1000) * imgHeight));
-    const right = Math.min(
-      imgWidth,
-      Math.ceil(((xmax + padX) / 1000) * imgWidth)
-    );
-    const bottom = Math.min(
-      imgHeight,
-      Math.ceil(((ymax + padBottom) / 1000) * imgHeight)
-    );
+    const right = Math.min(imgWidth, Math.ceil(((xmax + padX) / 1000) * imgWidth));
+    const bottom = Math.min(imgHeight, Math.ceil(((ymax + padBottom) / 1000) * imgHeight));
 
     const cropWidth = Math.max(1, right - left);
     const cropHeight = Math.max(1, bottom - top);
@@ -759,10 +774,7 @@ async function detectEdgeTextBands(
   croppedBuffer: Buffer
 ): Promise<{ top: number; bottom: number }> {
   try {
-    const raw = await sharp(croppedBuffer)
-      .greyscale()
-      .raw()
-      .toBuffer({ resolveWithObject: true });
+    const raw = await sharp(croppedBuffer).greyscale().raw().toBuffer({ resolveWithObject: true });
 
     const width = raw.info?.width ?? 0;
     const height = raw.info?.height ?? 0;
@@ -986,8 +998,7 @@ function hasSufficientPageTextEvidence(item: ImportedQuestionItem, pageTextRaw: 
   }
 
   const ratio = matched / candidateTokens.length;
-  const minRatio =
-    candidateTokens.length >= 16 ? 0.55 : candidateTokens.length >= 10 ? 0.5 : 0.4;
+  const minRatio = candidateTokens.length >= 16 ? 0.55 : candidateTokens.length >= 10 ? 0.5 : 0.4;
 
   if (ratio < minRatio) return false;
 
@@ -1067,7 +1078,7 @@ async function processWithGeminiRetry(
       return await processWithGemini(imageBuffer, mimeType, context);
     } catch (err) {
       lastError = err;
-      
+
       if (!isRetryableError(err)) {
         // Not a retryable error, throw immediately
         throw err;
@@ -1097,10 +1108,7 @@ async function processWithGeminiRetry(
 // Main Vercel handler
 // ---------------------------------------------------------------------------
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Only allow POST
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -1148,7 +1156,10 @@ export default async function handler(
     }
 
     if (imageBuffer.length > MAX_IMAGE_BYTES) {
-      return streamError(res, new Error(`Image too large (${(imageBuffer.length / 1024 / 1024).toFixed(1)} MB)`));
+      return streamError(
+        res,
+        new Error(`Image too large (${(imageBuffer.length / 1024 / 1024).toFixed(1)} MB)`)
+      );
     }
 
     // ---- Step 1: Gemini Extraction ----
@@ -1168,9 +1179,7 @@ export default async function handler(
       throw modelErr;
     }
 
-    const rawItems = Array.isArray(geminiResult?.items)
-      ? geminiResult.items
-      : [];
+    const rawItems = Array.isArray(geminiResult?.items) ? geminiResult.items : [];
 
     if (!rawItems.length) {
       sendStreamEvent(res, {
@@ -1223,12 +1232,7 @@ export default async function handler(
             const cropped = await extractAndCropImage(imageBuffer, box);
 
             const uniqueId = `p${pageNumber || 0}_q${normalized.sourceIndex}_${Date.now()}`;
-            questionImageUrl = await uploadToImageKit(
-              cropped,
-              uniqueId,
-              educatorId
-            );
-
+            questionImageUrl = await uploadToImageKit(cropped, uniqueId, educatorId);
           } catch (cropErr) {
             console.error(
               `[import-test-questions] Failed to crop/upload image for Q${normalized.sourceIndex}:`,
@@ -1302,13 +1306,13 @@ export default async function handler(
     // Log detailed error info for debugging
     const errorDetails = error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : "No stack trace";
-    
+
     console.error("[import-test-questions] Unhandled error:");
     console.error("  Message:", errorDetails);
     console.error("  Stack:", errorStack);
     console.error("  Full error:", error);
     await notifyDiscord(error, req, "import-test-questions");
-    
+
     try {
       streamError(res, error);
     } catch (streamErr) {

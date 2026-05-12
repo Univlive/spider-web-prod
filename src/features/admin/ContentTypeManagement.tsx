@@ -17,20 +17,8 @@ import { Label } from "@shared/ui/label";
 import { Badge } from "@shared/ui/badge";
 import { Card, CardContent } from "@shared/ui/card";
 import { Loader2, Plus } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@shared/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@shared/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@shared/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/ui/table";
 import { Switch } from "@shared/ui/switch";
 
 type ContentType = {
@@ -49,7 +37,10 @@ const DEFAULT_TYPES = [
 ];
 
 function toSlug(name: string) {
-  return name.toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/[^a-z0-9]/g, "");
 }
 
 export default function ContentTypeManagement() {
@@ -122,7 +113,7 @@ export default function ContentTypeManagement() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Content Types</h1>
@@ -130,7 +121,12 @@ export default function ContentTypeManagement() {
             Manage categories available for content uploads across the platform
           </p>
         </div>
-        <Button onClick={() => { setName(""); setOpen(true); }}>
+        <Button
+          onClick={() => {
+            setName("");
+            setOpen(true);
+          }}
+        >
           <Plus className="mr-2 h-4 w-4" /> Add Type
         </Button>
       </div>
@@ -139,7 +135,7 @@ export default function ContentTypeManagement() {
         <CardContent className="p-0">
           {loading || seeding ? (
             <div className="flex justify-center py-12">
-              <Loader2 className="animate-spin h-6 w-6 text-muted-foreground" />
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
             <Table>
@@ -156,7 +152,7 @@ export default function ContentTypeManagement() {
                   <TableRow key={t.id}>
                     <TableCell className="font-medium">{t.name}</TableCell>
                     <TableCell>
-                      <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{t.slug}</code>
+                      <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{t.slug}</code>
                     </TableCell>
                     <TableCell>
                       <Badge variant={t.isActive ? "default" : "secondary"}>
@@ -191,7 +187,7 @@ export default function ContentTypeManagement() {
               />
               {name.trim() && (
                 <p className="text-xs text-muted-foreground">
-                  Slug: <code className="bg-muted px-1 rounded">{toSlug(name)}</code>
+                  Slug: <code className="rounded bg-muted px-1">{toSlug(name)}</code>
                 </p>
               )}
             </div>

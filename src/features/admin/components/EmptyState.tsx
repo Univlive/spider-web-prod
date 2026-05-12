@@ -26,25 +26,39 @@ export default function EmptyState({
       transition={{ duration: 0.32 }}
       className={className}
     >
-      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+      <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
         {Icon ? (
-          <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
             <Icon className="h-8 w-8 text-muted-foreground" />
           </div>
         ) : (
-          <div className="w-16 h-16 rounded-2xl bg-muted/60 flex items-center justify-center mb-4">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/60">
             <svg className="h-8 w-8 text-muted-foreground" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2v6" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M20.24 7.76L13 15" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M12 2v6"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M20.24 7.76L13 15"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </div>
         )}
 
-        <h3 className="text-lg font-semibold text-foreground mb-1">{title}</h3>
-        {description && <p className="text-sm text-muted-foreground max-w-sm mb-4">{description}</p>}
+        <h3 className="mb-1 text-lg font-semibold text-foreground">{title}</h3>
+        {description && (
+          <p className="mb-4 max-w-sm text-sm text-muted-foreground">{description}</p>
+        )}
 
         {actionLabel && onAction && (
-          <Button onClick={onAction} className="gradient-bg text-white rounded-xl">
+          <Button onClick={onAction} className="gradient-bg rounded-xl text-white">
             {actionLabel}
           </Button>
         )}

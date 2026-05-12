@@ -17,7 +17,7 @@ export default function RequireRole({ allow, redirectTo = "/login", children }: 
   // ✅ CRITICAL: don’t redirect while loading
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center gap-2 text-muted-foreground">
+      <div className="flex min-h-[60vh] items-center justify-center gap-2 text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
         Loading…
       </div>

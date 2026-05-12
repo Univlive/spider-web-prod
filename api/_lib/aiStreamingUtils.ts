@@ -20,7 +20,7 @@ export function sendStreamEvent(res: VercelResponse, event: StreamProgressEvent)
     console.warn("[sendStreamEvent] Response already ended, cannot send event:", event.type);
     return;
   }
-  
+
   const json = JSON.stringify(event);
   try {
     res.write(`data: ${json}\n\n`);
@@ -51,7 +51,7 @@ export function endStreaming(res: VercelResponse) {
     console.warn("[endStreaming] Response already ended");
     return;
   }
-  
+
   try {
     res.write("data: [DONE]\n\n");
     res.end();
@@ -70,8 +70,7 @@ export function streamError(res: VercelResponse, error: unknown) {
     return;
   }
 
-  const message =
-    error instanceof Error ? error.message : "An unknown error occurred";
+  const message = error instanceof Error ? error.message : "An unknown error occurred";
 
   // User-friendly error messages
   const userFriendlyMessage = getUserFriendlyErrorMessage(message);
@@ -93,14 +92,16 @@ export function streamError(res: VercelResponse, error: unknown) {
 export function getUserFriendlyErrorMessage(technicalError: string): string {
   // Map specific errors to user-friendly messages
   const errorMap: Record<string, string> = {
-    "GEMINI_API_KEY is not configured": "AI service is not properly configured. Please contact support.",
-    "Gemini returned an empty response": "Failed to get a response from AI service. Please try again.",
+    "GEMINI_API_KEY is not configured":
+      "AI service is not properly configured. Please contact support.",
+    "Gemini returned an empty response":
+      "Failed to get a response from AI service. Please try again.",
     "404": "The requested AI model is not available. Please try again later.",
     "429": "Too many requests. Please wait a moment and try again.",
     "500": "AI service encountered an error. Please try again later.",
-    "TIMEOUT": "The operation took too long. Please try again with a simpler request.",
-    "NETWORK": "Network error. Please check your connection and try again.",
-    "INVALID_REQUEST": "Invalid request. Please check your input and try again.",
+    TIMEOUT: "The operation took too long. Please try again with a simpler request.",
+    NETWORK: "Network error. Please check your connection and try again.",
+    INVALID_REQUEST: "Invalid request. Please check your input and try again.",
   };
 
   // Check if any key matches the error
@@ -122,4 +123,3 @@ export function checkAborted(signal: AbortSignal | undefined) {
     throw new Error("Request was cancelled by user");
   }
 }
-

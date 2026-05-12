@@ -10,7 +10,8 @@ export async function registerStudentForTenant(token: string, tenantSlug: string
 
   if (!res.ok) {
     const data = await res.json().catch(() => null);
-    const message = data?.error || data?.detail || `Failed to register student (HTTP ${res.status})`;
+    const message =
+      data?.error || data?.detail || `Failed to register student (HTTP ${res.status})`;
     throw new Error(message);
   }
 
