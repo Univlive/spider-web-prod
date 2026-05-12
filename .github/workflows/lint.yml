@@ -2,9 +2,9 @@ name: Lint & Format
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, staging]
   pull_request:
-    branches: [main, develop]
+    branches: [master, staging]
 
 jobs:
   lint:
