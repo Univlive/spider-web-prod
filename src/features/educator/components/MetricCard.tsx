@@ -3,8 +3,10 @@ import { LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@shared/ui/card";
 import { cn } from "@shared/lib/utils";
 
+import { ReactNode } from "react";
+
 interface MetricCardProps {
-  title: string;
+  title: ReactNode;
   value: string | number;
   change?: {
     value: number;
@@ -41,7 +43,7 @@ export default function MetricCard({
         <CardContent className="p-5 h-full">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
-              <p className={cn("text-sm font-medium", blendWithGradient ? "text-white/85" : "text-muted-foreground")}>{title}</p>
+              <div className={cn("text-sm font-medium", blendWithGradient ? "text-white/85" : "text-muted-foreground")}>{title}</div>
               <p className="text-2xl sm:text-3xl font-bold font-display">{value}</p>
               {/* Kept prop for backward compatibility; hidden by request to remove percentage strip */}
               {change && null}

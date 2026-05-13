@@ -29,8 +29,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
 import { db } from "@shared/lib/firebase";
 import { useAuth } from "@app/providers/AuthProvider";
 import { buildTenantUrl } from "@shared/lib/tenant";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
+import DashboardStatsGrid from "./components/DashboardStatsGrid";
+import AttemptsAnalyticsChart from "./components/AttemptsAnalyticsChart";
+import RecentActivityFeed from "./components/RecentActivityFeed";
 
-type StudentDoc = { id: string; status?: string; isActive?: boolean };
+type BranchDoc = { id: string; name: string };
+type CourseDoc = { id: string; name: string; branchId: string };
+type BatchDoc = { id: string; name: string; courseId: string; branchId: string };
+
+type StudentDoc = { id: string; status?: string; isActive?: boolean; branchId?: string; courseId?: string; batchId?: string };
 type AccessCodeDoc = {
   id: string;
   maxUses?: number;
@@ -39,7 +47,17 @@ type AccessCodeDoc = {
   windowMinutes?: number;
   createdAt?: any;
 };
-type AttemptDoc = { id: string; status?: string; score?: number; maxScore?: number };
+type AttemptDoc = { 
+  id: string; 
+  status?: string; 
+  score?: number; 
+  maxScore?: number;
+  studentId?: string;
+  studentName?: string;
+  testTitle?: string;
+  createdAt?: any;
+  submittedAt?: any;
+};
 type EducatorProfileDoc = {
   displayName?: string;
   fullName?: string;
@@ -91,6 +109,39 @@ export default function EducatorDashboard() {
   const [allowedCourseNames, setAllowedCourseNames] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
+  
+  // Real data filter states
+  const [allBranches, setAllBranches] = useState<BranchDoc[]>([]);
+  const [allCourses, setAllCourses] = useState<CourseDoc[]>([]);
+  const [allBatches, setAllBatches] = useState<BatchDoc[]>([]);
+  
+  const [selectedBranchName, setSelectedBranchName] = useState<string>("All");
+  const [selectedCourseName, setSelectedCourseName] = useState<string>("All");
+  const [selectedBatchName, setSelectedBatchName] = useState<string>("All");
+
+  const [isFiltering, setIsFiltering] = useState(false);
+
+  const uniqueBranches = useMemo(() => Array.from(new Set(allBranches.map(b => b.name))).sort(), [allBranches]);
+  const uniqueCourses = useMemo(() => Array.from(new Set(allCourses.map(c => c.name))).sort(), [allCourses]);
+  const uniqueBatches = useMemo(() => Array.from(new Set(allBatches.map(b => b.name))).sort(), [allBatches]);
+
+  useEffect(() => {
+    if (uniqueBranches.length === 1 && selectedBranchName === "All") {
+      setSelectedBranchName(uniqueBranches[0]);
+    }
+  }, [uniqueBranches, selectedBranchName]);
+
+  useEffect(() => {
+    if (uniqueCourses.length === 1 && selectedCourseName === "All") {
+      setSelectedCourseName(uniqueCourses[0]);
+    }
+  }, [uniqueCourses, selectedCourseName]);
+
+  useEffect(() => {
+    if (uniqueBatches.length === 1 && selectedBatchName === "All") {
+      setSelectedBatchName(uniqueBatches[0]);
+    }
+  }, [uniqueBatches, selectedBatchName]);
 
   useEffect(() => {
     if (!educatorId) return;
@@ -158,6 +209,65 @@ export default function EducatorDashboard() {
       setAllowedCourseNames(names);
     }).catch(() => setAllowedCourseNames([]));
   }, [educatorDoc?.allowedCourseIds]);
+
+  // Fetch all branches, courses, and batches
+  useEffect(() => {
+    if (!educatorId) return;
+    const unsub = onSnapshot(collection(db, "educators", educatorId, "branches"), async (snap) => {
+      const branchesData = snap.docs.map((d) => ({ id: d.id, name: d.data().name || "Unknown Branch" }));
+      setAllBranches(branchesData);
+      
+      const coursesData: CourseDoc[] = [];
+      const batchesData: BatchDoc[] = [];
+      
+      for (const b of branchesData) {
+        const cSnap = await getDocs(collection(db, "educators", educatorId, "branches", b.id, "courses"));
+        for (const c of cSnap.docs) {
+          coursesData.push({ id: c.id, branchId: b.id, name: c.data().name || "Unknown Program" });
+          const bSnap = await getDocs(collection(db, "educators", educatorId, "branches", b.id, "courses", c.id, "batches"));
+          for (const batch of bSnap.docs) {
+            batchesData.push({ id: batch.id, branchId: b.id, courseId: c.id, name: batch.data().name || "Unknown Batch" });
+          }
+        }
+      }
+      setAllCourses(coursesData);
+      setAllBatches(batchesData);
+    });
+    return () => unsub();
+  }, [educatorId]);
+
+  // Simulated filter delay
+  useEffect(() => {
+    setIsFiltering(true);
+    const timer = setTimeout(() => setIsFiltering(false), 500);
+    return () => clearTimeout(timer);
+  }, [selectedBranchName, selectedCourseName, selectedBatchName]);
+
+  const filteredStudents = useMemo(() => {
+    const validBranchIds = selectedBranchName === "All" 
+      ? new Set(allBranches.map(b => b.id))
+      : new Set(allBranches.filter(b => b.name === selectedBranchName).map(b => b.id));
+
+    const validCourseIds = selectedCourseName === "All"
+      ? new Set(allCourses.map(c => c.id))
+      : new Set(allCourses.filter(c => c.name === selectedCourseName).map(c => c.id));
+
+    const validBatchIds = selectedBatchName === "All"
+      ? new Set(allBatches.map(b => b.id))
+      : new Set(allBatches.filter(b => b.name === selectedBatchName).map(b => b.id));
+
+    return students.filter(s => {
+      if (selectedBranchName !== "All" && !validBranchIds.has(s.branchId as string)) return false;
+      if (selectedCourseName !== "All" && !validCourseIds.has(s.courseId as string)) return false;
+      if (selectedBatchName !== "All" && !validBatchIds.has(s.batchId as string)) return false;
+      return true;
+    });
+  }, [students, selectedBranchName, selectedCourseName, selectedBatchName, allBranches, allCourses, allBatches]);
+
+  const filteredAttempts = useMemo(() => {
+    const validStudentIds = new Set(filteredStudents.map(s => s.id));
+    return attempts.filter(a => validStudentIds.has(a.studentId as string));
+  }, [attempts, filteredStudents]);
 
   const liveTests = useMemo(
     () => attempts.filter((a) => LIVE_STATUSES.includes(String(a.status || "").toLowerCase())).length,
@@ -255,104 +365,92 @@ export default function EducatorDashboard() {
         </div>
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <MetricCard
-          title="My Students"
-          value={students.length.toLocaleString()}
-          icon={Users}
-          iconColor="text-blue-400"
-          delay={0}
-        />
-        <MetricCard
-          title="Live Tests"
-          value={liveTests.toLocaleString()}
-          icon={Radio}
-          iconColor="text-green-400"
-          delay={0.05}
-        />
+      {/* Global Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center">
+        <div className="w-full sm:w-1/3">
+          <label className="text-xs font-medium text-muted-foreground mb-1 block">Branch</label>
+          <Select 
+            value={selectedBranchName} 
+            onValueChange={setSelectedBranchName}
+          >
+            <SelectTrigger className="w-full bg-white dark:bg-zinc-900">
+              <SelectValue placeholder="All Branches" />
+            </SelectTrigger>
+            <SelectContent>
+              {uniqueBranches.length !== 1 && <SelectItem value="All">All Branches</SelectItem>}
+              {uniqueBranches.map((name) => (
+                <SelectItem key={name} value={name}>{name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <MetricCard
-          title="Active Codes"
-          value={activeAccessCodes.toLocaleString()}
-          icon={KeyRound}
-          iconColor="text-orange-400"
-          delay={0.15}
-        />
+        <div className="w-full sm:w-1/3">
+          <label className="text-xs font-medium text-muted-foreground mb-1 block">Program</label>
+          <Select 
+            value={selectedCourseName} 
+            onValueChange={setSelectedCourseName}
+          >
+            <SelectTrigger className="w-full bg-white dark:bg-zinc-900">
+              <SelectValue placeholder="All Programs" />
+            </SelectTrigger>
+            <SelectContent>
+              {uniqueCourses.length !== 1 && <SelectItem value="All">All Programs</SelectItem>}
+              {uniqueCourses.map((name) => (
+                <SelectItem key={name} value={name}>{name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="w-full sm:w-1/3">
+          <label className="text-xs font-medium text-muted-foreground mb-1 block">Batch</label>
+          <Select 
+            value={selectedBatchName} 
+            onValueChange={setSelectedBatchName}
+          >
+            <SelectTrigger className="w-full bg-white dark:bg-zinc-900">
+              <SelectValue placeholder="All Batches" />
+            </SelectTrigger>
+            <SelectContent>
+              {uniqueBatches.length !== 1 && <SelectItem value="All">All Batches</SelectItem>}
+              {uniqueBatches.map((name) => (
+                <SelectItem key={name} value={name}>{name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {/* Seats & Plan */}
-      <Card className="border-border/50">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-            Seats &amp; Plan
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-            <div>
-              <p className="text-xs text-muted-foreground">Active Plan</p>
-              <p className="font-semibold mt-0.5">{planName || "No plan"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Total Seats</p>
-              <p className="font-semibold mt-0.5">{seatLimit}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Enrolled</p>
-              <p className="font-semibold mt-0.5">{usedSeats}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Vacant</p>
-              <p className={`font-semibold mt-0.5 ${vacantSeats === 0 ? "text-destructive" : "text-green-500"}`}>
-                {vacantSeats}
-              </p>
-            </div>
-          </div>
-          {allowedCourseNames.length > 0 && (
-            <div className="mt-5 pt-4 border-t border-border/50">
-              <p className="text-xs text-muted-foreground mb-2">Allowed Courses</p>
-              <div className="flex flex-wrap gap-1.5">
-                {allowedCourseNames.map((name) => (
-                  <span key={name} className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium">
-                    {name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Metric Cards */}
+      <DashboardStatsGrid 
+        students={filteredStudents}
+        attempts={filteredAttempts}
+        activeBatchesCount={allBatches.filter(b => {
+          if (selectedBranchName !== "All" && !allBranches.find(br => br.name === selectedBranchName && br.id === b.branchId)) return false;
+          if (selectedCourseName !== "All" && !allCourses.find(c => c.name === selectedCourseName && c.id === b.courseId)) return false;
+          if (selectedBatchName !== "All" && b.name !== selectedBatchName) return false;
+          return true;
+        }).length || 0}
+        isLoading={isFiltering || !loaded}
+      />
 
-      {/* Quick Actions */}
-      <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle className="text-base">Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-3">
-            <Button asChild className="gap-2">
-              <Link to="/educator/test-series">
-                <Plus className="h-4 w-4" />
-                Create Test
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="gap-2">
-              <Link to="/educator/divisions">
-                <Users className="h-4 w-4" />
-                View Learners
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="gap-2">
-              <Link to="/educator/analytics">
-                <BarChart3 className="h-4 w-4" />
-                View Analytics
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Analytics Chart */}
+      <AttemptsAnalyticsChart 
+        attempts={filteredAttempts}
+        isLoading={isFiltering || !loaded}
+      />
+
+      {/* Recent Activity Feed */}
+      <RecentActivityFeed 
+        attempts={filteredAttempts}
+        students={filteredStudents}
+        batches={allBatches}
+        isLoading={isFiltering || !loaded}
+      />
+
+      {/* Seats & Plan */}
+      
     </div>
   );
 }
