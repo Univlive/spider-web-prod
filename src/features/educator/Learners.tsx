@@ -218,13 +218,9 @@ export default function Learners() {
 
   // Load courses when branch changes
   useEffect(() => {
-    if (!educatorId || !selBranch) {
-      setCourses([]);
-      setSelCourse("");
-      return;
-    }
-    getDocs(collection(db, "educators", educatorId, "branches", selBranch, "courses")).then(
-      (snap) => setCourses(snap.docs.map((d) => ({ id: d.id, name: d.data().name || d.id })))
+    if (!educatorId || !selBranch) { setCourses([]); setSelCourse(""); return; }
+    getDocs(collection(db, "educators", educatorId, "branches", selBranch, "courses")).then((snap) =>
+      setCourses(snap.docs.map((d) => ({ id: d.id, name: d.data().name || d.id, branchId: selBranch })))
     );
   }, [educatorId, selBranch]);
 
@@ -247,14 +243,14 @@ export default function Learners() {
         "batches"
       )
     ).then((snap) =>
-      setBatches(
-        snap.docs.map((d) => ({
-          id: d.id,
-          name: d.data().name || d.id,
-          seatLimit: d.data().seatLimit || 0,
-          usedSeats: d.data().usedSeats || 0,
-        }))
-      )
+      setBatches(snap.docs.map((d) => ({
+        id: d.id,
+        name: d.data().name || d.id,
+        seatLimit: d.data().seatLimit || 0,
+        usedSeats: d.data().usedSeats || 0,
+        courseId: selCourse,
+        branchId: selBranch,
+      })))
     );
   }, [educatorId, selBranch, selCourse]);
 

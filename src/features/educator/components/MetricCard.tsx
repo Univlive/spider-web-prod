@@ -1,17 +1,13 @@
 import { motion } from "framer-motion";
-import { LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@shared/ui/card";
 import { cn } from "@shared/lib/utils";
 
+import { ReactNode } from "react";
+
 interface MetricCardProps {
-  title: string;
+  title: ReactNode;
   value: string | number;
-  change?: {
-    value: number;
-    type: "increase" | "decrease";
-  };
-  icon: LucideIcon;
-  iconColor?: string;
+  description?: ReactNode;
   delay?: number;
   blendWithGradient?: boolean;
 }
@@ -19,9 +15,7 @@ interface MetricCardProps {
 export default function MetricCard({
   title,
   value,
-  change,
-  icon: Icon,
-  iconColor = "text-primary",
+  description,
   delay = 0,
   blendWithGradient = false,
 }: MetricCardProps) {
@@ -38,30 +32,18 @@ export default function MetricCard({
           blendWithGradient && "border-white/30 bg-white/10 text-white backdrop-blur-sm"
         )}
       >
-        <CardContent className="h-full p-5">
+        <CardContent className="p-4 h-full">
           <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              <p
-                className={cn(
-                  "text-sm font-medium",
-                  blendWithGradient ? "text-white/85" : "text-muted-foreground"
-                )}
-              >
-                {title}
-              </p>
-              <p className="font-display text-2xl font-bold sm:text-3xl">{value}</p>
-              {/* Kept prop for backward compatibility; hidden by request to remove percentage strip */}
-              {change && null}
-            </div>
-            <div
-              className={cn(
-                "rounded-xl p-3",
-                blendWithGradient ? "bg-white/15" : "bg-muted",
-                iconColor
+            <div className="space-y-1">
+              <div className={cn("text-xs font-medium", blendWithGradient ? "text-white/85" : "text-muted-foreground")}>{title}</div>
+              <p className="text-xl sm:text-2xl font-bold font-display">{value}</p>
+              {description && (
+                <div className={cn("text-xs font-medium mt-1", blendWithGradient ? "text-white/70" : "text-muted-foreground")}>
+                  {description}
+                </div>
               )}
-            >
-              <Icon className="h-6 w-6" />
             </div>
+            
           </div>
         </CardContent>
       </Card>

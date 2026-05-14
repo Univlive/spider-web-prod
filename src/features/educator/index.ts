@@ -12,4 +12,7 @@ export { default as Messages } from "./Messages";
 export { default as EducatorQuestionBank } from "./QuestionBank";
 export { default as Settings } from "./Settings";
 export { default as WebsiteSettings } from "./WebsiteSettings";
+export { default as StudentsListing } from "./StudentsListing";
+export { default as BatchesListing } from "./BatchesListing";
+export { default as StudentDetails } from "./StudentDetails";
 export { TestSeries, ManageQuestionsPage } from "./test-series";
