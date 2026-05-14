@@ -32,18 +32,29 @@ export default function MetricCard({
           blendWithGradient && "border-white/30 bg-white/10 text-white backdrop-blur-sm"
         )}
       >
-        <CardContent className="p-4 h-full">
+        <CardContent className="h-full p-4">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <div className={cn("text-xs font-medium", blendWithGradient ? "text-white/85" : "text-muted-foreground")}>{title}</div>
-              <p className="text-xl sm:text-2xl font-bold font-display">{value}</p>
+              <div
+                className={cn(
+                  "text-xs font-medium",
+                  blendWithGradient ? "text-white/85" : "text-muted-foreground"
+                )}
+              >
+                {title}
+              </div>
+              <p className="font-display text-xl font-bold sm:text-2xl">{value}</p>
               {description && (
-                <div className={cn("text-xs font-medium mt-1", blendWithGradient ? "text-white/70" : "text-muted-foreground")}>
+                <div
+                  className={cn(
+                    "mt-1 text-xs font-medium",
+                    blendWithGradient ? "text-white/70" : "text-muted-foreground"
+                  )}
+                >
                   {description}
                 </div>
               )}
             </div>
-            
           </div>
         </CardContent>
       </Card>

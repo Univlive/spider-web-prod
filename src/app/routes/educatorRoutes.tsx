@@ -11,7 +11,6 @@ import {
   Divisions,
   DppGenerator,
   InstituteBuilder,
-  LearnerDetails,
   StudentDetails,
   Learners,
   Messages,
@@ -22,6 +21,8 @@ import {
   WebsiteSettings,
   ManageQuestionsPage,
   TestSeries,
+  ScheduledTests,
+  ScheduledDpps,
 } from "@features/educator";
 import QuestionPaperRequests from "@features/educator/QuestionPaperRequests";
 
@@ -41,11 +42,10 @@ export function getEducatorRoutes() {
       <Route path="students/:studentId" element={<StudentDetails />} />
       <Route path="batches" element={<BatchesListing />} />
       <Route path="learners" element={<Learners />} />
+      <Route path="scheduled-tests" element={<ScheduledTests />} />
+      <Route path="scheduled-dpps" element={<ScheduledDpps />} />
       <Route path="test-series" element={<TestSeries />} />
-      <Route
-        path="test-series/:testId/questions"
-        element={<ManageQuestionsPage />}
-      />
+      <Route path="test-series/:testId/questions" element={<ManageQuestionsPage />} />
       <Route path="question-bank" element={<EducatorQuestionBank />} />
       <Route path="access-codes" element={<AccessCodes />} />
       <Route path="messages" element={<Messages />} />

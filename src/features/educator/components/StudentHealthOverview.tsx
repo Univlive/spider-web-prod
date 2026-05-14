@@ -1,17 +1,8 @@
 import { useMemo } from "react";
-import { 
-  Heart, 
-  Zap, 
-  Activity, 
-  AlertCircle, 
-  ChevronRight,
-  TrendingUp,
-  Target
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@shared/ui/card";
+import { Zap, Activity, AlertCircle, TrendingUp } from "lucide-react";
+import { Card, CardContent } from "@shared/ui/card";
 import { Skeleton } from "@shared/ui/skeleton";
 import { cn } from "@shared/lib/utils";
-import { motion } from "framer-motion";
 
 type Attempt = {
   id: string;
@@ -47,20 +38,26 @@ function isCompleted(status?: string) {
   return ["submitted", "completed", "finished", "done"].includes(s);
 }
 
-export default function StudentHealthOverview({ students, attempts, isLoading }: StudentHealthOverviewProps) {
+export default function StudentHealthOverview({
+  students,
+  attempts,
+  isLoading,
+}: StudentHealthOverviewProps) {
   const healthStats = useMemo(() => {
     if (isLoading) return null;
 
     // Get latest completed attempt for each student
     const latestAttempts = new Map<string, Attempt>();
-    
-    attempts.forEach(a => {
+
+    attempts.forEach((a) => {
       if (!a.studentId || !isCompleted(a.status)) return;
-      
+
       const currentLatest = latestAttempts.get(a.studentId);
       const aTime = toMillis(a.submittedAt || a.createdAt);
-      const cTime = currentLatest ? toMillis(currentLatest.submittedAt || currentLatest.createdAt) : 0;
-      
+      const cTime = currentLatest
+        ? toMillis(currentLatest.submittedAt || currentLatest.createdAt)
+        : 0;
+
       if (!currentLatest || aTime > cTime) {
         latestAttempts.set(a.studentId, a);
       }
@@ -73,7 +70,7 @@ export default function StudentHealthOverview({ students, attempts, isLoading }:
       weak: 0,
     };
 
-    latestAttempts.forEach(a => {
+    latestAttempts.forEach((a) => {
       const score = Number(a.score || 0);
       const maxScore = Number(a.maxScore || 100);
       const pct = maxScore > 0 ? (score / maxScore) * 100 : 0;
@@ -87,23 +84,23 @@ export default function StudentHealthOverview({ students, attempts, isLoading }:
     const totalWithData = latestAttempts.size;
 
     return {
-      excellent: { 
-        count: categories.excellent, 
-        pct: totalWithData ? Math.round((categories.excellent / totalWithData) * 100) : 0 
+      excellent: {
+        count: categories.excellent,
+        pct: totalWithData ? Math.round((categories.excellent / totalWithData) * 100) : 0,
       },
-      good: { 
-        count: categories.good, 
-        pct: totalWithData ? Math.round((categories.good / totalWithData) * 100) : 0 
+      good: {
+        count: categories.good,
+        pct: totalWithData ? Math.round((categories.good / totalWithData) * 100) : 0,
       },
-      average: { 
-        count: categories.average, 
-        pct: totalWithData ? Math.round((categories.average / totalWithData) * 100) : 0 
+      average: {
+        count: categories.average,
+        pct: totalWithData ? Math.round((categories.average / totalWithData) * 100) : 0,
       },
-      weak: { 
-        count: categories.weak, 
-        pct: totalWithData ? Math.round((categories.weak / totalWithData) * 100) : 0 
+      weak: {
+        count: categories.weak,
+        pct: totalWithData ? Math.round((categories.weak / totalWithData) * 100) : 0,
       },
-      totalWithData
+      totalWithData,
     };
   }, [attempts, isLoading]);
 
@@ -114,7 +111,7 @@ export default function StudentHealthOverview({ students, attempts, isLoading }:
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-4 w-96" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-36 w-full rounded-2xl" />
           ))}
@@ -128,15 +125,17 @@ export default function StudentHealthOverview({ students, attempts, isLoading }:
       <div className="space-y-6">
         <div className="space-y-1">
           <h3 className="text-xl font-bold tracking-tight">Student Health Overview</h3>
-          <p className="text-sm text-muted-foreground">Performance distribution based on students' latest test scores.</p>
+          <p className="text-sm text-muted-foreground">
+            Performance distribution based on students' latest test scores.
+          </p>
         </div>
-        <Card className="border-dashed border-2 bg-muted/20">
+        <Card className="border-2 border-dashed bg-muted/20">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mb-4">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
               <Activity className="h-8 w-8 text-muted-foreground/40" />
             </div>
             <h4 className="text-lg font-semibold">No completed test data</h4>
-            <p className="text-sm text-muted-foreground max-w-xs mx-auto mt-1">
+            <p className="mx-auto mt-1 max-w-xs text-sm text-muted-foreground">
               Complete test attempts are required to calculate academic health metrics.
             </p>
           </CardContent>
@@ -155,7 +154,7 @@ export default function StudentHealthOverview({ students, attempts, isLoading }:
       color: "text-emerald-500",
       bg: "bg-emerald-500/10",
       gradient: "from-emerald-500/20 to-transparent",
-      accent: "border-emerald-500/20"
+      accent: "border-emerald-500/20",
     },
     {
       title: "Good Students",
@@ -166,7 +165,7 @@ export default function StudentHealthOverview({ students, attempts, isLoading }:
       color: "text-blue-500",
       bg: "bg-blue-500/10",
       gradient: "from-blue-500/20 to-transparent",
-      accent: "border-blue-500/20"
+      accent: "border-blue-500/20",
     },
     {
       title: "Average Students",
@@ -177,7 +176,7 @@ export default function StudentHealthOverview({ students, attempts, isLoading }:
       color: "text-amber-500",
       bg: "bg-amber-500/10",
       gradient: "from-amber-500/20 to-transparent",
-      accent: "border-amber-500/20"
+      accent: "border-amber-500/20",
     },
     {
       title: "Weak Students",
@@ -188,27 +187,31 @@ export default function StudentHealthOverview({ students, attempts, isLoading }:
       color: "text-rose-500",
       bg: "bg-rose-500/10",
       gradient: "from-rose-500/20 to-transparent",
-      accent: "border-rose-500/20"
-    }
+      accent: "border-rose-500/20",
+    },
   ];
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-6 duration-700 animate-in fade-in slide-in-from-bottom-4">
       <div className="space-y-1">
         <h3 className="text-xl font-bold tracking-tight">Student Health Overview</h3>
-        <p className="text-sm text-muted-foreground">Performance distribution based on students' latest test scores.</p>
+        <p className="text-sm text-muted-foreground">
+          Performance distribution based on students' latest test scores.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((card, i) => (
           <div key={card.title}>
-            <Card className={cn(
-              "relative overflow-hidden border-border/50 transition-all duration-300",
-              card.accent
-            )}>
-              <CardContent className="p-5 relative z-10">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={cn("p-2 rounded-xl", card.bg, card.color)}>
+            <Card
+              className={cn(
+                "relative overflow-hidden border-border/50 transition-all duration-300",
+                card.accent
+              )}
+            >
+              <CardContent className="relative z-10 p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <div className={cn("rounded-xl p-2", card.bg, card.color)}>
                     <card.icon className="h-5 w-5" />
                   </div>
                   <Badge variant="secondary" className="bg-muted/50 text-[10px] font-bold">
@@ -219,20 +222,23 @@ export default function StudentHealthOverview({ students, attempts, isLoading }:
                 <div className="space-y-1">
                   <p className="text-3xl font-bold tracking-tighter">
                     {card.count}
-                    <span className="text-sm font-medium text-muted-foreground ml-1.5 uppercase tracking-wide">
+                    <span className="ml-1.5 text-sm font-medium uppercase tracking-wide text-muted-foreground">
                       Students
                     </span>
                   </p>
-                  <p className="text-sm font-semibold text-foreground/80">
-                    {card.title}
-                  </p>
+                  <p className="text-sm font-semibold text-foreground/80">{card.title}</p>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between">
+                <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-4">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     {card.desc}
                   </span>
-                  <div className={cn("h-1.5 w-1.5 rounded-full animate-pulse", card.color.replace('text-', 'bg-'))} />
+                  <div
+                    className={cn(
+                      "h-1.5 w-1.5 animate-pulse rounded-full",
+                      card.color.replace("text-", "bg-")
+                    )}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -243,13 +249,23 @@ export default function StudentHealthOverview({ students, attempts, isLoading }:
   );
 }
 
-function Badge({ className, variant, children }: { className?: string; variant?: "secondary"; children: React.ReactNode }) {
+function Badge({
+  className,
+  variant,
+  children,
+}: {
+  className?: string;
+  variant?: "secondary";
+  children: React.ReactNode;
+}) {
   return (
-    <div className={cn(
-      "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold transition-colors",
-      variant === "secondary" && "bg-secondary text-secondary-foreground",
-      className
-    )}>
+    <div
+      className={cn(
+        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold transition-colors",
+        variant === "secondary" && "bg-secondary text-secondary-foreground",
+        className
+      )}
+    >
       {children}
     </div>
   );

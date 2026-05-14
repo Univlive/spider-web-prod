@@ -1,13 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Users,
-  Layers,
-  Trophy,
-  AlertTriangle,
-  FileText,
-  CheckCircle2,
-} from "lucide-react";
+
 import { format, isSameDay } from "date-fns";
 
 import { Calendar as CalendarIcon } from "lucide-react";
@@ -127,19 +120,15 @@ export default function DashboardStatsGrid({
       if (!isSameDay(attemptDate, date)) return false;
 
       const title = String(a.testTitle || "").toLowerCase();
-      if (type === "dpp")
-        return title.includes("dpp") || title.includes("practice");
+      if (type === "dpp") return title.includes("dpp") || title.includes("practice");
       return !title.includes("dpp") && !title.includes("practice");
     }).length;
   };
 
-  const dppAttemptsCount = useMemo(
-    () => getAttemptsForDate(dppDate, "dpp"),
-    [attempts, dppDate],
-  );
+  const dppAttemptsCount = useMemo(() => getAttemptsForDate(dppDate, "dpp"), [attempts, dppDate]);
   const testAttemptsCount = useMemo(
     () => getAttemptsForDate(testDate, "test"),
-    [attempts, testDate],
+    [attempts, testDate]
   );
 
   const handleDppDateChange = (date: Date | undefined) => {
@@ -155,19 +144,15 @@ export default function DashboardStatsGrid({
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
       {isLoading ? (
         <Skeleton className="h-[120px] w-full rounded-xl" />
       ) : (
         <div
           onClick={() => navigate("/educator/students")}
-          className="cursor-pointer h-full transition-transform hover:scale-[1.02]"
+          className="h-full cursor-pointer transition-transform hover:scale-[1.02]"
         >
-          <MetricCard
-            title="Total Students"
-            value={totalStudents}
-            delay={0.1}
-          />
+          <MetricCard title="Total Students" value={totalStudents} delay={0.1} />
         </div>
       )}
 
@@ -176,30 +161,17 @@ export default function DashboardStatsGrid({
       ) : (
         <div
           onClick={() => navigate("/educator/batches")}
-          className="cursor-pointer h-full transition-transform hover:scale-[1.02]"
+          className="h-full cursor-pointer transition-transform hover:scale-[1.02]"
         >
-          <MetricCard
-            title="Active Batches"
-            value={activeBatchesCount}
-            delay={0.2}
-          />
+          <MetricCard title="Active Batches" value={activeBatchesCount} delay={0.2} />
         </div>
       )}
-
-
 
       {isLoading ? (
         <Skeleton className="h-[120px] w-full rounded-xl" />
       ) : (
-        <div
-          
-          className="cursor-pointer h-full transition-transform hover:scale-[1.02]"
-        >
-          <MetricCard
-            title="Needs Attention (< 40%)"
-            value={weakStudentsCount}
-            delay={0.4}
-          />
+        <div className="h-full cursor-pointer transition-transform hover:scale-[1.02]">
+          <MetricCard title="Needs Attention (< 40%)" value={weakStudentsCount} delay={0.4} />
         </div>
       )}
 
@@ -207,29 +179,21 @@ export default function DashboardStatsGrid({
         {isLoading || isDppLoading ? (
           <Skeleton className="h-[120px] w-full rounded-xl" />
         ) : (
-          <div
-            
-            className="cursor-pointer h-full transition-transform hover:scale-[1.02]"
-          >
+          <div className="h-full cursor-pointer transition-transform hover:scale-[1.02]">
             <MetricCard
               title={
-                <div className="flex flex-col gap-1 items-start">
+                <div className="flex flex-col items-start gap-1">
                   <span>DPP Attempts</span>
                   <div onClick={(e) => e.stopPropagation()}>
-                    <Popover
-                      open={isDppPopoverOpen}
-                      onOpenChange={setIsDppPopoverOpen}
-                    >
+                    <Popover open={isDppPopoverOpen} onOpenChange={setIsDppPopoverOpen}>
                       <PopoverTrigger asChild>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 px-2 text-xs rounded-md bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
+                          className="h-6 rounded-md bg-muted/50 px-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
                         >
-                          <CalendarIcon className="h-3 w-3 mr-1" />
-                          {dppDate
-                            ? format(dppDate, "MMM d, yyyy")
-                            : "Any Date"}
+                          <CalendarIcon className="mr-1 h-3 w-3" />
+                          {dppDate ? format(dppDate, "MMM d, yyyy") : "Any Date"}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
@@ -259,29 +223,21 @@ export default function DashboardStatsGrid({
         {isLoading || isTestLoading ? (
           <Skeleton className="h-[120px] w-full rounded-xl" />
         ) : (
-          <div
-           
-            className="cursor-pointer h-full transition-transform hover:scale-[1.02]"
-          >
+          <div className="h-full cursor-pointer transition-transform hover:scale-[1.02]">
             <MetricCard
               title={
-                <div className="flex flex-col gap-1 items-start">
+                <div className="flex flex-col items-start gap-1">
                   <span>Test Attempts</span>
                   <div onClick={(e) => e.stopPropagation()}>
-                    <Popover
-                      open={isTestPopoverOpen}
-                      onOpenChange={setIsTestPopoverOpen}
-                    >
+                    <Popover open={isTestPopoverOpen} onOpenChange={setIsTestPopoverOpen}>
                       <PopoverTrigger asChild>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 px-2 text-xs rounded-md bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
+                          className="h-6 rounded-md bg-muted/50 px-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
                         >
-                          <CalendarIcon className="h-3 w-3 mr-1" />
-                          {testDate
-                            ? format(testDate, "MMM d, yyyy")
-                            : "Any Date"}
+                          <CalendarIcon className="mr-1 h-3 w-3" />
+                          {testDate ? format(testDate, "MMM d, yyyy") : "Any Date"}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">

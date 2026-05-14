@@ -213,7 +213,11 @@ export default function LearnerDetails() {
     );
 
     const unsubLearnerAttempts = onSnapshot(
-      query(collection(db, "attempts"), where("educatorId", "==", educatorId), where("studentId", "==", studentId)),
+      query(
+        collection(db, "attempts"),
+        where("educatorId", "==", educatorId),
+        where("studentId", "==", studentId)
+      ),
       (snap) => {
         setLearnerAttempts(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
         setAttemptsLoaded(true);
@@ -303,7 +307,9 @@ export default function LearnerDetails() {
     }
     setActionBusy("set-inactive");
     try {
-      await updateDoc(doc(db, "educators", educatorId, "students", studentId), { status: "INACTIVE" });
+      await updateDoc(doc(db, "educators", educatorId, "students", studentId), {
+        status: "INACTIVE",
+      });
       toast.success("Learner set to INACTIVE");
     } catch (e: any) {
       toast.error(e?.message || "Failed to set learner inactive");
@@ -320,7 +326,9 @@ export default function LearnerDetails() {
     }
     setActionBusy("set-active");
     try {
-      await updateDoc(doc(db, "educators", educatorId, "students", studentId), { status: "ACTIVE" });
+      await updateDoc(doc(db, "educators", educatorId, "students", studentId), {
+        status: "ACTIVE",
+      });
       toast.success("Learner set to ACTIVE");
     } catch (e: any) {
       toast.error(e?.message || "Failed to activate learner");
