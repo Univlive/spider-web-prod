@@ -3,7 +3,6 @@ import { Route } from "react-router-dom";
 import RequireRole from "@shared/auth/RequireRole";
 import EducatorLayout from "@features/educator/components/EducatorLayout";
 import AccessCodes from "@features/educator/AccessCodes";
-import EducatorAnalytics from "@features/educator/Analytics";
 import Billing from "@features/educator/Billing";
 import EducatorContent from "@features/educator/ContentManagement";
 import EducatorDashboard from "@features/educator/Dashboard";
@@ -44,7 +43,6 @@ export function getEducatorRoutes() {
       <Route path="divisions" element={<Divisions />} />
       <Route path="content" element={<EducatorContent />} />
       <Route path="dpp" element={<DppGenerator />} />
-      <Route path="analytics" element={<EducatorAnalytics />} />
       <Route path="website-builder" element={<InstituteBuilder />} />
       <Route path="question-papers" element={<QuestionPaperRequests />} />
     </Route>
