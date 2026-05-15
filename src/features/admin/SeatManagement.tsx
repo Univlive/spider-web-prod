@@ -231,8 +231,13 @@ export default function SeatManagement() {
   // Division controls
   const [maxBranchesInput, setMaxBranchesInput] = useState(5);
   const [allowedCourseIds, setAllowedCourseIds] = useState<string[]>([]);
+  const [allowedSubjectIds, setAllowedSubjectIds] = useState<string[]>([]);
+  const [expandedCourseSubjects, setExpandedCourseSubjects] = useState<Record<string, boolean>>({});
   const [savingDivision, setSavingDivision] = useState(false);
   const [allCourses, setAllCourses] = useState<{ id: string; name: string }[]>([]);
+  const [allSubjects, setAllSubjects] = useState<{ id: string; name: string; courseId: string }[]>(
+    []
+  );
 
   // AI config
   const [chatTokenLimit, setChatTokenLimit] = useState(100000);
@@ -307,11 +312,25 @@ export default function SeatManagement() {
     );
   }, []);
 
+  // Load global subjects
+  useEffect(() => {
+    getDocs(collection(db, "subjects")).then((snap) =>
+      setAllSubjects(
+        snap.docs.map((d) => ({
+          id: d.id,
+          name: (d.data() as any).name as string,
+          courseId: (d.data() as any).courseId as string,
+        }))
+      )
+    );
+  }, []);
+
   // Sync division + AI config from educator doc
   useEffect(() => {
     if (!educator) return;
     setMaxBranchesInput(educator.maxBranches ?? 5);
     setAllowedCourseIds((educator as any).allowedCourseIds ?? []);
+    setAllowedSubjectIds((educator as any).allowedSubjectIds ?? []);
     setChatTokenLimit((educator as any).chatDailyTokenLimit ?? 100000);
     setDppDailyLimit((educator as any).dppDailyLimit ?? 3);
     setMaxQpRequests((educator as any).maxQuestionPaperRequests ?? 5);
@@ -666,6 +685,7 @@ export default function SeatManagement() {
       await updateDoc(doc(db, "educators", targetId), {
         maxBranches: maxBranchesInput,
         allowedCourseIds,
+        allowedSubjectIds,
         updatedAt: serverTimestamp(),
       });
       toast.success("Division controls saved");
@@ -1155,30 +1175,87 @@ export default function SeatManagement() {
               </div>
               <div>
                 <Label className="mb-2 block text-sm text-muted-foreground">
-                  Allowed Courses (empty = all)
+                  Allowed Courses &amp; Subjects (empty = no access)
                 </Label>
-                <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                  {allCourses.map((c) => (
-                    <label
-                      key={c.id}
-                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-muted"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={allowedCourseIds.includes(c.id)}
-                        onChange={(e) =>
-                          setAllowedCourseIds((prev) =>
-                            e.target.checked ? [...prev, c.id] : prev.filter((x) => x !== c.id)
-                          )
-                        }
-                      />
-                      {c.name}
-                    </label>
-                  ))}
+                <div className="space-y-1.5">
+                  {allCourses.map((c) => {
+                    const isCourseAllowed = allowedCourseIds.includes(c.id);
+                    const courseSubjects = allSubjects.filter((s) => s.courseId === c.id);
+                    const allowedInCourse = courseSubjects.filter((s) =>
+                      allowedSubjectIds.includes(s.id)
+                    ).length;
+                    const isExpanded = expandedCourseSubjects[c.id];
+                    return (
+                      <div key={c.id} className="rounded-md border">
+                        <label className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50">
+                          <input
+                            type="checkbox"
+                            checked={isCourseAllowed}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setAllowedCourseIds((prev) =>
+                                checked ? [...prev, c.id] : prev.filter((x) => x !== c.id)
+                              );
+                              const subIds = courseSubjects.map((s) => s.id);
+                              if (checked) {
+                                setAllowedSubjectIds((prev) => [...new Set([...prev, ...subIds])]);
+                              } else {
+                                setAllowedSubjectIds((prev) =>
+                                  prev.filter((id) => !subIds.includes(id))
+                                );
+                              }
+                            }}
+                          />
+                          <span className="flex-1 font-medium">{c.name}</span>
+                          {isCourseAllowed && courseSubjects.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setExpandedCourseSubjects((prev) => ({
+                                  ...prev,
+                                  [c.id]: !prev[c.id],
+                                }));
+                              }}
+                              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                            >
+                              {allowedInCourse}/{courseSubjects.length} subjects
+                              {isExpanded ? (
+                                <ChevronDown className="h-3 w-3" />
+                              ) : (
+                                <ChevronRight className="h-3 w-3" />
+                              )}
+                            </button>
+                          )}
+                        </label>
+                        {isCourseAllowed && isExpanded && courseSubjects.length > 0 && (
+                          <div className="space-y-1 border-t bg-muted/20 px-6 py-2">
+                            {courseSubjects.map((s) => (
+                              <label
+                                key={s.id}
+                                className="flex cursor-pointer items-center gap-2 py-0.5 text-sm"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={allowedSubjectIds.includes(s.id)}
+                                  onChange={(e) =>
+                                    setAllowedSubjectIds((prev) =>
+                                      e.target.checked
+                                        ? [...prev, s.id]
+                                        : prev.filter((id) => id !== s.id)
+                                    )
+                                  }
+                                />
+                                {s.name}
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                   {allCourses.length === 0 && (
-                    <p className="col-span-3 text-sm text-muted-foreground">
-                      No courses defined yet.
-                    </p>
+                    <p className="text-sm text-muted-foreground">No courses defined yet.</p>
                   )}
                 </div>
               </div>
