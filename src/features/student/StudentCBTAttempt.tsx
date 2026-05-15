@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
-import { AlertTriangle, Save, LayoutGrid, Upload } from "lucide-react";
+import { AlertTriangle, LayoutGrid, Upload } from "lucide-react";
 import { toast } from "sonner";
 
-import { normalizeQuestionType, isSubjectiveType } from "@shared/lib/questionTypes";
+import { normalizeQuestionType } from "@shared/lib/questionTypes";
 import { uploadToImageKit } from "@shared/lib/imagekitUpload";
 import { TimerChip } from "@features/student/components/TimerChip";
 import { cn } from "@shared/lib/utils";
@@ -1243,18 +1243,38 @@ export default function StudentCBTAttempt() {
     };
   }, [isStarted, exitCount, submitDialogOpen, violationModalOpen, instructionsOpen]);
 
-  const handleViolation = useCallback(() => {
-    const nextCount = proctorStateRef.current.exitCount + 1;
-    setExitCount(nextCount);
-    queueAttemptUpdate({ exitCount: nextCount });
+  const handleViolation = useCallback(
+    async (violationType = "Proctoring Violation") => {
+      const nextCount = proctorStateRef.current.exitCount + 1;
+      setExitCount(nextCount);
+      queueAttemptUpdate({ exitCount: nextCount });
 
-    if (nextCount > 3) {
-      toast.error("Maximum warnings exceeded. Submitting test automatically.");
-      handleSubmit(true);
-    } else {
-      setViolationModalOpen(true);
-    }
-  }, [queueAttemptUpdate, handleSubmit]);
+      // Log violation to educator's cheat_alerts collection
+      if (educatorId && firebaseUser && testMeta) {
+        try {
+          await addDoc(collection(db, "educators", educatorId, "cheat_alerts"), {
+            studentId: firebaseUser.uid,
+            studentName: firebaseUser.displayName || profile?.fullName || "Unknown Student",
+            testId: testMeta.id,
+            testTitle: testMeta.title,
+            violationType,
+            tenantSlug: tenantSlug || "main",
+            timestamp: serverTimestamp(),
+          });
+        } catch (e) {
+          console.error("Failed to log cheat alert", e);
+        }
+      }
+
+      if (nextCount > 3) {
+        toast.error("Maximum warnings exceeded. Submitting test automatically.");
+        handleSubmit(true);
+      } else {
+        setViolationModalOpen(true);
+      }
+    },
+    [queueAttemptUpdate, handleSubmit, educatorId, firebaseUser, profile, testMeta, tenantSlug]
+  );
 
   // Proctoring: Tab switch & Full-screen exit logic
   useEffect(() => {
@@ -1263,7 +1283,7 @@ export default function StudentCBTAttempt() {
     const handleVisibilityChange = () => {
       if (ignoreProctoringRef.current) return;
       if (document.visibilityState === "hidden") {
-        handleViolation();
+        handleViolation("Switched Tab / Window Hidden");
       }
     };
 
@@ -1276,7 +1296,7 @@ export default function StudentCBTAttempt() {
         instructionsOpen: instOpen,
       } = proctorStateRef.current;
       if (!document.fullscreenElement && started && !subOpen && !violOpen && !instOpen) {
-        handleViolation();
+        handleViolation("Exited Fullscreen");
       }
     };
 
@@ -1673,28 +1693,30 @@ export default function StudentCBTAttempt() {
       }}
     >
       {/* ─── INSTITUTE WATERMARK ─── */}
-      {tenant?.coachingName &&
-        (() => {
-          const name = tenant.coachingName!.replace(
-            /[<>&"]/g,
-            (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c] ?? c
-          );
-          const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="rgba(0,0,0,0.055)" transform="rotate(-30,160,90)" letter-spacing="3">${name}</text></svg>`;
-          return (
-            <div
-              aria-hidden="true"
-              style={{
-                position: "absolute",
-                inset: 0,
-                pointerEvents: "none",
-                zIndex: 102,
-                backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(svg)}")`,
-                backgroundRepeat: "repeat",
-                backgroundSize: "320px 180px",
-              }}
-            />
-          );
-        })()}
+      {(() => {
+        const rawName =
+          tenant?.coachingName || tenant?.builderConfig?.instituteName || tenantSlug || null;
+        if (!rawName) return null;
+        const name = rawName.replace(
+          /[<>&"]/g,
+          (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c] ?? c
+        );
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#000000" fill-opacity="0.09" transform="rotate(-30,100,60)" letter-spacing="3">${name}</text></svg>`;
+        return (
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              zIndex: 102,
+              backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(svg)}")`,
+              backgroundRepeat: "repeat",
+              backgroundSize: "200px 120px",
+            }}
+          />
+        );
+      })()}
 
       {/* ─── INSTRUCTIONS GATE ─── */}
       {!isStarted && instructionsOpen && (
