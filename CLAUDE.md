@@ -63,6 +63,7 @@ Multi-tenant SaaS platform for coaching institutes. Built with React + TypeScrip
 - `/admin/analytics` — platform activity: 7-day attempts chart, today's engagement, recent activity feed
 - `/admin/educators` — educator management (create educators here)
 - `/admin/plans`, `/admin/coupons`, `/admin/payment-logs`, `/admin/seats`, `/admin/subjects`
+- `/admin/roles` — Employee Roles management: create/edit/archive roles with permission checkboxes; roles are org-wide and assigned to employees by educator admins
 - `/admin/content` — Admin content library (books/notes per subject)
 - No `/login` or `/signup` on main domain (intentional)
 
@@ -75,9 +76,20 @@ Multi-tenant SaaS platform for coaching institutes. Built with React + TypeScrip
 - `/educator/analytics` — deep analytics: student growth, attempts chart, top performers, subject heatmap (existing Analytics.tsx, now routed)
 - `/educator/question-papers` — submit question paper files to admin for manual upload; shows status (PENDING/IN_PROGRESS/COMPLETE/CANCELLED); can edit/cancel while PENDING
 - `/educator/content` — per-course content management; import from admin library
+- `/educator/organization` — Branches, Programs, and **Employees** tabs; employees tab: invite staff, assign role + branch scope, filter list
 - `/student/*` — student portal (dashboard, tests, results, rankings, content)
 - `/student/dashboard` — live tests grid, resume in-progress, rank + avg score, leaderboard preview (top 5), score trend
 - `/student/content` — view books/notes for enrolled course
+
+## Employee RBAC System
+
+- **Roles**: defined by platform admin at `roles/{roleId}` (global Firestore collection); fields: `name, description, permissions[], status`
+- **Permissions**: 16 atomic permissions in `src/shared/lib/employeePermissions.ts` (e.g. `students.view`, `tests.create`, `analytics.view`)
+- **Employees**: stored in `educators/{orgUid}/employees/{empUid}`; fields: `uid, email, name, roleId, status, scope.branchIds[]`
+- **Auth**: employees have `role: "EDUCATOR"` in `users/{uid}` plus `isEmployee: true, orgUid, employeeDocId`
+- **Context**: `src/shared/contexts/EmployeeContext.tsx` — `EmployeeProvider` wraps `EducatorLayout`; `useEmployee()` gives `hasPermission(p)` and `inBranchScope(branchId)` to any educator page
+- **Sidebar**: `EducatorLayout` filters nav items based on `hasPermission`; Billing + Organization hidden for employees
+- **Invite flow**: org head fills form → `POST /api/org/invite-employee` creates Firebase Auth user + writes Firestore docs → frontend calls `sendPasswordResetEmail` → employee sets password → logs in
 
 ## Multi-Tenant Theming
 

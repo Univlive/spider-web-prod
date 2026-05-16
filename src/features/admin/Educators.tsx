@@ -237,8 +237,12 @@ export default function AdminEducators() {
     setCredCopied(false);
   }
 
+  const [impersonatingId, setImpersonatingId] = useState<string | null>(null);
+
   async function handleImpersonate(uid: string, name: string) {
-    if (!firebaseUser) return;
+    if (!firebaseUser || impersonatingId) return;
+    setImpersonatingId(uid);
+    const key = `imp_${Date.now()}`;
     try {
       const token = await firebaseUser.getIdToken();
       const base = import.meta.env.VITE_MONKEY_KING_API_URL || "";
@@ -249,14 +253,20 @@ export default function AdminEducators() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.detail || "Failed");
-      const key = `imp_${Date.now()}`;
       localStorage.setItem(
         key,
         JSON.stringify({ token: data.custom_token, name, expires: Date.now() + 60000 })
       );
-      window.open(`/impersonate?k=${key}`, "_blank");
+      const popup = window.open(`/impersonate?k=${key}`, "_blank");
+      if (!popup) {
+        localStorage.removeItem(key);
+        toast.error("Popup was blocked. Allow popups for this site and try again.");
+      }
     } catch (e: any) {
+      localStorage.removeItem(key);
       toast.error(e.message || "Failed to impersonate");
+    } finally {
+      setImpersonatingId(null);
     }
   }
 
@@ -392,9 +402,14 @@ export default function AdminEducators() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          disabled={!!impersonatingId}
                           onClick={() => handleImpersonate(edu.uid, edu.displayName)}
                         >
-                          Login as
+                          {impersonatingId === edu.uid ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            "Login as"
+                          )}
                         </Button>
                       </div>
                     </TableCell>

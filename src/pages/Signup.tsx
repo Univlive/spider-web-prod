@@ -60,6 +60,12 @@ export default function Signup() {
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Holds captured credentials when "email already in use" is detected so the
+  // user can explicitly confirm they want to sign in and enroll.
+  const [pendingEnroll, setPendingEnroll] = useState<{ email: string; password: string } | null>(
+    null
+  );
+
   const title = useMemo(() => {
     if (tenantLoading) return "Loading…";
     if (isTenantDomain) return `Student Signup for ${tenantSlug || "your coaching"}`;
@@ -74,6 +80,12 @@ export default function Signup() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      setLoading(false);
+      return;
+    }
 
     try {
       if (effectiveRole === "student") {
@@ -133,66 +145,10 @@ export default function Signup() {
           return;
         } catch (err: any) {
           if (err?.code === "auth/email-already-in-use") {
-            try {
-              const cred2 = await signInWithEmailAndPassword(auth, email, password);
-              const snap = await getDoc(doc(db, "users", cred2.user.uid));
-              const existingRole = String(snap.data()?.role || "").toUpperCase();
-
-              if (existingRole && existingRole !== "STUDENT") {
-                toast.error(
-                  `This email is already registered as ${existingRole}. Please use a different email.`
-                );
-                await auth.signOut();
-                return;
-              }
-
-              await setDoc(
-                doc(db, "users", cred2.user.uid),
-                {
-                  tenantSlug,
-                  enrolledTenants: arrayUnion(tenantSlug),
-                  updatedAt: serverTimestamp(),
-                },
-                { merge: true }
-              );
-
-              // Ensure they appear in educator's students subcollection
-              const displayName = snap.data()?.displayName || email;
-              await setDoc(
-                doc(db, "educators", tenant.educatorId, "students", cred2.user.uid),
-                {
-                  uid: cred2.user.uid,
-                  name: displayName,
-                  email,
-                  status: "ACTIVE",
-                  tenantSlug,
-                  joinedAt: serverTimestamp(),
-                },
-                { merge: true }
-              );
-
-              const token = await cred2.user.getIdToken();
-              try {
-                await registerStudentForTenant(token, tenantSlug);
-              } catch (apiErr: any) {
-                console.error("[Signup] Sync error (re-join):", apiErr);
-              }
-
-              const sid = generateSessionId();
-              setLocalSessionId(sid);
-              await syncSessionWithFirestore(cred2.user.uid, sid);
-
-              toast.success("Signed in and enrolled!");
-              nav("/student");
-              return;
-            } catch (innerErr: any) {
-              if (innerErr?.code === "auth/invalid-credential") {
-                toast.error("Wrong password. Please login instead.");
-              } else if (!innerErr?.code) {
-                throw innerErr;
-              }
-              return;
-            }
+            // Stop and ask the user to confirm before signing in with existing credentials.
+            setPendingEnroll({ email, password });
+            setLoading(false);
+            return;
           }
           throw err;
         }
@@ -241,6 +197,8 @@ export default function Signup() {
         {
           tenantSlug: slug,
           coachingName: coachingName || name,
+          displayName: name,
+          fullName: name,
           phone: phone || "",
           email,
           createdAt: serverTimestamp(),
@@ -269,6 +227,69 @@ export default function Signup() {
       setLoading(false);
     }
   };
+
+  async function handleConfirmEnroll() {
+    if (!pendingEnroll || !tenantSlug || !tenant?.educatorId) return;
+    setLoading(true);
+    try {
+      const cred2 = await signInWithEmailAndPassword(
+        auth,
+        pendingEnroll.email,
+        pendingEnroll.password
+      );
+      const snap = await getDoc(doc(db, "users", cred2.user.uid));
+      const existingRole = String(snap.data()?.role || "").toUpperCase();
+
+      if (existingRole && existingRole !== "STUDENT") {
+        toast.error(`This email is registered as ${existingRole}. Use a different email.`);
+        await auth.signOut();
+        setPendingEnroll(null);
+        return;
+      }
+
+      const displayName = snap.data()?.displayName || pendingEnroll.email;
+      await setDoc(
+        doc(db, "users", cred2.user.uid),
+        { tenantSlug, enrolledTenants: arrayUnion(tenantSlug), updatedAt: serverTimestamp() },
+        { merge: true }
+      );
+      await setDoc(
+        doc(db, "educators", tenant.educatorId, "students", cred2.user.uid),
+        {
+          uid: cred2.user.uid,
+          name: displayName,
+          email: pendingEnroll.email,
+          status: "ACTIVE",
+          tenantSlug,
+          joinedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      const token = await cred2.user.getIdToken();
+      try {
+        await registerStudentForTenant(token, tenantSlug);
+      } catch (e) {
+        console.error("[Signup] Sync error:", e);
+      }
+
+      const sid = generateSessionId();
+      setLocalSessionId(sid);
+      await syncSessionWithFirestore(cred2.user.uid, sid);
+
+      toast.success("Signed in and enrolled!");
+      nav("/student");
+    } catch (err: any) {
+      if (err?.code === "auth/invalid-credential") {
+        toast.error("Wrong password. Please use the login page instead.");
+      } else {
+        toast.error(err?.message || "Enrollment failed");
+      }
+      setPendingEnroll(null);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="min-h-screen w-full bg-background lg:grid lg:grid-cols-2">
@@ -360,103 +381,143 @@ export default function Signup() {
               </div>
             </div>
 
-            <form onSubmit={onSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Full Name</Label>
-                <Input
-                  className="h-11"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
-                />
-              </div>
-
-              {effectiveRole === "educator" && (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Coaching Name</Label>
-                      <Input
-                        className="h-11"
-                        value={coachingName}
-                        onChange={(e) => setCoachingName(e.target.value)}
-                        placeholder="My Coaching"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Phone (optional)</Label>
-                      <Input
-                        className="h-11"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="9876543210"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Tenant Slug (subdomain)</Label>
-                    <Input
-                      className="h-11"
-                      value={desiredSlug}
-                      onChange={(e) => setDesiredSlug(e.target.value)}
-                      placeholder="e.g. abc-coaching"
-                    />
-                  </div>
-                </>
-              )}
-
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input
-                  className="h-11"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@email.com"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Password</Label>
-                <div className="relative">
-                  <Input
-                    className="h-11"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    type={show ? "text" : "password"}
-                    placeholder="••••••••"
-                  />
-                  <button
+            {pendingEnroll ? (
+              <div className="space-y-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                <p className="text-sm font-medium text-amber-900">
+                  An account already exists for <strong>{pendingEnroll.email}</strong>. Sign in to
+                  enroll in this coaching institute?
+                </p>
+                <div className="flex gap-2">
+                  <Button
                     type="button"
-                    onClick={() => setShow((s) => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                    className="flex-1 bg-[#4F46E5] text-white hover:bg-[#4338CA]"
+                    disabled={loading}
+                    onClick={handleConfirmEnroll}
                   >
-                    {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Yes, Sign In & Enroll"
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    disabled={loading}
+                    onClick={() => setPendingEnroll(null)}
+                  >
+                    Cancel
+                  </Button>
                 </div>
               </div>
+            ) : (
+              <>
+                <form onSubmit={onSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Full Name</Label>
+                    <Input
+                      className="h-11"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Your name"
+                      required
+                    />
+                  </div>
 
-              <Button
-                disabled={loading}
-                className="mt-2 h-11 w-full bg-[#4F46E5] text-base text-white transition-colors hover:bg-[#4338CA]"
-              >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
-              </Button>
-            </form>
+                  {effectiveRole === "educator" && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Coaching Name</Label>
+                          <Input
+                            className="h-11"
+                            value={coachingName}
+                            onChange={(e) => setCoachingName(e.target.value)}
+                            placeholder="My Coaching"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Phone (optional)</Label>
+                          <Input
+                            className="h-11"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            placeholder="9876543210"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Tenant Slug (subdomain)</Label>
+                        <Input
+                          className="h-11"
+                          value={desiredSlug}
+                          onChange={(e) => setDesiredSlug(e.target.value)}
+                          placeholder="e.g. abc-coaching"
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
 
-            <div className="pt-2 text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link
-                className="font-medium text-[#4F46E5] hover:underline"
-                to={(() => {
-                  const tenant = searchParams.get("tenant");
-                  return tenant
-                    ? `/login?role=${effectiveRole}&tenant=${tenant}`
-                    : `/login?role=${effectiveRole}`;
-                })()}
-              >
-                Login
-              </Link>
-            </div>
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input
+                      className="h-11"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@email.com"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Password</Label>
+                    <div className="relative">
+                      <Input
+                        className="h-11"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        type={show ? "text" : "password"}
+                        placeholder="••••••••"
+                        minLength={6}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShow((s) => !s)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <Button
+                    disabled={loading}
+                    className="mt-2 h-11 w-full bg-[#4F46E5] text-base text-white transition-colors hover:bg-[#4338CA]"
+                  >
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
+                  </Button>
+                </form>
+
+                <div className="pt-2 text-center text-sm text-muted-foreground">
+                  Already have an account?{" "}
+                  <Link
+                    className="font-medium text-[#4F46E5] hover:underline"
+                    to={(() => {
+                      const tenant = searchParams.get("tenant");
+                      return tenant
+                        ? `/login?role=${effectiveRole}&tenant=${tenant}`
+                        : `/login?role=${effectiveRole}`;
+                    })()}
+                  >
+                    Login
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

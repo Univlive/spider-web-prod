@@ -14,14 +14,14 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  GitBranch,
   BookOpen,
   Zap,
   Database,
   BarChart3,
-  UserPlus,
   ClipboardList,
-  Layers,
+  Users,
+  Building2,
+  UserCheck,
 } from "lucide-react";
 import { Button } from "@shared/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@shared/ui/avatar";
@@ -43,20 +43,10 @@ import { collection, onSnapshot, query, where } from "firebase/firestore";
 import ImpersonationBanner from "@shared/components/ImpersonationBanner";
 import NotificationBell from "@shared/components/NotificationBell";
 import EducatorBroadcastModal from "./EducatorBroadcastModal";
+import { EmployeeProvider, useEmployee } from "@shared/contexts/EmployeeContext";
 
-type SubItem = {
-  icon: any;
-  label: string;
-  href: string;
-};
-
-type SidebarItem = {
-  icon: any;
-  label: string;
-  href: string;
-  badge?: number;
-  children?: SubItem[];
-};
+type SubItem = { icon: any; label: string; href: string };
+type SidebarItem = { icon: any; label: string; href: string; badge?: number; children?: SubItem[] };
 
 function initials(name: string) {
   const parts = (name || "").trim().split(/\s+/).filter(Boolean);
@@ -67,7 +57,8 @@ function initials(name: string) {
     .join("");
 }
 
-export default function EducatorLayout() {
+// Inner layout that can use useEmployee() since it's inside EmployeeProvider
+function EducatorLayoutInner() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -76,6 +67,7 @@ export default function EducatorLayout() {
   const navigate = useNavigate();
 
   const { profile } = useAuth();
+  const { isEmployee, hasPermission } = useEmployee();
 
   const educatorName = profile?.displayName || profile?.fullName || "Educator";
   const educatorEmail = profile?.email || "No email";
@@ -91,7 +83,6 @@ export default function EducatorLayout() {
     }
 
     const unreadQuery = query(collection(db, "support_threads"), where("educatorId", "==", uid));
-
     const unsub = onSnapshot(
       unreadQuery,
       (snap) => {
@@ -103,54 +94,77 @@ export default function EducatorLayout() {
       },
       () => setUnreadMessages(0)
     );
-
     return () => unsub();
   }, [profile?.uid]);
 
-  const sidebarItems = useMemo<SidebarItem[]>(
-    () => [
+  const sidebarItems = useMemo<SidebarItem[]>(() => {
+    const items: SidebarItem[] = [
       { icon: LayoutDashboard, label: "Dashboard", href: "/educator/dashboard" },
-      {
-        icon: GitBranch,
-        label: "Student Management",
-        href: "/educator/divisions",
-        children: [
-          { icon: UserPlus, label: "Invite", href: "/educator/learners?invite=1" },
-          { icon: BarChart3, label: "Analytics", href: "/educator/analytics" },
-        ],
-      },
-      {
+    ];
+
+    if (!isEmployee || hasPermission("students.view")) {
+      items.push({ icon: Users, label: "Batches", href: "/educator/batches" });
+      items.push({ icon: UserCheck, label: "Students", href: "/educator/learners" });
+    }
+
+    if (!isEmployee || hasPermission("analytics.view")) {
+      items.push({ icon: BarChart3, label: "Analytics", href: "/educator/analytics" });
+    }
+
+    // Build Test Series children based on permissions
+    const testChildren: SubItem[] = [];
+    if (!isEmployee || hasPermission("question_bank.view")) {
+      testChildren.push({
+        icon: Database,
+        label: "Question Bank",
+        href: "/educator/question-bank",
+      });
+    }
+    if (!isEmployee || hasPermission("tests.create")) {
+      testChildren.push({
+        icon: ClipboardList,
+        label: "Test Upload Request",
+        href: "/educator/question-papers",
+      });
+      testChildren.push({ icon: Zap, label: "DPP Generator", href: "/educator/dpp" });
+    }
+
+    const showTests =
+      !isEmployee ||
+      hasPermission("tests.view") ||
+      hasPermission("tests.create") ||
+      testChildren.length > 0;
+    if (showTests) {
+      items.push({
         icon: FileText,
         label: "Test Series",
         href: "/educator/test-series",
-        children: [
-          { icon: Database, label: "Question Bank", href: "/educator/question-bank" },
-          { icon: ClipboardList, label: "Test Upload Request", href: "/educator/question-papers" },
-          { icon: Zap, label: "DPP Generator", href: "/educator/dpp" },
-        ],
-      },
-      { icon: BookOpen, label: "Content", href: "/educator/content" },
-      {
-        icon: CreditCard,
-        label: "Billing & Plan",
-        href: "/educator/billing",
-        children: [{ icon: Layers, label: "Seat Allocation", href: "/educator/seat-allocation" }],
-      },
-    ],
-    []
-  );
+        children: testChildren.length > 0 ? testChildren : undefined,
+      });
+    }
+
+    if (!isEmployee || hasPermission("content.view")) {
+      items.push({ icon: BookOpen, label: "Content", href: "/educator/content" });
+    }
+
+    // Billing and Organization are org-head only
+    if (!isEmployee) {
+      items.push({ icon: CreditCard, label: "Billing", href: "/educator/billing" });
+      items.push({ icon: Building2, label: "Organization", href: "/educator/organization" });
+    }
+
+    return items;
+  }, [isEmployee, hasPermission]);
 
   const isActive = (href: string) => {
-    if (href === "/educator/dashboard") {
+    if (href === "/educator/dashboard")
       return location.pathname === "/educator" || location.pathname === href;
-    }
     return location.pathname === href;
   };
 
   const isChildActive = (item: SidebarItem) =>
     !!item.children?.some((c) => location.pathname === c.href.split("?")[0]);
 
-  // Expand all parent items that have children by default
   const [expandedItems, setExpandedItems] = useState<Set<string>>(() => new Set());
 
   const toggleExpanded = (href: string) => {
@@ -162,7 +176,6 @@ export default function EducatorLayout() {
     });
   };
 
-  // Auto-expand parent when navigating directly to a child route
   useEffect(() => {
     sidebarItems.forEach((item) => {
       if (item.children?.some((c) => location.pathname === c.href)) {
@@ -191,7 +204,6 @@ export default function EducatorLayout() {
       navigate("/educator/website-settings");
       return;
     }
-
     window.open(buildTenantUrl(tenantSlug, "/"), "_blank");
   };
 
@@ -261,12 +273,10 @@ export default function EducatorLayout() {
                 const childActive = isChildActive(item);
                 const hasChildren = !!item.children?.length;
                 const expanded = expandedItems.has(item.href);
-                // In collapsed mode, highlight parent icon when a child route is active
                 const parentHighlighted = active || (sidebarCollapsed && childActive);
 
                 return (
                   <div key={item.href}>
-                    {/* Parent row: link area + optional chevron button */}
                     <div
                       className={cn(
                         "relative flex items-center overflow-hidden rounded-lg",
@@ -280,7 +290,6 @@ export default function EducatorLayout() {
                           transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                         />
                       )}
-
                       <Link
                         to={item.href}
                         onClick={() => {
@@ -314,8 +323,6 @@ export default function EducatorLayout() {
                           </Badge>
                         )}
                       </Link>
-
-                      {/* Chevron toggle — only when not collapsed and has children */}
                       {!sidebarCollapsed && hasChildren && (
                         <button
                           onClick={() => toggleExpanded(item.href)}
@@ -337,7 +344,6 @@ export default function EducatorLayout() {
                       )}
                     </div>
 
-                    {/* Sub-items — animated expand/collapse */}
                     {!sidebarCollapsed && hasChildren && (
                       <AnimatePresence initial={false}>
                         {expanded && (
@@ -428,7 +434,6 @@ export default function EducatorLayout() {
               >
                 <Menu className="h-5 w-5" />
               </Button>
-
               <div className="hidden items-center gap-2 text-sm sm:flex">
                 <span className="text-muted-foreground">Educator</span>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -518,5 +523,13 @@ export default function EducatorLayout() {
         />
       )}
     </div>
+  );
+}
+
+export default function EducatorLayout() {
+  return (
+    <EmployeeProvider>
+      <EducatorLayoutInner />
+    </EmployeeProvider>
   );
 }
