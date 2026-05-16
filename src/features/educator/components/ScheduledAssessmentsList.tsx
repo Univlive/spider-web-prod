@@ -9,6 +9,7 @@ import { Badge } from "@shared/ui/badge";
 import { Skeleton } from "@shared/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/ui/table";
 import { CalendarRange, Clock, BookOpen, AlertCircle } from "lucide-react";
+import { cn } from "@shared/lib/utils";
 
 interface AssessmentDoc {
   id: string;
@@ -294,8 +295,14 @@ export default function ScheduledAssessmentsList({ type }: ScheduledAssessmentsL
             </SelectContent>
           </Select>
 
-          <Select value={selectedCourse} onValueChange={setSelectedCourse}>
-            <SelectTrigger className="h-9 w-[140px] bg-background">
+          <Select
+            value={selectedCourse}
+            onValueChange={setSelectedCourse}
+            disabled={!selectedBranch}
+          >
+            <SelectTrigger
+              className={cn("h-9 w-[140px] bg-background", !selectedBranch && "opacity-50")}
+            >
               <SelectValue placeholder="Select Program" />
             </SelectTrigger>
             <SelectContent>
@@ -307,8 +314,10 @@ export default function ScheduledAssessmentsList({ type }: ScheduledAssessmentsL
             </SelectContent>
           </Select>
 
-          <Select value={selectedBatch} onValueChange={setSelectedBatch}>
-            <SelectTrigger className="h-9 w-[140px] bg-background">
+          <Select value={selectedBatch} onValueChange={setSelectedBatch} disabled={!selectedCourse}>
+            <SelectTrigger
+              className={cn("h-9 w-[140px] bg-background", !selectedCourse && "opacity-50")}
+            >
               <SelectValue placeholder="All Batches" />
             </SelectTrigger>
             <SelectContent>
