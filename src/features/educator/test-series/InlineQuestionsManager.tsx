@@ -188,6 +188,7 @@ type EditorDraftSnapshot = {
   correct: number;
   difficulty: Difficulty;
   subject: string;
+  chapter: string;
   topic: string;
   marks: string;
   negativeMarks: string;
@@ -218,6 +219,7 @@ function buildSnapshotFromQuestion(question?: TestQuestion): EditorDraftSnapshot
       correct: 0,
       difficulty: "medium",
       subject: "",
+      chapter: "",
       topic: "",
       marks: "",
       negativeMarks: "",
@@ -234,6 +236,7 @@ function buildSnapshotFromQuestion(question?: TestQuestion): EditorDraftSnapshot
     correct: Math.min(Math.max(0, parsedCorrect), options.length - 1),
     difficulty: question.difficulty || "medium",
     subject: question.subject || "",
+    chapter: question.chapter || "",
     topic: question.topic || "",
     marks: question.marks != null ? String(question.marks) : "",
     negativeMarks: question.negativeMarks != null ? String(question.negativeMarks) : "",
@@ -246,6 +249,7 @@ function areSnapshotsEqual(a: EditorDraftSnapshot, b: EditorDraftSnapshot) {
   if (a.correct !== b.correct) return false;
   if (a.difficulty !== b.difficulty) return false;
   if (a.subject !== b.subject) return false;
+  if (a.chapter !== b.chapter) return false;
   if (a.topic !== b.topic) return false;
   if (a.marks !== b.marks) return false;
   if (a.negativeMarks !== b.negativeMarks) return false;
@@ -713,6 +717,7 @@ const QuestionsManager = ({
   const [formDifficulty, setFormDifficulty] = useState<Difficulty>("medium");
   const [formSectionId, setFormSectionId] = useState("");
   const [formSubject, setFormSubject] = useState("");
+  const [formChapter, setFormChapter] = useState("");
   const [formTopic, setFormTopic] = useState("");
   const [formMarks, setFormMarks] = useState("");
   const [formNegMarks, setFormNegMarks] = useState("");
@@ -932,6 +937,7 @@ const QuestionsManager = ({
       correct: Number(formCorrect) || 0,
       difficulty: formDifficulty || "medium",
       subject: formSubject || "",
+      chapter: formChapter || "",
       topic: formTopic || "",
       marks: formMarks,
       negativeMarks: formNegMarks,
@@ -943,6 +949,7 @@ const QuestionsManager = ({
       formCorrect,
       formDifficulty,
       formSubject,
+      formChapter,
       formTopic,
       formMarks,
       formNegMarks,
@@ -1239,6 +1246,7 @@ const QuestionsManager = ({
       resolveSectionId(preferredSectionId || managedSections[0]?.id, managedSections)
     );
     setFormSubject("");
+    setFormChapter("");
     setFormTopic("");
     setFormMarks("");
     setFormNegMarks("");
@@ -1284,6 +1292,7 @@ const QuestionsManager = ({
     setFormDifficulty(q.difficulty || "medium");
     setFormSectionId(resolveSectionId(q.sectionId, managedSections));
     setFormSubject(q.subject || "");
+    setFormChapter(q.chapter || "");
     setFormTopic(q.topic || "");
     setFormMarks(q.marks != null ? String(q.marks) : "");
     setFormNegMarks(q.negativeMarks != null ? String(q.negativeMarks) : "");
@@ -1744,6 +1753,7 @@ const QuestionsManager = ({
       difficulty: formDifficulty || "medium",
       sectionId: targetSectionId,
       subject: formSubject || "",
+      chapter: formChapter || "",
       topic: formTopic || "",
       isActive: !!formActive,
       updatedAt: serverTimestamp(),
@@ -1776,6 +1786,7 @@ const QuestionsManager = ({
             difficulty: formDifficulty || "medium",
             sectionId: targetSectionId,
             subject: formSubject || "",
+            chapter: formChapter || "",
             topic: formTopic || "",
             marks: formMarks.trim() !== "" ? Number(formMarks) : undefined,
             negativeMarks: formNegMarks.trim() !== "" ? Number(formNegMarks) : undefined,
@@ -1905,6 +1916,7 @@ const QuestionsManager = ({
         difficulty: q.difficulty || "medium",
         sectionId: targetSectionId,
         subject: q.subject || "",
+        chapter: q.chapter || "",
         topic: q.topic || "",
         marks: q.marks ?? null,
         negativeMarks: q.negativeMarks ?? null,
@@ -2183,6 +2195,7 @@ const QuestionsManager = ({
       explanation: data?.explanation ? String(data.explanation) : "",
       difficulty,
       subject: data?.subject ? String(data.subject) : "",
+      chapter: data?.chapter ? String(data.chapter) : "",
       topic: data?.topic ? String(data.topic) : "",
       sectionId: data?.sectionId ? String(data.sectionId) : "",
       marks: marks,
@@ -2666,6 +2679,24 @@ const QuestionsManager = ({
                                                         <Label>Topic</Label>
                                                         <Input value={formTopic} onChange={(e) => setFormTopic(e.target.value)} className="rounded-xl" placeholder="e.g. Kinematics" />
                                                     </div> */}
+                          <div className="space-y-2">
+                            <Label>Chapter</Label>
+                            <Input
+                              value={formChapter}
+                              onChange={(e) => setFormChapter(e.target.value)}
+                              className="rounded-xl"
+                              placeholder="e.g. Optics"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Topic</Label>
+                            <Input
+                              value={formTopic}
+                              onChange={(e) => setFormTopic(e.target.value)}
+                              className="rounded-xl"
+                              placeholder="e.g. Kinematics"
+                            />
+                          </div>
                           <div className="space-y-2">
                             <Label>Marks</Label>
                             <Input

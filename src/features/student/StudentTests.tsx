@@ -34,7 +34,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export default function StudentTests() {
   const nav = useNavigate();
-  const { firebaseUser, role, enrolledTenants, loading: authLoading } = useAuth();
+  const { firebaseUser, role, enrolledTenants, profile, loading: authLoading } = useAuth();
   const { tenant, tenantSlug, isTenantDomain, loading: tenantLoading } = useTenant();
 
   const educatorId = tenant?.educatorId || "";
@@ -96,19 +96,29 @@ export default function StudentTests() {
   const enrolledHere = tenantSlug ? enrolledTenants.includes(tenantSlug) : false;
   const allowed = enrolledHere && seatActive;
 
+  const studentBatchId = profile?.batchId;
+
   // Load tests via useQuery (cached, no real-time listener needed)
   const { data: tests = [] } = useQuery({
-    queryKey: ["studentTests", educatorId],
+    queryKey: ["studentTests", educatorId, studentBatchId],
     queryFn: async () => {
       const qTests = query(
         collection(db, "educators", educatorId, "my_tests"),
         orderBy("createdAt", "desc")
       );
       const snap = await getDocs(qTests);
-      return snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+      const all = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+      // Show test if: legacy (no targetBatches field) OR student's batch is in targetBatches
+      return all.filter((t: any) =>
+        t.targetBatches === undefined || t.targetBatches === null
+          ? true
+          : studentBatchId
+            ? t.targetBatches.includes(studentBatchId)
+            : t.targetBatches.length === 0
+      );
     },
     enabled: allowed && !!educatorId,
-    staleTime: 2 * 60 * 1000, // tests list is fresh for 2 minutes
+    staleTime: 2 * 60 * 1000,
   });
 
   // Load unlocked tests — kept as onSnapshot because window expiry needs real-time checks

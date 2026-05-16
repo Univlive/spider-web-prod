@@ -214,18 +214,29 @@ export default function StudentDashboard() {
     staleTime: 2 * 60 * 1000,
   });
 
-  // Live (published) tests
+  const studentBatchId = profile?.batchId;
+
+  // Live (published) tests — filter by student's batch after fetch (avoids composite index)
   const { data: liveTests = [] } = useQuery<LiveTest[]>({
-    queryKey: ["liveTests", educatorId],
+    queryKey: ["liveTests", educatorId, studentBatchId],
     queryFn: async () => {
       const q = query(
         collection(db, "educators", educatorId!, "my_tests"),
         where("isPublished", "==", true),
         orderBy("createdAt", "desc"),
-        limit(4)
+        limit(20)
       );
       const snap = await getDocs(q);
-      return snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+      const all = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+      return all
+        .filter((t: any) =>
+          t.targetBatches === undefined || t.targetBatches === null
+            ? true
+            : studentBatchId
+              ? t.targetBatches.includes(studentBatchId)
+              : t.targetBatches.length === 0
+        )
+        .slice(0, 4);
     },
     enabled: !!educatorId,
     staleTime: 2 * 60 * 1000,

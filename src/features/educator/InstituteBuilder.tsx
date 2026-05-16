@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { uploadToImageKit } from "@shared/lib/imagekitUpload";
-import { useNavigate } from "react-router-dom";
 import {
   DndContext,
   DragEndEvent,
@@ -5582,7 +5581,6 @@ function newId() {
 }
 
 export default function InstituteBuilder() {
-  const navigate = useNavigate();
   const { firebaseUser, profile } = useAuth();
   const uid = firebaseUser?.uid || null;
 

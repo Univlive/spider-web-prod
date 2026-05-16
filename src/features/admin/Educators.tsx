@@ -18,7 +18,7 @@ import {
   Users,
   Mail,
   ExternalLink,
-  BookOpen,
+  Briefcase,
   Settings,
   Search,
 } from "lucide-react";
@@ -41,13 +41,14 @@ type Student = {
   joinedAt?: Timestamp | null;
 };
 
-type Test = {
+type Employee = {
   id: string;
-  title: string;
-  subject: string;
-  questionsCount: number;
-  durationMinutes: number;
-  createdAt?: Timestamp | null;
+  uid: string;
+  name: string;
+  email: string;
+  roleId: string;
+  status: string;
+  scope: { branchIds: string[] };
 };
 
 export default function AdminEducators() {
@@ -79,9 +80,10 @@ export default function AdminEducators() {
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [studentsOpen, setStudentsOpen] = useState(false);
 
-  const [tests, setTests] = useState<Test[]>([]);
-  const [loadingTests, setLoadingTests] = useState(false);
-  const [testsOpen, setTestsOpen] = useState(false);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [employeesOpen, setEmployeesOpen] = useState(false);
+  const [roles, setRoles] = useState<Map<string, string>>(new Map());
 
   const [search, setSearch] = useState("");
 
@@ -106,6 +108,7 @@ export default function AdminEducators() {
 
       for (const d of snap.docs) {
         const data = d.data();
+        if (data.isEmployee === true) continue;
         const eduId = d.id;
 
         // Find tenant slug
@@ -169,33 +172,18 @@ export default function AdminEducators() {
     }
   }
 
-  async function viewTests(edu: Educator) {
+  async function viewEmployees(edu: Educator) {
     setSelectedEducator(edu);
-    setTestsOpen(true);
-    setLoadingTests(true);
+    setEmployeesOpen(true);
+    setLoadingEmployees(true);
     try {
-      const q = query(
-        collection(db, "educators", edu.uid, "my_tests"),
-        orderBy("createdAt", "desc")
-      );
-      const snap = await getDocs(q);
-      const list: Test[] = snap.docs.map((d) => {
-        const data = d.data();
-        return {
-          id: d.id,
-          title: data.title || "Untitled Test",
-          subject: data.subject || "N/A",
-          questionsCount: data.questionsCount || 0,
-          durationMinutes: data.durationMinutes || 0,
-          createdAt: data.createdAt as Timestamp,
-        };
-      });
-      setTests(list);
+      const snap = await getDocs(collection(db, "educators", edu.uid, "employees"));
+      setEmployees(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Employee, "id">) })));
     } catch (e) {
       console.error(e);
-      toast.error("Failed to load tests");
+      toast.error("Failed to load employees");
     } finally {
-      setLoadingTests(false);
+      setLoadingEmployees(false);
     }
   }
 
@@ -237,8 +225,12 @@ export default function AdminEducators() {
     setCredCopied(false);
   }
 
+  const [impersonatingId, setImpersonatingId] = useState<string | null>(null);
+
   async function handleImpersonate(uid: string, name: string) {
-    if (!firebaseUser) return;
+    if (!firebaseUser || impersonatingId) return;
+    setImpersonatingId(uid);
+    const key = `imp_${Date.now()}`;
     try {
       const token = await firebaseUser.getIdToken();
       const base = import.meta.env.VITE_MONKEY_KING_API_URL || "";
@@ -249,14 +241,20 @@ export default function AdminEducators() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.detail || "Failed");
-      const key = `imp_${Date.now()}`;
       localStorage.setItem(
         key,
         JSON.stringify({ token: data.custom_token, name, expires: Date.now() + 60000 })
       );
-      window.open(`/impersonate?k=${key}`, "_blank");
+      const popup = window.open(`/impersonate?k=${key}`, "_blank");
+      if (!popup) {
+        localStorage.removeItem(key);
+        toast.error("Popup was blocked. Allow popups for this site and try again.");
+      }
     } catch (e: any) {
+      localStorage.removeItem(key);
       toast.error(e.message || "Failed to impersonate");
+    } finally {
+      setImpersonatingId(null);
     }
   }
 
@@ -271,6 +269,9 @@ export default function AdminEducators() {
 
   useEffect(() => {
     loadEducators();
+    getDocs(query(collection(db, "roles"), where("status", "==", "active"))).then((snap) =>
+      setRoles(new Map(snap.docs.map((d) => [d.id, (d.data().name as string) || "Unknown"])))
+    );
   }, []);
 
   function fmtTs(ts?: Timestamp | null) {
@@ -282,8 +283,8 @@ export default function AdminEducators() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Educators & Institutes</h1>
-          <p className="text-muted-foreground">Manage and view all registered educators</p>
+          <h1 className="text-2xl font-bold">Institutes</h1>
+          <p className="text-muted-foreground">Manage and view all registered institutes</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -294,7 +295,7 @@ export default function AdminEducators() {
             size="sm"
             className="gap-2"
           >
-            <Plus className="h-4 w-4" /> New Educator
+            <Plus className="h-4 w-4" /> New Institute
           </Button>
           <Button onClick={loadEducators} disabled={loading} variant="outline" size="sm">
             {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -318,7 +319,7 @@ export default function AdminEducators() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Educator</TableHead>
+                <TableHead>Institute</TableHead>
                 <TableHead>Institute Slug</TableHead>
                 <TableHead>Students</TableHead>
                 <TableHead>Joined</TableHead>
@@ -330,13 +331,13 @@ export default function AdminEducators() {
                 <TableRow>
                   <TableCell colSpan={5} className="py-10 text-center">
                     <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
-                    <p className="mt-2 text-muted-foreground">Loading educators...</p>
+                    <p className="mt-2 text-muted-foreground">Loading institutes...</p>
                   </TableCell>
                 </TableRow>
               ) : filteredEducators.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
-                    {search ? "No educators match your search." : "No educators found."}
+                    {search ? "No institutes match your search." : "No institutes found."}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -379,8 +380,8 @@ export default function AdminEducators() {
                         <Button variant="ghost" size="sm" onClick={() => viewStudents(edu)}>
                           Students
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => viewTests(edu)}>
-                          Tests
+                        <Button variant="ghost" size="sm" onClick={() => viewEmployees(edu)}>
+                          Employees
                         </Button>
                         <Button
                           variant="ghost"
@@ -392,9 +393,14 @@ export default function AdminEducators() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          disabled={!!impersonatingId}
                           onClick={() => handleImpersonate(edu.uid, edu.displayName)}
                         >
-                          Login as
+                          {impersonatingId === edu.uid ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            "Login as"
+                          )}
                         </Button>
                       </div>
                     </TableCell>
@@ -482,7 +488,7 @@ export default function AdminEducators() {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{created ? "Educator Created" : "New Educator Account"}</DialogTitle>
+            <DialogTitle>{created ? "Institute Created" : "New Institute Account"}</DialogTitle>
           </DialogHeader>
 
           {created ? (
@@ -593,43 +599,82 @@ export default function AdminEducators() {
         </DialogContent>
       </Dialog>
 
-      {/* Tests Dialog */}
-      <Dialog open={testsOpen} onOpenChange={setTestsOpen}>
+      {/* Employees Dialog */}
+      <Dialog open={employeesOpen} onOpenChange={setEmployeesOpen}>
         <DialogContent className="flex max-h-[80vh] max-w-4xl flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              Tests uploaded by {selectedEducator?.displayName}
+              <Briefcase className="h-5 w-5" />
+              Employees — {selectedEducator?.displayName}
             </DialogTitle>
           </DialogHeader>
 
           <div className="mt-4 flex-1 overflow-y-auto">
-            {loadingTests ? (
+            {loadingEmployees ? (
               <div className="py-10 text-center">
                 <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
               </div>
-            ) : tests.length === 0 ? (
-              <div className="py-10 text-center text-muted-foreground">No tests uploaded yet.</div>
+            ) : employees.length === 0 ? (
+              <div className="py-10 text-center text-muted-foreground">No employees added yet.</div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Test Title</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Questions</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead>Created At</TableHead>
+                    <TableHead>Employee</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Scope</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {tests.map((t) => (
-                    <TableRow key={t.id}>
-                      <TableCell className="font-medium">{t.title}</TableCell>
-                      <TableCell>{t.subject}</TableCell>
-                      <TableCell>{t.questionsCount}</TableCell>
-                      <TableCell>{t.durationMinutes} mins</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {fmtTs(t.createdAt)}
+                  {employees.map((emp) => (
+                    <TableRow key={emp.id}>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{emp.name}</span>
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Mail className="h-3 w-3" />
+                            {emp.email}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {roles.get(emp.roleId) ?? (
+                          <span className="text-muted-foreground">Unknown</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {emp.scope?.branchIds?.length
+                          ? `${emp.scope.branchIds.length} branch(es)`
+                          : "All Branches"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            emp.status === "ACTIVE"
+                              ? "default"
+                              : emp.status === "DEACTIVATED"
+                                ? "destructive"
+                                : "secondary"
+                          }
+                        >
+                          {emp.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={!!impersonatingId}
+                          onClick={() => handleImpersonate(emp.uid, emp.name)}
+                        >
+                          {impersonatingId === emp.uid ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            "Login as"
+                          )}
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}

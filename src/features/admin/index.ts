@@ -14,3 +14,4 @@ export { default as AdminSubjectManagement } from "./SubjectManagement";
 export { default as AdminTemplates } from "./Templates";
 export { default as AdminTestBank } from "./TestBank";
 export { default as AdminTestForm } from "./TestForm";
+export { default as AdminRolesManagement } from "./RolesManagement";

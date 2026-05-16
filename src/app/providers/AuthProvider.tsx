@@ -28,6 +28,9 @@ export type AppUserProfile = {
   globalCourseId?: string;
   globalCourseName?: string;
   subjectIds?: string[];
+  isEmployee?: boolean;
+  orgUid?: string;
+  employeeDocId?: string;
 };
 
 type AuthContextValue = {
@@ -71,6 +74,9 @@ async function loadProfile(uid: string): Promise<AppUserProfile | null> {
     globalCourseId: typeof data.globalCourseId === "string" ? data.globalCourseId : undefined,
     globalCourseName: typeof data.globalCourseName === "string" ? data.globalCourseName : undefined,
     subjectIds: Array.isArray(data.subjectIds) ? (data.subjectIds as string[]) : undefined,
+    isEmployee: typeof data.isEmployee === "boolean" ? data.isEmployee : undefined,
+    orgUid: typeof data.orgUid === "string" ? data.orgUid : undefined,
+    employeeDocId: typeof data.employeeDocId === "string" ? data.employeeDocId : undefined,
   };
 
   if (role === "EDUCATOR") {

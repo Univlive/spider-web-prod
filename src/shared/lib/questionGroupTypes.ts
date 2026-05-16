@@ -13,6 +13,7 @@ export type QuestionGroup = {
   passageContentFormat: "html" | "latex";
   subjectId?: string;
   subjectName?: string;
+  chapter?: string;
   topics?: string[];
   tags?: string[];
   difficulty?: "easy" | "medium" | "hard";

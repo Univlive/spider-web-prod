@@ -63,6 +63,7 @@ Multi-tenant SaaS platform for coaching institutes. Built with React + TypeScrip
 - `/admin/analytics` — platform activity: 7-day attempts chart, today's engagement, recent activity feed
 - `/admin/educators` — educator management (create educators here)
 - `/admin/plans`, `/admin/coupons`, `/admin/payment-logs`, `/admin/seats`, `/admin/subjects`
+- `/admin/roles` — Employee Roles management: create/edit/archive roles with permission checkboxes; roles are org-wide and assigned to employees by educator admins
 - `/admin/content` — Admin content library (books/notes per subject)
 - No `/login` or `/signup` on main domain (intentional)
 
@@ -75,9 +76,21 @@ Multi-tenant SaaS platform for coaching institutes. Built with React + TypeScrip
 - `/educator/analytics` — deep analytics: student growth, attempts chart, top performers, subject heatmap (existing Analytics.tsx, now routed)
 - `/educator/question-papers` — submit question paper files to admin for manual upload; shows status (PENDING/IN_PROGRESS/COMPLETE/CANCELLED); can edit/cancel while PENDING
 - `/educator/content` — per-course content management; import from admin library
+- `/educator/organization` — Branches, Programs, and **Employees** tabs; employees tab: invite staff, assign role + branch scope, filter list
 - `/student/*` — student portal (dashboard, tests, results, rankings, content)
 - `/student/dashboard` — live tests grid, resume in-progress, rank + avg score, leaderboard preview (top 5), score trend
+- `/student/reports` — performance analytics: readiness score, weak areas, strong holds, strategy list, subject accuracy bar chart, weekly trend line chart; calls `monkey-king GET /api/reports/my` (STUDENT auth via Firebase ID token); Refresh button calls `POST /api/reports/recompute` (202, rate-limited 10 min)
 - `/student/content` — view books/notes for enrolled course
+
+## Employee RBAC System
+
+- **Roles**: defined by platform admin at `roles/{roleId}` (global Firestore collection); fields: `name, description, permissions[], status`
+- **Permissions**: 16 atomic permissions in `src/shared/lib/employeePermissions.ts` (e.g. `students.view`, `tests.create`, `analytics.view`)
+- **Employees**: stored in `educators/{orgUid}/employees/{empUid}`; fields: `uid, email, name, roleId, status, scope.branchIds[]`
+- **Auth**: employees have `role: "EDUCATOR"` in `users/{uid}` plus `isEmployee: true, orgUid, employeeDocId`
+- **Context**: `src/shared/contexts/EmployeeContext.tsx` — `EmployeeProvider` wraps `EducatorLayout`; `useEmployee()` gives `hasPermission(p)` and `inBranchScope(branchId)` to any educator page
+- **Sidebar**: `EducatorLayout` filters nav items based on `hasPermission`; Billing + Organization hidden for employees
+- **Invite flow**: org head fills form → `POST /api/org/invite-employee` creates Firebase Auth user + writes Firestore docs → frontend calls `sendPasswordResetEmail` → employee sets password → logs in
 
 ## Multi-Tenant Theming
 
@@ -121,13 +134,32 @@ Multi-tenant SaaS platform for coaching institutes. Built with React + TypeScrip
 
 ## DPP Auto-Scheduling
 
-- **Route**: `/educator/dpp` — DppGenerator with two tabs: "Generate Now" (manual) + "Schedule Series" (automated)
+- **Route**: `/educator/dpp` — DppGenerator with two views: "Generate Now" + "Schedule"
 - **Component**: `src/features/educator/DppGenerator.tsx`
-  - Schedule form: content picker, difficulty, date range, time of day, batch multi-select, daily topics table (per-day topic text)
-  - Saves to `POST /api/dpp/schedules`; active schedules list with pause/resume/delete
-- **Backend**: `monkey-king /api/dpp/schedules/*`
+  - Generate Now: source toggle (AI / QB / Hybrid), content/topic picker, difficulty, topic hint
+  - Schedule: 3-step wizard — Step 1: Source mode + content/QB filters; Step 2: Template summary + difficulty; Step 3: Date range, time, batches, topic rotation list
+  - Topic rotation: round-robin list of topics (replaces per-date dailyTopics map for new schedules)
+  - Source modes: `ai_only` (Pinecone+Gemini), `qb_only` (educator QB only), `hybrid` (QB first, AI fills gap)
+  - Link to `/educator/dpp/template` for editing educator's personal DPP template
+- **Backend**: `monkey-king /api/dpp/*`
+  - `GET/PUT/DELETE /api/dpp/template/my` — educator's personal DPP template (overrides global per-educator)
+  - Template stored at Firestore `educators/{uid}/dpp_settings/template`; falls back to `dpp_template/default`
+  - `POST /api/dpp/generate` — accepts `source_mode`, `topic_filters`, `subject_filter`
+  - `POST /api/test/gap-fill` — AI gap-fill for normal test sections when QB is short; questions get `source: "ai_gap_fill"` + `reviewRequired: true`
   - APScheduler job runs every 15 min, auto-generates DPPs for due schedules and publishes to `targetBatches`
-  - `source: "schedule"` bypasses daily manual DPP limit
+
+## Question Types
+
+- **File**: `src/shared/lib/questionTypes.ts`
+- **Types**: `MCQ` | `SHORT_ANSWER` | `UPLOAD` | `CASE_STUDY` (new)
+- `CASE_STUDY`: passage + sub-questions (each MCQ/SHORT_ANSWER/UPLOAD); marks per sub-question; `SubQuestion[]` type exported
+- `normalizeQuestionType()` maps legacy pipeline values: `single_correct_mcq`→MCQ, `subjective`→SHORT_ANSWER, `case_study`→CASE_STUDY, etc.
+
+## Question Upload (formerly Question Paper Requests)
+
+- **Route**: `/educator/question-papers` — unchanged route; underlying API now `/api/question-upload/` (was `/api/question-paper/`)
+- **DB table**: `question_upload_requests` (renamed from `question_paper_requests` in migration 008)
+- Both `/api/question-upload/*` (canonical) and `/api/question-paper/*` (compat alias) are active
 
 ## Content Management
 
@@ -148,10 +180,11 @@ Multi-tenant SaaS platform for coaching institutes. Built with React + TypeScrip
 
 ## Filter System (Question Bank / Templates / Test Bank)
 
-- **Cascade**: Course (single) → Subject (multi) → Topic (multi, QB only) → Tags (multi, QB only)
+- **Cascade**: Course (single) → Subject (multi) → Chapter (single, QB only) → Topic (multi, QB only) → Tags (multi, QB only)
 - **Courses**: `courses` collection `{id, name, isActive}` — admin sees all; educator sees only those derived from their `allowedSubjectIds` via `useAccessibleCourses`
 - **Subjects**: `subjects` collection `{id, name, courseId}` — filtered by selected course; educator only sees allowed subjects
-- **Topics/Tags**: free-text fields on questions (`topic`, `topics[]`, `tags[]`) — derived dynamically from filtered question pool
+- **Chapter**: free-text field (`chapter`) on questions — single string, derived dynamically after subject filter; narrows topic options
+- **Topics/Tags**: free-text fields on questions (`topic`, `topics[]`, `tags[]`) — derived dynamically from filtered question pool (after chapter filter)
 - **CSV import validation**: validates `course` and `subject` column values against Firestore before writing; throws with list of invalid rows + valid options
 - **SectionCard (template editor)**: topics/tags per-section driven by question bank data passed from `CreateTemplateModal`
 - **Educator bankTests**: pre-filtered in TestSeries to only show templates whose `courseId` is in educator's accessible courses

@@ -138,6 +138,11 @@ export default function Login() {
       }
 
       if (roleDb === "EDUCATOR") {
+        if (isTenantDomain && tenantSlug && data?.tenantSlug !== tenantSlug) {
+          toast.error("This account is not registered for this coaching institute.");
+          await auth.signOut();
+          return;
+        }
         toast.success("Welcome back!");
         await refreshProfile();
         nav("/educator", { replace: true });
@@ -190,6 +195,11 @@ export default function Login() {
       console.error(error);
       let msg = "Failed to login";
       if (error.code === "auth/invalid-credential") msg = "Invalid email or password";
+      else if (error.code === "auth/user-disabled") msg = "This account has been disabled.";
+      else if (error.code === "auth/too-many-requests")
+        msg = "Too many failed attempts. Try again later.";
+      else if (error.code === "auth/network-request-failed")
+        msg = "Network error. Check your connection.";
       else msg = error.message || msg;
       toast.error(msg);
       await auth.signOut().catch(() => {});

@@ -71,6 +71,7 @@ type Difficulty = "easy" | "medium" | "hard";
 type QBQuestion = {
   id: string;
   course?: string;
+  chapter?: string;
   topic?: string;
   difficulty?: Difficulty;
 
@@ -509,6 +510,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
   const [qSearch, setQSearch] = useState("");
   const [fCourseId, setFCourseId] = useState<string>("all");
   const [fSubjectIds, setFSubjectIds] = useState<string[]>([]);
+  const [fChapter, setFChapter] = useState<string[]>([]);
   const [fTopics, setFTopics] = useState<string[]>([]);
   const [fTags, setFTags] = useState<string[]>([]);
   const [fDifficulty, setFDifficulty] = useState<string>("all");
@@ -529,6 +531,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const [course, setCourse] = useState("");
+  const [chapter, setChapter] = useState("");
   const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [tags, setTags] = useState<string>("");
@@ -800,28 +803,43 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
     });
   }, [allItems, fCourseId, fSubjectIds, allSubjects, allCourses]);
 
-  // Topic options: derived from questions matching course+subject selection
-  const topicOptions = useMemo(() => {
+  // Chapter options: derived from questions matching course+subject selection
+  const chapterOptions = useMemo(() => {
     const s = new Set<string>();
     filteredByCourseSubject.forEach((x) => {
+      if (x.chapter) s.add(x.chapter);
+    });
+    return Array.from(s).sort();
+  }, [filteredByCourseSubject]);
+
+  // Pre-filter by course + subject + chapter (for deriving topic/tag option lists)
+  const filteredByCourseSubjectChapter = useMemo(() => {
+    if (fChapter.length === 0) return filteredByCourseSubject;
+    return filteredByCourseSubject.filter((x) => x.chapter && fChapter.includes(x.chapter));
+  }, [filteredByCourseSubject, fChapter]);
+
+  // Topic options: derived from questions matching course+subject+chapter selection
+  const topicOptions = useMemo(() => {
+    const s = new Set<string>();
+    filteredByCourseSubjectChapter.forEach((x) => {
       (x.topics || []).forEach((t) => t && s.add(t));
       if (x.topic) s.add(x.topic);
     });
     return Array.from(s).sort();
-  }, [filteredByCourseSubject]);
+  }, [filteredByCourseSubjectChapter]);
 
-  // Tag options: derived from questions matching course+subject selection
+  // Tag options: derived from questions matching course+subject+chapter selection
   const tagOptions = useMemo(() => {
     const s = new Set<string>();
-    filteredByCourseSubject.forEach((x) => {
+    filteredByCourseSubjectChapter.forEach((x) => {
       (x.tags || []).forEach((t) => t && s.add(t));
     });
     return Array.from(s).sort();
-  }, [filteredByCourseSubject]);
+  }, [filteredByCourseSubjectChapter]);
 
   const filtered = useMemo(() => {
     const needle = qSearch.trim().toLowerCase();
-    return filteredByCourseSubject.filter((x) => {
+    return filteredByCourseSubjectChapter.filter((x) => {
       if (fTopics.length > 0) {
         const qTopics = [...(x.topics || []), ...(x.topic ? [x.topic] : [])];
         if (!fTopics.some((t) => qTopics.includes(t))) return false;
@@ -832,7 +850,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
       const hay = (x.searchText || x.question + " " + (x.options || []).join(" ")).toLowerCase();
       return hay.includes(needle);
     });
-  }, [filteredByCourseSubject, qSearch, fTopics, fTags, fDifficulty]);
+  }, [filteredByCourseSubjectChapter, qSearch, fTopics, fTags, fDifficulty]);
 
   const QB_PAGE_SIZE = 20;
   const qbTotalPages = Math.max(1, Math.ceil(filtered.length / QB_PAGE_SIZE));
@@ -841,12 +859,13 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
   // Reset to page 1 on filter change
   useEffect(() => {
     setQbPage(1);
-  }, [qSearch, fCourseId, fSubjectIds, fTopics, fTags, fDifficulty]);
+  }, [qSearch, fCourseId, fSubjectIds, fChapter, fTopics, fTags, fDifficulty]);
 
   const resetEditor = () => {
     setEditingId(null);
     setCourse("");
     setQCourseId("");
+    setChapter("");
     setTopic("");
     setDifficulty("medium");
     setTags("");
@@ -884,6 +903,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
     const matchedCourseId =
       allCourses.find((c) => c.name === x.course)?.id || (x as any).courseId || "";
     setQCourseId(matchedCourseId);
+    setChapter(x.chapter || "");
     setTopic(x.topic || "");
     setDifficulty(ensureDifficulty(x.difficulty));
     setTags((x.tags || []).join(", "));
@@ -1008,6 +1028,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
       } else if (course.trim()) {
         base.course = course.trim();
       }
+      if (chapter.trim()) base.chapter = chapter.trim();
       if (topic.trim()) base.topic = topic.trim();
       if (topicsArr.length) base.topics = topicsArr;
       if (qSubjectId && matchedSubject) {
@@ -1021,6 +1042,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
 
       base.searchText = [
         matchedCourse?.name || course,
+        chapter.trim(),
         topicsArr.join(" "),
         stripHtml(question),
         stripHtml(options.join(" ")),
@@ -1374,6 +1396,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
       "marks",
       "negative_marks",
       "course",
+      "chapter",
       "tags",
       "group_id",
       "group_type",
@@ -1652,6 +1675,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
           (s) => s.name.toLowerCase() === subjectName.toLowerCase()
         );
 
+        const chapterVal = (row.chapter || "").trim();
         const topicsArr = (row.topics || "")
           .split(",")
           .map((s) => s.trim())
@@ -1681,6 +1705,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         const searchText = [
           courseVal,
           subjectName,
+          chapterVal,
           topicsArr.join(" "),
           ques,
           opts.join(" "),
@@ -1702,6 +1727,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
           negativeMarks: negMarksVal,
           course: courseVal || undefined,
           courseId: matchedCourse?.id || undefined,
+          chapter: chapterVal || undefined,
           topic: topicsArr[0] || undefined,
           topics: topicsArr.length ? topicsArr : undefined,
           tags: tagsArr.length ? tagsArr : undefined,
@@ -1906,6 +1932,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
                 selected={fSubjectIds.map((id) => allSubjects.find((s) => s.id === id)?.name ?? id)}
                 onChange={(names) => {
                   setFSubjectIds(names.map((n) => allSubjects.find((s) => s.name === n)?.id ?? n));
+                  setFChapter([]);
                   setFTopics([]);
                   setFTags([]);
                 }}
@@ -1929,7 +1956,18 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <MultiSelect
+              options={chapterOptions}
+              selected={fChapter}
+              onChange={(v) => {
+                setFChapter(v);
+                setFTopics([]);
+                setFTags([]);
+              }}
+              placeholder="All Chapters"
+              disabled={chapterOptions.length === 0}
+            />
             <MultiSelect
               options={topicOptions}
               selected={fTopics}
@@ -1987,6 +2025,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
                           </Badge>
                         )}
                         {q.course && <Badge variant="secondary">{q.course}</Badge>}
+                        {q.chapter && <Badge variant="outline">{q.chapter}</Badge>}
                         {q.topic && <Badge variant="outline">{q.topic}</Badge>}
                         <Badge className="capitalize" variant="outline">
                           {q.difficulty || "medium"}
@@ -2144,8 +2183,16 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
             </div>
           </div>
 
-          {/* Row 2: Topics + Tags + Marks */}
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          {/* Row 2: Chapter + Topics + Tags + Marks */}
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Chapter</Label>
+              <Input
+                value={chapter}
+                onChange={(e) => setChapter(e.target.value)}
+                placeholder="e.g. Optics"
+              />
+            </div>
             <div className="space-y-2">
               <Label>
                 Topics <span className="text-xs text-muted-foreground">(comma-separated)</span>
@@ -2156,6 +2203,8 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
                 placeholder="e.g. Integral, Derivatives"
               />
             </div>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <div className="space-y-2">
               <Label>
                 Tags <span className="text-xs text-muted-foreground">(comma-separated)</span>

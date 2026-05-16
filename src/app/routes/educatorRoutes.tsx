@@ -1,4 +1,4 @@
-import { Route } from "react-router-dom";
+import { Route, Navigate } from "react-router-dom";
 
 import RequireRole from "@shared/auth/RequireRole";
 import EducatorLayout from "@features/educator/components/EducatorLayout";
@@ -18,15 +18,15 @@ import {
   EducatorQuestionBank,
   Settings,
   StudentsListing,
-  WebsiteSettings,
   ManageQuestionsPage,
   TestSeries,
   ScheduledTests,
   ScheduledDpps,
+  SeatAllocation,
   StudentHealthCategoryList,
 } from "@features/educator";
+import DppTemplatePage from "@features/educator/DppTemplatePage";
 import QuestionPaperRequests from "@features/educator/QuestionPaperRequests";
-import SeatAllocation from "@features/educator/SeatAllocation";
 
 export function getEducatorRoutes() {
   return (
@@ -51,15 +51,16 @@ export function getEducatorRoutes() {
       <Route path="question-bank" element={<EducatorQuestionBank />} />
       <Route path="access-codes" element={<AccessCodes />} />
       <Route path="messages" element={<Messages />} />
-      <Route path="website-settings" element={<WebsiteSettings />} />
       <Route path="billing" element={<Billing />} />
       <Route path="analytics" element={<EducatorAnalytics />} />
       <Route path="analytics/health/:category" element={<StudentHealthCategoryList />} />
       <Route path="seat-allocation" element={<SeatAllocation />} />
       <Route path="settings" element={<Settings />} />
-      <Route path="divisions" element={<Divisions />} />
+      <Route path="organization" element={<Divisions />} />
+      <Route path="divisions" element={<Navigate to="/educator/organization" replace />} />
       <Route path="content" element={<EducatorContent />} />
       <Route path="dpp" element={<DppGenerator />} />
+      <Route path="dpp/template" element={<DppTemplatePage />} />
       <Route path="website-builder" element={<InstituteBuilder />} />
       <Route path="question-papers" element={<QuestionPaperRequests />} />
     </Route>

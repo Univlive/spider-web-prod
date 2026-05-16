@@ -104,6 +104,7 @@ type QuestionDoc = {
   explanation?: string;
   difficulty: Difficulty;
   subject?: string;
+  chapter?: string;
   topic?: string;
 
   marks?: number;
@@ -135,6 +136,7 @@ type QuestionDoc = {
 type QBQuestion = {
   id: string;
   subject?: string;
+  chapter?: string;
   topic?: string;
   difficulty?: Difficulty;
   question: string; // HTML
@@ -299,6 +301,7 @@ export default function Questions() {
   const [formDifficulty, setFormDifficulty] = useState<Difficulty>("medium");
   const [formSectionId, setFormSectionId] = useState<string>("main");
   const [formSubject, setFormSubject] = useState("");
+  const [formChapter, setFormChapter] = useState("");
   const [formTopic, setFormTopic] = useState("");
   const [formMarks, setFormMarks] = useState<string>("");
   const [formNegMarks, setFormNegMarks] = useState<string>("");
@@ -326,6 +329,7 @@ export default function Questions() {
   const [qbRows, setQbRows] = useState<QBQuestion[]>([]);
   const [qbSearch, setQbSearch] = useState("");
   const [qbSubject, setQbSubject] = useState<string>("all");
+  const [qbChapter, setQbChapter] = useState<string>("all");
   const [qbTopic, setQbTopic] = useState<string>("all");
   const [qbDifficulty, setQbDifficulty] = useState<"all" | Difficulty>("all");
   const [qbSelected, setQbSelected] = useState<Record<string, boolean>>({});
@@ -466,6 +470,7 @@ export default function Questions() {
             explanation: safeStr(data?.explanation, ""),
             difficulty: normalizeDifficulty(data?.difficulty),
             subject: safeStr(data?.subject, ""),
+            chapter: safeStr(data?.chapter, "") || undefined,
             topic: safeStr(data?.topic, ""),
             marks: data?.marks != null ? safeNum(data?.marks, 0) : undefined,
             negativeMarks:
@@ -524,6 +529,7 @@ export default function Questions() {
           return {
             id: d.id,
             subject: safeStr(data?.subject, ""),
+            chapter: safeStr(data?.chapter, "") || undefined,
             topic: safeStr(data?.topic, ""),
             difficulty: normalizeDifficulty(data?.difficulty),
             question: safeStr(data?.question, ""),
@@ -567,25 +573,37 @@ export default function Questions() {
     return ["all", ...Array.from(s).sort((a, b) => a.localeCompare(b))];
   }, [qbRows]);
 
+  const qbChapters = useMemo(() => {
+    const s = new Set<string>();
+    qbRows.forEach((q) => {
+      if (qbSubject !== "all" && q.subject !== qbSubject) return;
+      if (q.chapter) s.add(q.chapter);
+    });
+    return ["all", ...Array.from(s).sort((a, b) => a.localeCompare(b))];
+  }, [qbRows, qbSubject]);
+
   const qbTopics = useMemo(() => {
     const s = new Set<string>();
     qbRows.forEach((q) => {
       if (qbSubject !== "all" && q.subject !== qbSubject) return;
+      if (qbChapter !== "all" && (q.chapter || "") !== qbChapter) return;
       if (q.topic) s.add(q.topic);
     });
     return ["all", ...Array.from(s).sort((a, b) => a.localeCompare(b))];
-  }, [qbRows, qbSubject]);
+  }, [qbRows, qbSubject, qbChapter]);
 
   const qbFiltered = useMemo(() => {
     const q = qbSearch.trim().toLowerCase();
     return qbRows.filter((x) => {
       if (qbDifficulty !== "all" && (x.difficulty || "medium") !== qbDifficulty) return false;
       if (qbSubject !== "all" && (x.subject || "") !== qbSubject) return false;
+      if (qbChapter !== "all" && (x.chapter || "") !== qbChapter) return false;
       if (qbTopic !== "all" && (x.topic || "") !== qbTopic) return false;
       if (!q) return true;
       const hay = [
         stripHtml(x.question),
         x.subject || "",
+        x.chapter || "",
         x.topic || "",
         ...(x.options || []).map(stripHtml),
       ]
@@ -593,7 +611,7 @@ export default function Questions() {
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [qbRows, qbSearch, qbDifficulty, qbSubject, qbTopic]);
+  }, [qbRows, qbSearch, qbDifficulty, qbSubject, qbChapter, qbTopic]);
 
   const qbSelectedIds = useMemo(
     () => Object.keys(qbSelected).filter((id) => qbSelected[id]),
@@ -637,6 +655,7 @@ export default function Questions() {
           difficulty: normalizeDifficulty(q.difficulty),
           sectionId: resolveSectionId(qbSectionId, selectedTestSections),
           subject: q.subject || selectedTest?.subject || "",
+          chapter: q.chapter || "",
           topic: q.topic || "",
           isActive: true,
           usageCount: 0,
@@ -955,6 +974,7 @@ export default function Questions() {
     setFormDifficulty(q.difficulty || "medium");
     setFormSectionId(resolveSectionId(q.sectionId, selectedTestSections));
     setFormSubject(q.subject || selectedTest?.subject || "");
+    setFormChapter(q.chapter || "");
     setFormTopic(q.topic || "");
     setFormMarks(
       q.marks != null
@@ -1044,6 +1064,7 @@ export default function Questions() {
         difficulty: formDifficulty,
         sectionId: normalizedSectionId,
         subject: formSubject.trim() || selectedTest?.subject || "",
+        chapter: formChapter.trim() || "",
         topic: topicsArr[0] || formTopic.trim() || "",
         isActive: !!formActive,
         usageCount: 0,
@@ -1426,6 +1447,16 @@ export default function Questions() {
             </div>
 
             <div className="space-y-2">
+              <Label className="text-sm font-semibold">Chapter</Label>
+              <Input
+                className="h-11 rounded-xl"
+                value={formChapter}
+                onChange={(e) => setFormChapter(e.target.value)}
+                placeholder="e.g. Optics"
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label className="text-sm font-semibold">
                 Topics{" "}
                 <span className="text-xs font-normal text-muted-foreground">(comma-separated)</span>
@@ -1573,9 +1604,16 @@ export default function Questions() {
                   </div>
                 </div>
 
-                <div className="lg:col-span-3">
+                <div className="lg:col-span-2">
                   <Label className="text-xs">Subject</Label>
-                  <Select value={qbSubject} onValueChange={setQbSubject}>
+                  <Select
+                    value={qbSubject}
+                    onValueChange={(v) => {
+                      setQbSubject(v);
+                      setQbChapter("all");
+                      setQbTopic("all");
+                    }}
+                  >
                     <SelectTrigger className="mt-1 rounded-xl">
                       <SelectValue placeholder="All subjects" />
                     </SelectTrigger>
@@ -1589,7 +1627,29 @@ export default function Questions() {
                   </Select>
                 </div>
 
-                <div className="lg:col-span-3">
+                <div className="lg:col-span-2">
+                  <Label className="text-xs">Chapter</Label>
+                  <Select
+                    value={qbChapter}
+                    onValueChange={(v) => {
+                      setQbChapter(v);
+                      setQbTopic("all");
+                    }}
+                  >
+                    <SelectTrigger className="mt-1 rounded-xl">
+                      <SelectValue placeholder="All chapters" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {qbChapters.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c === "all" ? "All chapters" : c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="lg:col-span-2">
                   <Label className="text-xs">Topic</Label>
                   <Select value={qbTopic} onValueChange={setQbTopic}>
                     <SelectTrigger className="mt-1 rounded-xl">
@@ -1688,6 +1748,11 @@ export default function Questions() {
                                 {q.subject ? (
                                   <Badge variant="secondary" className="rounded-full">
                                     {q.subject}
+                                  </Badge>
+                                ) : null}
+                                {q.chapter ? (
+                                  <Badge variant="outline" className="rounded-full">
+                                    {q.chapter}
                                   </Badge>
                                 ) : null}
                                 {q.topic ? (
@@ -1982,6 +2047,11 @@ export default function Questions() {
                                         {q.subject ? (
                                           <Badge variant="secondary" className="rounded-full">
                                             {q.subject}
+                                          </Badge>
+                                        ) : null}
+                                        {q.chapter ? (
+                                          <Badge variant="outline" className="rounded-full">
+                                            {q.chapter}
                                           </Badge>
                                         ) : null}
                                         {q.topic ? (

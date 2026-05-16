@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Loader2, ShoppingCart, Tag, CheckCircle2, XCircle, RefreshCw, Layers } from "lucide-react";
+import { Loader2, ShoppingCart, Tag, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
 import { collection, getDocs, onSnapshot } from "firebase/firestore";
 import { db } from "@shared/lib/firebase";
 import { useAuth } from "@app/providers/AuthProvider";
@@ -272,43 +272,37 @@ export default function Billing() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Billing & Plan</h1>
-        <p className="text-sm text-muted-foreground">
-          Purchase seats into your pool, then assign them to batches from Seat Allocation.
-        </p>
+        <h1 className="text-2xl font-bold">Billing</h1>
+        <p className="text-sm text-muted-foreground">Purchase seats and manage your plan.</p>
       </div>
 
-      {/* Pool Status */}
-      {pools.length > 0 && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {pools.map((pool) => (
-            <Card key={pool.planId}>
-              <CardContent className="pt-4">
-                <div className="mb-2 flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">
-                    {plans.find((p) => p.id === pool.planId)?.name || pool.planName} Pool
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-1 text-center">
+      {/* Seat Balance Widget */}
+      {pools.length > 0 &&
+        (() => {
+          const totalAvailable = pools.reduce((s, p) => s + p.availableSeats, 0);
+          const totalInUse = pools.reduce((s, p) => s + p.allocatedSeats, 0);
+          const totalPurchased = pools.reduce((s, p) => s + p.totalSeats, 0);
+          return (
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="flex flex-wrap items-center gap-6 py-4">
+                <div className="flex gap-6">
                   <div>
-                    <p className="text-xl font-bold text-primary">{pool.availableSeats}</p>
+                    <p className="text-2xl font-bold text-primary">{totalAvailable}</p>
                     <p className="text-xs text-muted-foreground">Available</p>
                   </div>
                   <div>
-                    <p className="text-xl font-bold">{pool.allocatedSeats}</p>
-                    <p className="text-xs text-muted-foreground">Allocated</p>
+                    <p className="text-2xl font-bold">{totalInUse}</p>
+                    <p className="text-xs text-muted-foreground">In use</p>
                   </div>
                   <div>
-                    <p className="text-xl font-bold text-muted-foreground">{pool.totalSeats}</p>
-                    <p className="text-xs text-muted-foreground">Total</p>
+                    <p className="text-2xl font-bold text-muted-foreground">{totalPurchased}</p>
+                    <p className="text-xs text-muted-foreground">Purchased</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      )}
+          );
+        })()}
 
       {/* Purchase Form */}
       <Card className="max-w-xl">

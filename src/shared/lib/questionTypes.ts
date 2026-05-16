@@ -1,6 +1,19 @@
-export type QuestionType = "MCQ" | "SHORT_ANSWER" | "UPLOAD";
+// Canonical question type enum used across the entire platform.
+// Legacy values from AI/DPP pipeline are mapped in normalizeQuestionType().
+export type QuestionType = "MCQ" | "SHORT_ANSWER" | "UPLOAD" | "CASE_STUDY";
 
-export const QUESTION_TYPES: QuestionType[] = ["MCQ", "SHORT_ANSWER", "UPLOAD"];
+export const QUESTION_TYPES: QuestionType[] = ["MCQ", "SHORT_ANSWER", "UPLOAD", "CASE_STUDY"];
+
+export type SubQuestion = {
+  id: string;
+  question: string;
+  questionType: "MCQ" | "SHORT_ANSWER" | "UPLOAD";
+  options?: string[];
+  correctOption?: number;
+  referenceAnswer?: string;
+  marks: number;
+  negativeMarks: number;
+};
 
 export const QUESTION_TYPE_CONFIG: Record<
   QuestionType,
@@ -14,7 +27,7 @@ export const QUESTION_TYPE_CONFIG: Record<
     supportsCorrectOption: boolean;
     requiresReferenceAnswer: boolean;
     requiresAiEvaluation: boolean;
-    studentInputType: "radio" | "textarea" | "file";
+    studentInputType: "radio" | "textarea" | "file" | "case_study";
   }
 > = {
   MCQ: {
@@ -53,6 +66,18 @@ export const QUESTION_TYPE_CONFIG: Record<
     requiresAiEvaluation: true,
     studentInputType: "file",
   },
+  CASE_STUDY: {
+    label: "Case Study",
+    shortLabel: "Case Study",
+    description: "A passage or scenario with multiple sub-questions of mixed types",
+    badgeColor: "bg-teal-100 text-teal-700 border-teal-200",
+    supportsOptions: false,
+    supportsNegativeMarks: false,
+    supportsCorrectOption: false,
+    requiresReferenceAnswer: false,
+    requiresAiEvaluation: false,
+    studentInputType: "case_study",
+  },
 };
 
 export function getQuestionTypeConfig(type?: string) {
@@ -72,13 +97,33 @@ export function isSubjectiveType(type?: string): boolean {
   return getQuestionTypeConfig(type).requiresAiEvaluation;
 }
 
+export function isCaseStudy(type?: string): boolean {
+  return normalizeQuestionType(type) === "CASE_STUDY";
+}
+
 export function normalizeQuestionType(type?: string | null): QuestionType {
   if (!type) return "MCQ";
   const upper = String(type).toUpperCase().trim();
-  if (upper === "MCQ" || upper === "MULTIPLE_CHOICE") return "MCQ";
-  if (upper === "SHORT_ANSWER" || upper === "SHORT" || upper === "SUBJECTIVE")
+  if (
+    upper === "MCQ" ||
+    upper === "MULTIPLE_CHOICE" ||
+    upper === "MCQ_SINGLE" ||
+    upper === "SINGLE_CORRECT_MCQ" ||
+    upper === "MCQ_MULTI" ||
+    upper === "MULTICORRECT_MCQ"
+  )
+    return "MCQ";
+  if (
+    upper === "SHORT_ANSWER" ||
+    upper === "SHORT" ||
+    upper === "SUBJECTIVE" ||
+    upper === "SUBJECTIVE_LONG" ||
+    upper === "LONG_ANSWER"
+  )
     return "SHORT_ANSWER";
   if (upper === "UPLOAD" || upper === "FILE_UPLOAD" || upper === "IMAGE_UPLOAD") return "UPLOAD";
+  if (upper === "CASE_STUDY" || upper === "CASESTUDY" || upper === "CASE-STUDY")
+    return "CASE_STUDY";
   return "MCQ";
 }
 
