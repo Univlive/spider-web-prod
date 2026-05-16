@@ -149,6 +149,7 @@ const QuestionsManager = ({
   const [formDifficulty, setFormDifficulty] = useState<Difficulty>("medium");
   const [formSectionId, setFormSectionId] = useState("");
   const [formSubject, setFormSubject] = useState("");
+  const [formChapter, setFormChapter] = useState("");
   const [formTopic, setFormTopic] = useState("");
   const [formMarks, setFormMarks] = useState("");
   const [formNegMarks, setFormNegMarks] = useState("");
@@ -214,6 +215,7 @@ const QuestionsManager = ({
   const [questionBankSelected, setQuestionBankSelected] = useState<Record<string, boolean>>({});
   const [questionBankSearch, setQuestionBankSearch] = useState("");
   const [questionBankSubject, setQuestionBankSubject] = useState("all");
+  const [questionBankChapter, setQuestionBankChapter] = useState("all");
   const [questionBankTopic, setQuestionBankTopic] = useState("all");
   const [questionBankDifficulty, setQuestionBankDifficulty] = useState<"all" | Difficulty>("all");
   const [questionBankSectionId, setQuestionBankSectionId] = useState("");
@@ -475,14 +477,24 @@ const QuestionsManager = ({
     return ["all", ...Array.from(subjects).sort((a, b) => a.localeCompare(b))];
   }, [questionBankRows]);
 
+  const questionBankChapters = useMemo(() => {
+    const chapters = new Set<string>();
+    questionBankRows.forEach((question) => {
+      if (questionBankSubject !== "all" && question.subject !== questionBankSubject) return;
+      if (question.chapter) chapters.add(question.chapter);
+    });
+    return ["all", ...Array.from(chapters).sort((a, b) => a.localeCompare(b))];
+  }, [questionBankRows, questionBankSubject]);
+
   const questionBankTopics = useMemo(() => {
     const topics = new Set<string>();
     questionBankRows.forEach((question) => {
       if (questionBankSubject !== "all" && question.subject !== questionBankSubject) return;
+      if (questionBankChapter !== "all" && (question.chapter || "") !== questionBankChapter) return;
       if (question.topic) topics.add(question.topic);
     });
     return ["all", ...Array.from(topics).sort((a, b) => a.localeCompare(b))];
-  }, [questionBankRows, questionBankSubject]);
+  }, [questionBankRows, questionBankSubject, questionBankChapter]);
 
   const filteredQuestionBankRows = useMemo(() => {
     const searchText = questionBankSearch.trim().toLowerCase();
@@ -491,12 +503,15 @@ const QuestionsManager = ({
         return false;
       if (questionBankSubject !== "all" && (question.subject || "") !== questionBankSubject)
         return false;
+      if (questionBankChapter !== "all" && (question.chapter || "") !== questionBankChapter)
+        return false;
       if (questionBankTopic !== "all" && (question.topic || "") !== questionBankTopic) return false;
       if (!searchText) return true;
 
       const haystack = [
         stripHtml(question.question),
         question.subject || "",
+        question.chapter || "",
         question.topic || "",
         ...(question.options || []).map(stripHtml),
       ]
@@ -510,6 +525,7 @@ const QuestionsManager = ({
     questionBankSearch,
     questionBankDifficulty,
     questionBankSubject,
+    questionBankChapter,
     questionBankTopic,
   ]);
 
@@ -583,6 +599,7 @@ const QuestionsManager = ({
       correct: Number(formCorrect) || 0,
       difficulty: formDifficulty || "medium",
       subject: formSubject || "",
+      chapter: formChapter || "",
       topic: formTopic || "",
       marks: formMarks,
       negativeMarks: formNegMarks,
@@ -599,6 +616,7 @@ const QuestionsManager = ({
       formCorrect,
       formDifficulty,
       formSubject,
+      formChapter,
       formTopic,
       formMarks,
       formNegMarks,
@@ -682,6 +700,7 @@ const QuestionsManager = ({
       explanation: data?.explanation ? String(data.explanation) : "",
       difficulty: normalizeDifficulty(data?.difficulty),
       subject: data?.subject ? String(data.subject) : "",
+      chapter: data?.chapter ? String(data.chapter) : "",
       topic: data?.topic ? String(data.topic) : "",
       marks: data?.marks != null ? Number(data.marks) : undefined,
       negativeMarks: data?.negativeMarks != null ? Number(data.negativeMarks) : undefined,
@@ -1003,6 +1022,7 @@ const QuestionsManager = ({
       resolveSectionId(preferredSectionId || managedSections[0]?.id, managedSections)
     );
     setFormSubject("");
+    setFormChapter("");
     setFormTopic("");
     setFormMarks("");
     setFormNegMarks("");
@@ -1054,6 +1074,7 @@ const QuestionsManager = ({
     setFormDifficulty(q.difficulty || "medium");
     setFormSectionId(resolveSectionId(q.sectionId, managedSections));
     setFormSubject(q.subject || "");
+    setFormChapter(q.chapter || "");
     setFormTopic(q.topic || "");
     setFormMarks(q.marks != null ? String(q.marks) : "");
     setFormNegMarks(q.negativeMarks != null ? String(q.negativeMarks) : "");
@@ -1519,6 +1540,7 @@ const QuestionsManager = ({
           difficulty: question.difficulty || "medium",
           sectionId: targetSectionId,
           subject: question.subject || "",
+          chapter: question.chapter || "",
           topic: question.topic || "",
           marks: question.marks != null ? Number(question.marks) : null,
           negativeMarks: question.negativeMarks != null ? Number(question.negativeMarks) : null,
@@ -1681,6 +1703,7 @@ const QuestionsManager = ({
             difficulty: question.difficulty || "medium",
             sectionId: section.id,
             subject: question.subject || "",
+            chapter: question.chapter || "",
             topic: question.topic || "",
             marks: question.marks != null ? Number(question.marks) : null,
             negativeMarks: question.negativeMarks != null ? Number(question.negativeMarks) : null,
@@ -1798,6 +1821,7 @@ const QuestionsManager = ({
           difficulty: bankQuestion.difficulty || "medium",
           sectionId: targetSectionId,
           subject: bankQuestion.subject || "",
+          chapter: bankQuestion.chapter || "",
           topic: bankQuestion.topic || "",
           marks: bankQuestion.marks != null ? Number(bankQuestion.marks) : null,
           negativeMarks:
@@ -2057,6 +2081,7 @@ const QuestionsManager = ({
       difficulty: formDifficulty || "medium",
       sectionId: targetSectionId,
       subject: formSubject || "",
+      chapter: formChapter || "",
       topic: formTopic || "",
       isActive: !!formActive,
       updatedAt: serverTimestamp(),
@@ -2111,6 +2136,7 @@ const QuestionsManager = ({
             difficulty: formDifficulty || "medium",
             sectionId: targetSectionId,
             subject: formSubject || "",
+            chapter: formChapter || "",
             topic: formTopic || "",
             marks: formMarks.trim() !== "" ? Number(formMarks) : undefined,
             negativeMarks: formNegMarks.trim() !== "" ? Number(formNegMarks) : undefined,
@@ -2506,6 +2532,7 @@ const QuestionsManager = ({
       explanation: data?.explanation ? String(data.explanation) : "",
       difficulty,
       subject: data?.subject ? String(data.subject) : "",
+      chapter: data?.chapter ? String(data.chapter) : "",
       topic: data?.topic ? String(data.topic) : "",
       sectionId: data?.sectionId ? String(data.sectionId) : "",
       marks: marks,
@@ -3086,9 +3113,16 @@ const QuestionsManager = ({
                 </div>
               </div>
 
-              <div className="lg:col-span-3">
+              <div className="lg:col-span-2">
                 <Label className="text-xs">Subject</Label>
-                <Select value={questionBankSubject} onValueChange={setQuestionBankSubject}>
+                <Select
+                  value={questionBankSubject}
+                  onValueChange={(v) => {
+                    setQuestionBankSubject(v);
+                    setQuestionBankChapter("all");
+                    setQuestionBankTopic("all");
+                  }}
+                >
                   <SelectTrigger className="mt-1 rounded-xl">
                     <SelectValue placeholder="All subjects" />
                   </SelectTrigger>
@@ -3102,7 +3136,29 @@ const QuestionsManager = ({
                 </Select>
               </div>
 
-              <div className="lg:col-span-3">
+              <div className="lg:col-span-2">
+                <Label className="text-xs">Chapter</Label>
+                <Select
+                  value={questionBankChapter}
+                  onValueChange={(v) => {
+                    setQuestionBankChapter(v);
+                    setQuestionBankTopic("all");
+                  }}
+                >
+                  <SelectTrigger className="mt-1 rounded-xl">
+                    <SelectValue placeholder="All chapters" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {questionBankChapters.map((ch) => (
+                      <SelectItem key={ch} value={ch}>
+                        {ch === "all" ? "All chapters" : ch}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="lg:col-span-2">
                 <Label className="text-xs">Topic</Label>
                 <Select value={questionBankTopic} onValueChange={setQuestionBankTopic}>
                   <SelectTrigger className="mt-1 rounded-xl">

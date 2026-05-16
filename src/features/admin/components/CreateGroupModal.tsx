@@ -53,6 +53,7 @@ type BankQuestion = {
   question: string;
   topic?: string;
   subject?: string;
+  chapter?: string;
   difficulty?: string;
   groupId?: string;
   groupOrder?: number;

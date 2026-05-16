@@ -86,7 +86,7 @@ export default function AdminQuestionPaperRequests() {
     setLoading(true);
     try {
       const params = statusFilter !== "all" ? `?status=${statusFilter}` : "";
-      const data = await adminFetch(`/api/question-paper/admin/requests${params}`);
+      const data = await adminFetch(`/api/question-upload/admin/requests${params}`);
       setRequests(data);
     } catch (e: any) {
       toast.error(e.message);
@@ -106,7 +106,7 @@ export default function AdminQuestionPaperRequests() {
     setUpdateBusy(true);
     try {
       const updated = await adminFetch(
-        `/api/question-paper/admin/requests/${updateTarget.id}/status`,
+        `/api/question-upload/admin/requests/${updateTarget.id}/status`,
         {
           method: "PATCH",
           body: JSON.stringify({

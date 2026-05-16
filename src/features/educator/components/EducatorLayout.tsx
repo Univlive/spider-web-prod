@@ -204,10 +204,7 @@ function EducatorLayoutInner() {
   };
 
   const handleViewWebsite = () => {
-    if (!tenantSlug) {
-      navigate("/educator/website-settings");
-      return;
-    }
+    if (!tenantSlug) return;
     window.open(buildTenantUrl(tenantSlug, "/"), "_blank");
   };
 

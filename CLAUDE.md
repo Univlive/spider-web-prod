@@ -133,13 +133,32 @@ Multi-tenant SaaS platform for coaching institutes. Built with React + TypeScrip
 
 ## DPP Auto-Scheduling
 
-- **Route**: `/educator/dpp` — DppGenerator with two tabs: "Generate Now" (manual) + "Schedule Series" (automated)
+- **Route**: `/educator/dpp` — DppGenerator with two views: "Generate Now" + "Schedule"
 - **Component**: `src/features/educator/DppGenerator.tsx`
-  - Schedule form: content picker, difficulty, date range, time of day, batch multi-select, daily topics table (per-day topic text)
-  - Saves to `POST /api/dpp/schedules`; active schedules list with pause/resume/delete
-- **Backend**: `monkey-king /api/dpp/schedules/*`
+  - Generate Now: source toggle (AI / QB / Hybrid), content/topic picker, difficulty, topic hint
+  - Schedule: 3-step wizard — Step 1: Source mode + content/QB filters; Step 2: Template summary + difficulty; Step 3: Date range, time, batches, topic rotation list
+  - Topic rotation: round-robin list of topics (replaces per-date dailyTopics map for new schedules)
+  - Source modes: `ai_only` (Pinecone+Gemini), `qb_only` (educator QB only), `hybrid` (QB first, AI fills gap)
+  - Link to `/educator/dpp/template` for editing educator's personal DPP template
+- **Backend**: `monkey-king /api/dpp/*`
+  - `GET/PUT/DELETE /api/dpp/template/my` — educator's personal DPP template (overrides global per-educator)
+  - Template stored at Firestore `educators/{uid}/dpp_settings/template`; falls back to `dpp_template/default`
+  - `POST /api/dpp/generate` — accepts `source_mode`, `topic_filters`, `subject_filter`
+  - `POST /api/test/gap-fill` — AI gap-fill for normal test sections when QB is short; questions get `source: "ai_gap_fill"` + `reviewRequired: true`
   - APScheduler job runs every 15 min, auto-generates DPPs for due schedules and publishes to `targetBatches`
-  - `source: "schedule"` bypasses daily manual DPP limit
+
+## Question Types
+
+- **File**: `src/shared/lib/questionTypes.ts`
+- **Types**: `MCQ` | `SHORT_ANSWER` | `UPLOAD` | `CASE_STUDY` (new)
+- `CASE_STUDY`: passage + sub-questions (each MCQ/SHORT_ANSWER/UPLOAD); marks per sub-question; `SubQuestion[]` type exported
+- `normalizeQuestionType()` maps legacy pipeline values: `single_correct_mcq`→MCQ, `subjective`→SHORT_ANSWER, `case_study`→CASE_STUDY, etc.
+
+## Question Upload (formerly Question Paper Requests)
+
+- **Route**: `/educator/question-papers` — unchanged route; underlying API now `/api/question-upload/` (was `/api/question-paper/`)
+- **DB table**: `question_upload_requests` (renamed from `question_paper_requests` in migration 008)
+- Both `/api/question-upload/*` (canonical) and `/api/question-paper/*` (compat alias) are active
 
 ## Content Management
 
@@ -160,10 +179,11 @@ Multi-tenant SaaS platform for coaching institutes. Built with React + TypeScrip
 
 ## Filter System (Question Bank / Templates / Test Bank)
 
-- **Cascade**: Course (single) → Subject (multi) → Topic (multi, QB only) → Tags (multi, QB only)
+- **Cascade**: Course (single) → Subject (multi) → Chapter (single, QB only) → Topic (multi, QB only) → Tags (multi, QB only)
 - **Courses**: `courses` collection `{id, name, isActive}` — admin sees all; educator sees only those derived from their `allowedSubjectIds` via `useAccessibleCourses`
 - **Subjects**: `subjects` collection `{id, name, courseId}` — filtered by selected course; educator only sees allowed subjects
-- **Topics/Tags**: free-text fields on questions (`topic`, `topics[]`, `tags[]`) — derived dynamically from filtered question pool
+- **Chapter**: free-text field (`chapter`) on questions — single string, derived dynamically after subject filter; narrows topic options
+- **Topics/Tags**: free-text fields on questions (`topic`, `topics[]`, `tags[]`) — derived dynamically from filtered question pool (after chapter filter)
 - **CSV import validation**: validates `course` and `subject` column values against Firestore before writing; throws with list of invalid rows + valid options
 - **SectionCard (template editor)**: topics/tags per-section driven by question bank data passed from `CreateTemplateModal`
 - **Educator bankTests**: pre-filtered in TestSeries to only show templates whose `courseId` is in educator's accessible courses

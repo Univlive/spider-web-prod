@@ -144,6 +144,29 @@ export function getAdmin() {
     } catch (e: any) {
       const msg = e?.message || String(e);
       console.error("[firebaseAdmin] ❌ Initialization failed:", msg);
+      const webhook = process.env.DISCORD_ERROR_WEBHOOK_URL;
+      if (webhook) {
+        fetch(webhook, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            embeds: [
+              {
+                title: "[firebaseAdmin] Init failed",
+                color: 0xe74c3c,
+                fields: [
+                  { name: "Error", value: msg.slice(0, 1000) },
+                  { name: "HAS_JSON", value: String(!!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) },
+                  {
+                    name: "HAS_BASE64",
+                    value: String(!!process.env.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64),
+                  },
+                ],
+              },
+            ],
+          }),
+        }).catch(() => {});
+      }
       throw e;
     }
   }

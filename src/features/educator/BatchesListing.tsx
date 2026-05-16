@@ -111,6 +111,7 @@ export default function BatchesListing() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [inviteGlobalCourseId, setInviteGlobalCourseId] = useState("");
+  const [inviteTimeoutMinutes, setInviteTimeoutMinutes] = useState(15);
 
   useEffect(() => {
     if (!educatorId) return;
@@ -421,6 +422,7 @@ export default function BatchesListing() {
     setInviteBatch(batch);
     setInviteLink("");
     setCopied(false);
+    setInviteTimeoutMinutes(15);
     const course = courses.find((c) => c.id === batch.courseId);
     const firstSubjectId = course?.subjectIds[0];
     const globalCourseId = firstSubjectId
@@ -444,6 +446,7 @@ export default function BatchesListing() {
           global_course_id: inviteGlobalCourseId,
           global_course_name: globalCourse?.name ?? "",
           subject_ids: course?.subjectIds ?? [],
+          expires_in_minutes: inviteTimeoutMinutes,
         }),
       });
       setInviteLink(`${window.location.origin}/join/${data.token}`);
@@ -1107,6 +1110,26 @@ export default function BatchesListing() {
                 </Select>
               </div>
             )}
+
+            <div className="space-y-1">
+              <Label className="text-sm">Link expires after</Label>
+              <Select
+                value={String(inviteTimeoutMinutes)}
+                onValueChange={(v) => setInviteTimeoutMinutes(Number(v))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="15">15 minutes</SelectItem>
+                  <SelectItem value="30">30 minutes</SelectItem>
+                  <SelectItem value="60">1 hour</SelectItem>
+                  <SelectItem value="360">6 hours</SelectItem>
+                  <SelectItem value="1440">24 hours</SelectItem>
+                  <SelectItem value="10080">7 days</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             {!inviteLink ? (
               <Button className="w-full" onClick={generateInviteLink} disabled={inviteLoading}>

@@ -28,6 +28,7 @@ export type TestQuestion = {
 
   difficulty: Difficulty;
   subject?: string;
+  chapter?: string;
   topic?: string;
 
   marks?: number; // positive marks
@@ -69,6 +70,7 @@ export type QuestionBankQuestion = {
   explanation?: string;
   difficulty: Difficulty;
   subject?: string;
+  chapter?: string;
   topic?: string;
   marks?: number;
   negativeMarks?: number;
@@ -87,6 +89,7 @@ export type EditorDraftSnapshot = {
   correct: number;
   difficulty: Difficulty;
   subject: string;
+  chapter: string;
   topic: string;
   marks: string;
   negativeMarks: string;

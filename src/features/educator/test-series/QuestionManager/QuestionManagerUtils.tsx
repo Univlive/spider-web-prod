@@ -14,6 +14,7 @@ export function buildSnapshotFromQuestion(question?: TestQuestion): EditorDraftS
       correct: 0,
       difficulty: "medium",
       subject: "",
+      chapter: "",
       topic: "",
       marks: "",
       negativeMarks: "",
@@ -35,6 +36,7 @@ export function buildSnapshotFromQuestion(question?: TestQuestion): EditorDraftS
     correct: Math.min(Math.max(0, parsedCorrect), options.length - 1),
     difficulty: question.difficulty || "medium",
     subject: question.subject || "",
+    chapter: question.chapter || "",
     topic: question.topic || "",
     marks: question.marks != null ? String(question.marks) : "",
     negativeMarks: question.negativeMarks != null ? String(question.negativeMarks) : "",
@@ -54,6 +56,7 @@ export function areSnapshotsEqual(a: EditorDraftSnapshot, b: EditorDraftSnapshot
   if (a.correct !== b.correct) return false;
   if (a.difficulty !== b.difficulty) return false;
   if (a.subject !== b.subject) return false;
+  if (a.chapter !== b.chapter) return false;
   if (a.topic !== b.topic) return false;
   if (a.marks !== b.marks) return false;
   if (a.negativeMarks !== b.negativeMarks) return false;

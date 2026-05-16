@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { uploadToImageKit } from "@shared/lib/imagekitUpload";
-import { useNavigate } from "react-router-dom";
 import {
   DndContext,
   DragEndEvent,
@@ -25,7 +24,6 @@ import { useAuth } from "@app/providers/AuthProvider";
 import {
   Monitor,
   Smartphone,
-  ArrowLeft,
   Trash2,
   GripVertical,
   ChevronUp,
@@ -3674,7 +3672,6 @@ function newId() {
 }
 
 export default function InstituteBuilder() {
-  const navigate = useNavigate();
   const { firebaseUser, profile } = useAuth();
   const uid = firebaseUser?.uid || null;
 
@@ -3972,24 +3969,6 @@ export default function InstituteBuilder() {
             flexShrink: 0,
           }}
         >
-          <button
-            onClick={() => navigate("/educator/website-settings")}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "5px 10px",
-              borderRadius: 8,
-              border: "1px solid rgba(0,0,0,0.1)",
-              background: "none",
-              cursor: "pointer",
-              fontSize: 12,
-              color: "rgba(0,0,0,0.5)",
-            }}
-          >
-            <ArrowLeft size={14} /> Back
-          </button>
-          <div style={{ width: 1, height: 24, background: "rgba(0,0,0,0.08)" }} />
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ fontSize: 10 }}>🏫</span>
             <span style={{ fontSize: 13, fontWeight: 600, color: "#1a1a2e" }}>{instituteName}</span>

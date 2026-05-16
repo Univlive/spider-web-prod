@@ -356,6 +356,20 @@ export default function Divisions() {
                           </div>
                         </TableCell>
                         <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {c.subjectIds.slice(0, 3).map((id) => (
+                              <Badge key={id} variant="secondary" className="text-xs">
+                                {subjects.find((s) => s.id === id)?.name || id}
+                              </Badge>
+                            ))}
+                            {c.subjectIds.length > 3 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{c.subjectIds.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
                           <div className="flex gap-1">
                             <Button size="sm" variant="outline" onClick={() => openEditCourse(c)}>
                               <Pencil className="h-3 w-3" />

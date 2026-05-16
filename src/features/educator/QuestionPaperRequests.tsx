@@ -161,7 +161,7 @@ export default function QuestionPaperRequests() {
   async function fetchRequests() {
     setLoading(true);
     try {
-      const data = await apiFetch("/api/question-paper/");
+      const data = await apiFetch("/api/question-upload/");
       setRequests(data);
     } catch (e: any) {
       toast.error(e.message);
@@ -179,7 +179,7 @@ export default function QuestionPaperRequests() {
       fd.append("title", createTitle.trim());
       fd.append("description", createDesc.trim());
       fd.append("file", createFile);
-      const newReq = await apiUpload("/api/question-paper/", fd);
+      const newReq = await apiUpload("/api/question-upload/", fd);
       setRequests((prev) => [newReq, ...prev]);
       setCreateOpen(false);
       setCreateTitle("");
@@ -198,7 +198,7 @@ export default function QuestionPaperRequests() {
     if (!editTitle.trim() && !editDesc.trim()) return toast.error("Nothing to update");
     setEditBusy(true);
     try {
-      const updated = await apiFetch(`/api/question-paper/${editTarget.id}`, {
+      const updated = await apiFetch(`/api/question-upload/${editTarget.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -222,7 +222,11 @@ export default function QuestionPaperRequests() {
     try {
       const fd = new FormData();
       fd.append("file", reuploadFile);
-      const updated = await apiUpload(`/api/question-paper/${reuploadTarget.id}/file`, fd, "PATCH");
+      const updated = await apiUpload(
+        `/api/question-upload/${reuploadTarget.id}/file`,
+        fd,
+        "PATCH"
+      );
       setRequests((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
       setReuploadTarget(null);
       setReuploadFile(null);
@@ -238,7 +242,7 @@ export default function QuestionPaperRequests() {
     if (!cancelTarget) return;
     setCancelBusy(true);
     try {
-      const updated = await apiFetch(`/api/question-paper/${cancelTarget.id}`, {
+      const updated = await apiFetch(`/api/question-upload/${cancelTarget.id}`, {
         method: "DELETE",
       });
       setRequests((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));

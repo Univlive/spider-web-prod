@@ -134,6 +134,7 @@ export default function Learners() {
   const [generatingLink, setGeneratingLink] = useState(false);
   const [inviteUrl, setInviteUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const [inviteTimeoutMinutes, setInviteTimeoutMinutes] = useState(15);
 
   // Bulk upload
   const [bulkOpen, setBulkOpen] = useState(false);
@@ -360,11 +361,11 @@ export default function Learners() {
         courseId: assignCourse,
         batchId: assignBatch,
       });
-      batch.update(doc(db, "educators", educatorId, "billingSeats", assignTarget.id), {
-        branchId: assignBranch,
-        courseId: assignCourse,
-        batchId: assignBatch,
-      });
+      batch.set(
+        doc(db, "educators", educatorId, "billingSeats", assignTarget.id),
+        { branchId: assignBranch, courseId: assignCourse, batchId: assignBatch },
+        { merge: true }
+      );
       await batch.commit();
       toast.success(`Assigned to ${batchInfo?.name || assignBatch}`);
       setAssignTarget(null);
@@ -397,6 +398,7 @@ export default function Learners() {
           global_course_id: selGlobalCourse,
           global_course_name: globalCourse?.name ?? "",
           subject_ids: selSubjectIds,
+          expires_in_minutes: inviteTimeoutMinutes,
         }),
       });
       setInviteUrl(`${window.location.origin}/join/${data.token}`);
@@ -642,6 +644,26 @@ export default function Learners() {
                   No seats available — all {seatLimit} institute seats are in use
                 </p>
               ))}
+
+            <div className="space-y-2">
+              <Label className="text-sm">Link expires after</Label>
+              <Select
+                value={String(inviteTimeoutMinutes)}
+                onValueChange={(v) => setInviteTimeoutMinutes(Number(v))}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="15">15 minutes</SelectItem>
+                  <SelectItem value="30">30 minutes</SelectItem>
+                  <SelectItem value="60">1 hour</SelectItem>
+                  <SelectItem value="360">6 hours</SelectItem>
+                  <SelectItem value="1440">24 hours</SelectItem>
+                  <SelectItem value="10080">7 days</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="flex gap-2">
               <Button

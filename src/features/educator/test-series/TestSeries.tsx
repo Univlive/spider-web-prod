@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import {
   Search,
   Plus,
+  Minus,
   Edit,
   Trash2,
   FileText,
@@ -31,6 +32,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
 import { Dialog } from "@shared/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@shared/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@shared/ui/popover";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,6 +73,111 @@ import {
 import { db } from "@shared/lib/firebase";
 import { useAuth } from "@app/providers/AuthProvider";
 import MoveTest from "./MoveTest";
+
+const ATTEMPTS_OPTIONS = [
+  { value: "1", label: "1 Attempt" },
+  { value: "2", label: "2 Attempts" },
+  { value: "3", label: "3 Attempts" },
+  { value: "4", label: "4 Attempts" },
+  { value: "5", label: "5 Attempts" },
+  { value: "6", label: "6 Attempts" },
+  { value: "7", label: "7 Attempts" },
+  { value: "8", label: "8 Attempts" },
+  { value: "9", label: "9 Attempts" },
+  { value: "10", label: "10 Attempts" },
+  { value: "0", label: "Unlimited" },
+];
+
+const SCROLL_ITEM_H = 32;
+const SCROLL_VISIBLE = 4;
+
+function ScrollPicker({
+  options,
+  value,
+  onChange,
+  disabled,
+  onSelect,
+}: {
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+  onSelect?: (v: string) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Item sits at slot 1 (second from top) when selected.
+  // scrollTop = selectedIndex * SCROLL_ITEM_H
+  const scrollToIndex = (idx: number, animated = true) => {
+    ref.current?.scrollTo({
+      top: idx * SCROLL_ITEM_H,
+      behavior: animated ? "smooth" : ("instant" as ScrollBehavior),
+    });
+  };
+
+  useEffect(() => {
+    const idx = options.findIndex((o) => o.value === value);
+    if (idx >= 0) scrollToIndex(idx, false);
+  }, [value, options]);
+
+  const handleScroll = () => {
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      if (!ref.current) return;
+      const idx = Math.round(ref.current.scrollTop / SCROLL_ITEM_H);
+      const clamped = Math.max(0, Math.min(idx, options.length - 1));
+      scrollToIndex(clamped);
+      const opt = options[clamped];
+      if (opt && opt.value !== value) onChange(opt.value);
+    }, 120);
+  };
+
+  return (
+    <div className="relative w-36" style={{ height: SCROLL_ITEM_H * SCROLL_VISIBLE }}>
+      {/* top/bottom fade */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-gradient-to-b from-popover to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-8 bg-gradient-to-t from-popover to-transparent" />
+      {/* selection highlight at slot 1 */}
+      <div
+        className="pointer-events-none absolute inset-x-2 z-0 rounded-lg bg-primary/10 ring-1 ring-primary/20"
+        style={{ top: SCROLL_ITEM_H, height: SCROLL_ITEM_H }}
+      />
+      <div
+        ref={ref}
+        onScroll={handleScroll}
+        className="h-full overflow-y-scroll [&::-webkit-scrollbar]:hidden"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
+      >
+        {/* webkit scrollbar hidden via inline style trick */}
+        {/* 1 item of top padding → item 0 centres at slot 1 when scrollTop=0 */}
+        <div style={{ height: SCROLL_ITEM_H }} aria-hidden />
+        {options.map((opt, i) => (
+          <div
+            key={opt.value}
+            style={{ height: SCROLL_ITEM_H }}
+            onClick={() => {
+              if (disabled) return;
+              onChange(opt.value);
+              scrollToIndex(i);
+              onSelect?.(opt.value);
+            }}
+            className={cn(
+              "relative z-20 flex cursor-pointer select-none items-center justify-center text-sm font-semibold transition-all duration-150",
+              opt.value === value
+                ? "text-primary"
+                : "text-muted-foreground opacity-50 hover:opacity-75"
+            )}
+          >
+            {opt.label}
+          </div>
+        ))}
+        {/* 2 items of bottom padding → last item can reach slot 1 */}
+        <div style={{ height: SCROLL_ITEM_H * 2 }} aria-hidden />
+      </div>
+    </div>
+  );
+}
 
 type Difficulty = "easy" | "medium" | "hard";
 
@@ -946,6 +1053,7 @@ export default function TestSeries() {
         linkedAdminTestId: bankTest.id,
         originalTestId: bankTest.id,
         isQuestionSourceShared: true,
+        targetBatches: [],
 
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -998,6 +1106,7 @@ export default function TestSeries() {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       questionsCount: 0,
+      targetBatches: [],
     };
 
     if (values.sections) {
@@ -1096,7 +1205,7 @@ export default function TestSeries() {
 
   return (
     <div className="space-y-6 p-1">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Test Series</h1>
           <p className="text-muted-foreground">
@@ -1104,134 +1213,144 @@ export default function TestSeries() {
           </p>
         </div>
 
-        <div className="group flex w-full items-center gap-3 rounded-2xl border border-border/50 bg-white px-4 py-2 shadow-sm transition-all hover:shadow-md dark:bg-card sm:w-auto">
-          <div className="flex flex-1 items-center gap-3 sm:flex-none">
-            <div className="shrink-0 rounded-xl bg-primary/10 p-2 text-primary transition-transform group-hover:scale-105">
-              <Award className="h-4 w-4" />
+        <div className="flex items-center gap-3 rounded-2xl border border-border/50 bg-white px-4 py-2 shadow-sm dark:bg-card">
+          <div className="shrink-0 rounded-xl bg-primary/10 p-2 text-primary">
+            <Award className="h-4 w-4" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold uppercase leading-tight tracking-wider text-muted-foreground">
+              Default Limit
+            </span>
+            <span className="text-xs font-semibold text-foreground">Global Attempts</span>
+          </div>
+          <div className="mx-2 h-8 w-px shrink-0 bg-border/60" />
+          {savingGlobalAttempts ? (
+            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+          ) : (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => {
+                  const idx = ATTEMPTS_OPTIONS.findIndex(
+                    (o) => o.value === String(globalAttemptsAllowed)
+                  );
+                  const prev =
+                    ATTEMPTS_OPTIONS[(idx - 1 + ATTEMPTS_OPTIONS.length) % ATTEMPTS_OPTIONS.length];
+                  handleSaveGlobalAttempts(Number(prev.value));
+                }}
+                className="flex h-7 w-7 items-center justify-center rounded-lg border bg-muted/50 text-muted-foreground hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
+              >
+                <Minus className="h-3 w-3" />
+              </button>
+              <div className="flex min-w-[52px] flex-col items-center">
+                <span className="text-lg font-black leading-none text-primary">
+                  {globalAttemptsAllowed === 0 ? "∞" : globalAttemptsAllowed}
+                </span>
+                <span className="text-[9px] font-medium text-muted-foreground">
+                  {globalAttemptsAllowed === 0
+                    ? "unlimited"
+                    : globalAttemptsAllowed === 1
+                      ? "attempt"
+                      : "attempts"}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  const idx = ATTEMPTS_OPTIONS.findIndex(
+                    (o) => o.value === String(globalAttemptsAllowed)
+                  );
+                  const next = ATTEMPTS_OPTIONS[(idx + 1) % ATTEMPTS_OPTIONS.length];
+                  handleSaveGlobalAttempts(Number(next.value));
+                }}
+                className="flex h-7 w-7 items-center justify-center rounded-lg border bg-muted/50 text-muted-foreground hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
+              >
+                <Plus className="h-3 w-3" />
+              </button>
             </div>
-            <div className="flex min-w-[90px] flex-col">
-              <span className="text-[10px] font-bold uppercase leading-tight tracking-wider text-muted-foreground">
-                Default Limit
-              </span>
-              <span className="truncate text-xs font-semibold text-foreground">
-                Global Attempts
-              </span>
-            </div>
-          </div>
-          <div className="mx-1 h-8 w-px shrink-0 bg-border/60" />
-          <Select
-            value={String(globalAttemptsAllowed)}
-            onValueChange={(v) => handleSaveGlobalAttempts(Number(v))}
-            disabled={savingGlobalAttempts}
-          >
-            <SelectTrigger className="h-4 w-[65px] shrink-0 rounded-xl border-none bg-muted/50 text-xs font-black shadow-none transition-colors hover:bg-muted focus:ring-0">
-              {savingGlobalAttempts ? (
-                <Loader2 className="h-3 w-3 animate-spin text-primary" />
-              ) : (
-                <SelectValue />
-              )}
-            </SelectTrigger>
-            <SelectContent className="overflow-hidden rounded-xl border-none p-1 shadow-2xl">
-              <SelectItem value="1" className="rounded-lg py-2 text-xs font-bold">
-                1 Attempt
-              </SelectItem>
-              <SelectItem value="2" className="rounded-lg py-2 text-xs font-bold">
-                2 Attempts
-              </SelectItem>
-              <SelectItem value="3" className="rounded-lg py-2 text-xs font-bold">
-                3 Attempts
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex w-full flex-col gap-2 sm:flex-row">
-          <div className="relative w-full sm:w-[320px]">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search tests..."
-              className="rounded-xl pl-9"
-            />
-          </div>
-
-          <div className="flex w-full items-center gap-2 sm:w-auto">
-            {/* CreateEducatorTemplate is opened programmatically from the template dropdown */}
-            <CreateEducatorTemplate
-              open={createTemplateOpen}
-              onOpenChange={(open) => {
-                setCreateTemplateOpen(open);
-                // Re-open create test dialog after template creation completes
-                if (!open) setCreateOpen(true);
-              }}
-            />
-            <Button
-              className="gradient-bg w-full text-white shadow-lg sm:w-auto"
-              onClick={() => setCreateOpen(true)}
-            >
-              <Plus className="mr-2 h-4 w-4" /> Create Custom Test
-            </Button>
-          </div>
-
-          {/* Create Custom Test Dialog (controlled) */}
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <CreateCustomTest {...creatCustomTestState} />
-          </Dialog>
+          )}
         </div>
       </div>
 
-      {accessibleCourses.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3">
-          <Select
-            value={courseFilter}
-            onValueChange={(v) => {
-              setCourseFilter(v);
-              setSubjectFilter("all");
-            }}
-          >
-            <SelectTrigger className="h-9 w-[180px] rounded-xl text-sm">
-              <SelectValue placeholder="All Courses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Courses</SelectItem>
-              {accessibleCourses.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={subjectFilter}
-            onValueChange={setSubjectFilter}
-            disabled={filterSubjectOptions.length === 0}
-          >
-            <SelectTrigger className="h-9 w-[180px] rounded-xl text-sm">
-              <SelectValue placeholder="All Subjects" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Subjects</SelectItem>
-              {filterSubjectOptions.map((s) => (
-                <SelectItem key={s.id} value={s.name}>
-                  {s.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {(courseFilter !== "all" || subjectFilter !== "all") && (
-            <button
-              onClick={() => {
-                setCourseFilter("all");
+      {/* Search + filters + create — all on one row */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative min-w-[200px] flex-1 sm:max-w-[300px]">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search tests..."
+            className="rounded-xl pl-9"
+          />
+        </div>
+
+        {accessibleCourses.length > 0 && (
+          <>
+            <Select
+              value={courseFilter}
+              onValueChange={(v) => {
+                setCourseFilter(v);
                 setSubjectFilter("all");
               }}
-              className="text-xs text-muted-foreground underline hover:text-foreground"
             >
-              Clear filters
-            </button>
-          )}
+              <SelectTrigger className="h-9 w-[160px] rounded-xl text-sm">
+                <SelectValue placeholder="All Courses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Courses</SelectItem>
+                {accessibleCourses.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={subjectFilter}
+              onValueChange={setSubjectFilter}
+              disabled={filterSubjectOptions.length === 0}
+            >
+              <SelectTrigger className="h-9 w-[160px] rounded-xl text-sm">
+                <SelectValue placeholder="All Subjects" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Subjects</SelectItem>
+                {filterSubjectOptions.map((s) => (
+                  <SelectItem key={s.id} value={s.name}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(courseFilter !== "all" || subjectFilter !== "all") && (
+              <button
+                onClick={() => {
+                  setCourseFilter("all");
+                  setSubjectFilter("all");
+                }}
+                className="text-xs text-muted-foreground underline hover:text-foreground"
+              >
+                Clear
+              </button>
+            )}
+          </>
+        )}
+
+        <div className="ml-auto flex items-center gap-2">
+          <CreateEducatorTemplate
+            open={createTemplateOpen}
+            onOpenChange={(open) => {
+              setCreateTemplateOpen(open);
+              if (!open) setCreateOpen(true);
+            }}
+          />
+          <Button className="gradient-bg text-white shadow-lg" onClick={() => setCreateOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Create Custom Test
+          </Button>
         </div>
-      )}
+
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <CreateCustomTest {...creatCustomTestState} />
+        </Dialog>
+      </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
         <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -1545,26 +1664,33 @@ export default function TestSeries() {
                                           )}
                                         </div>
 
-                                        <div className="flex shrink-0 items-center gap-1 rounded-lg bg-muted/30 px-2 py-1">
-                                          <span className="text-[9px] font-bold uppercase text-muted-foreground">
-                                            Attempts:
-                                          </span>
-                                          <Select
-                                            value={String(test.attemptsAllowed || 3)}
-                                            onValueChange={(v) =>
-                                              handleUpdateTestAttempts(test.id, Number(v))
-                                            }
+                                        <Popover>
+                                          <PopoverTrigger asChild>
+                                            <div className="flex shrink-0 cursor-pointer items-center gap-1 rounded-lg bg-muted/30 px-2 py-1 hover:bg-muted/50">
+                                              <span className="text-[9px] font-bold uppercase text-muted-foreground">
+                                                Attempts:
+                                              </span>
+                                              <span className="text-[10px] font-bold">
+                                                {(test.attemptsAllowed ?? 3) === 0
+                                                  ? "∞"
+                                                  : (test.attemptsAllowed ?? 3)}
+                                              </span>
+                                            </div>
+                                          </PopoverTrigger>
+                                          <PopoverContent
+                                            className="w-auto p-2"
+                                            align="end"
+                                            sideOffset={4}
                                           >
-                                            <SelectTrigger className="h-6 w-[45px] rounded-md border-none bg-background text-[10px] font-bold shadow-none focus:ring-0">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent className="rounded-xl">
-                                              <SelectItem value="1">1</SelectItem>
-                                              <SelectItem value="2">2</SelectItem>
-                                              <SelectItem value="3">3</SelectItem>
-                                            </SelectContent>
-                                          </Select>
-                                        </div>
+                                            <ScrollPicker
+                                              options={ATTEMPTS_OPTIONS}
+                                              value={String(test.attemptsAllowed ?? 3)}
+                                              onChange={(v) =>
+                                                handleUpdateTestAttempts(test.id, Number(v))
+                                              }
+                                            />
+                                          </PopoverContent>
+                                        </Popover>
                                       </div>
 
                                       <div className="mt-4 grid grid-cols-1 gap-2 border-t pt-4">
@@ -1832,25 +1958,42 @@ export default function TestSeries() {
                 No batches found. Create batches in Divisions first.
               </p>
             ) : (
-              <div className="max-h-56 space-y-2 overflow-y-auto rounded-lg border p-2">
-                {allBatches.map((b) => (
-                  <label
-                    key={b.id}
-                    className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-muted"
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    {selectedBatchIds.length} of {allBatches.length} selected
+                  </span>
+                  <button
+                    className="text-xs text-primary hover:underline"
+                    onClick={() =>
+                      selectedBatchIds.length === allBatches.length
+                        ? setSelectedBatchIds([])
+                        : setSelectedBatchIds(allBatches.map((b) => b.id))
+                    }
                   >
-                    <input
-                      type="checkbox"
-                      checked={selectedBatchIds.includes(b.id)}
-                      onChange={(e) =>
-                        setSelectedBatchIds((prev) =>
-                          e.target.checked ? [...prev, b.id] : prev.filter((x) => x !== b.id)
-                        )
-                      }
-                    />
-                    <span className="text-sm">{b.label}</span>
-                  </label>
-                ))}
-              </div>
+                    {selectedBatchIds.length === allBatches.length ? "Deselect All" : "Select All"}
+                  </button>
+                </div>
+                <div className="max-h-56 space-y-2 overflow-y-auto rounded-lg border p-2">
+                  {allBatches.map((b) => (
+                    <label
+                      key={b.id}
+                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-muted"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedBatchIds.includes(b.id)}
+                        onChange={(e) =>
+                          setSelectedBatchIds((prev) =>
+                            e.target.checked ? [...prev, b.id] : prev.filter((x) => x !== b.id)
+                          )
+                        }
+                      />
+                      <span className="text-sm">{b.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </>
             )}
             <div className="flex justify-end gap-2 pt-2">
               <button
