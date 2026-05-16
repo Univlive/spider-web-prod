@@ -715,8 +715,8 @@ function ResultsComponent({ data, theme: t, selected, onClick }: ComponentProps)
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 20,
+          gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+          gap: 16,
           marginBottom: 48,
           textAlign: "center",
         }}
@@ -929,7 +929,13 @@ function GalleryComponent({ data, theme: t, selected, onClick }: ComponentProps)
           {data.title || "Life at Our Institute"}
         </div>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          gap: 16,
+        }}
+      >
         {items.map((item: any, i: number) => (
           <div
             key={i}
@@ -1350,11 +1356,11 @@ function ContactFormComponent({ data, theme: t, selected, onClick, previewMode }
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 60,
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gap: 40,
           maxWidth: 900,
           margin: "0 auto",
-          alignItems: "center",
+          alignItems: "start",
         }}
       >
         <div>
@@ -1663,7 +1669,14 @@ function AppDownloadComponent({ data, theme: t, selected, onClick }: ComponentPr
       }}
     >
       <div
-        style={{ display: "flex", alignItems: "center", gap: 60, maxWidth: 900, margin: "0 auto" }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 40,
+          maxWidth: 900,
+          margin: "0 auto",
+        }}
       >
         <div style={{ flex: 1 }}>
           <div
@@ -1782,8 +1795,8 @@ function AboutComponent({ data, theme: t, selected, onClick }: ComponentProps) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 60,
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gap: 40,
           maxWidth: 960,
           margin: "0 auto",
           alignItems: "center",
@@ -1937,8 +1950,8 @@ function StatsComponent({ data, theme: t, selected, onClick }: ComponentProps) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 24,
+          gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+          gap: 20,
           maxWidth: 900,
           margin: "0 auto",
         }}
@@ -2180,8 +2193,8 @@ function FooterComponent({ data, theme: t, selected, onClick }: ComponentProps) 
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "2fr 1fr 1fr 1fr",
-          gap: 40,
+          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gap: 32,
           marginBottom: 40,
         }}
       >
