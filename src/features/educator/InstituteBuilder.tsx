@@ -661,11 +661,11 @@ function HeroCarouselSlide({
           <div
             style={{
               position: "absolute",
-              bottom: 10,
+              bottom: 20,
               left: "50%",
               transform: "translateX(-50%)",
               display: "flex",
-              gap: 6,
+              gap: 8,
             }}
           >
             {images.map((_, i) => (
@@ -704,15 +704,18 @@ function HeroCarouselSlide({
               background: "rgba(0,0,0,0.35)",
               border: "none",
               borderRadius: "50%",
-              width: 28,
-              height: 28,
+              width: 36,
+              height: 36,
               color: "#fff",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 14,
+              fontSize: 20,
+              transition: "all 0.2s",
             }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.5)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.35)")}
           >
             ‹
           </button>
@@ -733,15 +736,18 @@ function HeroCarouselSlide({
               background: "rgba(0,0,0,0.35)",
               border: "none",
               borderRadius: "50%",
-              width: 28,
-              height: 28,
+              width: 36,
+              height: 36,
               color: "#fff",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 14,
+              fontSize: 20,
+              transition: "all 0.2s",
             }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.5)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.35)")}
           >
             ›
           </button>
@@ -759,6 +765,7 @@ function HeroComponent({
   previewMode,
   instituteName,
   instituteLogo,
+  mobile,
 }: ComponentProps) {
   const variant = data.variant || "centered";
   // heroImages array; fall back to legacy heroImage single string
@@ -782,7 +789,7 @@ function HeroComponent({
         : t.useGradient
           ? `linear-gradient(135deg, ${t.primary} 0%, ${t.primary}ee 40%, ${t.secondary}dd 100%)`
           : `linear-gradient(135deg, ${t.primary}ee 0%, ${t.primary}aa 60%, ${t.secondary}55 100%)`,
-      padding: isCarousel ? 0 : variant === "centered" ? "80px 40px" : "60px 40px",
+      padding: isCarousel ? "20px 0" : variant === "centered" ? "80px 40px" : "60px 40px",
       display: "flex",
       // Mobile: always column. On wider containers split = row, else column.
       flexDirection: isSplit ? "row" : "column",
@@ -1060,19 +1067,35 @@ function HeroComponent({
       )}
 
       {isCarousel && (
-        <HeroCarouselSlide
-          images={rawImages}
-          placeholder={
-            {
-              ...s.imagePlaceholder,
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 1200,
+            margin: "0 auto",
+            padding: mobile ? "0 16px" : "0 40px",
+            zIndex: 1,
+          }}
+        >
+          <HeroCarouselSlide
+            images={rawImages}
+            placeholder={
+              {
+                ...s.imagePlaceholder,
+                width: "100%",
+                height: "auto",
+                aspectRatio: mobile ? "16/9" : "21/6",
+                minHeight: mobile ? 180 : 300,
+                borderRadius: mobile ? 16 : 24,
+              } as React.CSSProperties
+            }
+            style={{
               width: "100%",
-              height: "100%",
-              minHeight: 400,
-              borderRadius: 0,
-            } as React.CSSProperties
-          }
-          style={{ width: "100%", flex: 1 }}
-        />
+              borderRadius: mobile ? 16 : 24,
+              overflow: "hidden",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+            }}
+          />
+        </div>
       )}
     </div>
   );
