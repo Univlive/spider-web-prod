@@ -191,8 +191,8 @@ export default function BuilderThemeHome() {
             >
               <div
                 style={{
-                  width: 32,
-                  height: 32,
+                  width: isMobile ? 24 : 32,
+                  height: isMobile ? 24 : 32,
                   borderRadius: "50%",
                   background: `${theme.primary}15`,
                   display: "flex",
@@ -200,9 +200,9 @@ export default function BuilderThemeHome() {
                   justifyContent: "center",
                 }}
               >
-                <Phone size={14} color={theme.primary} />
+                <Phone size={isMobile ? 12 : 14} color={theme.primary} />
               </div>
-              {!isMobile && <span>{navbarPhone}</span>}
+              <span style={{ fontSize: isMobile ? 12 : 14 }}>{navbarPhone}</span>
             </a>
           )}
           <Link
@@ -211,8 +211,8 @@ export default function BuilderThemeHome() {
               background: theme.primary,
               color: "#fff",
               borderRadius: 8,
-              padding: "6px 16px",
-              fontSize: 13,
+              padding: isMobile ? "4px 8px" : "6px 16px",
+              fontSize: isMobile ? 11 : 13,
               fontWeight: 600,
               textDecoration: "none",
             }}

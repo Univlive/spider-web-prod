@@ -783,7 +783,13 @@ function HeroComponent({
         : t.useGradient
           ? `linear-gradient(135deg, ${t.primary} 0%, ${t.primary}ee 40%, ${t.secondary}dd 100%)`
           : `linear-gradient(135deg, ${t.primary}ee 0%, ${t.primary}aa 60%, ${t.secondary}55 100%)`,
-      padding: isCarousel ? "20px 0" : variant === "centered" ? "80px 40px" : "60px 40px",
+      padding: isCarousel
+        ? "20px 0"
+        : mobile
+          ? "40px 20px"
+          : variant === "centered"
+            ? "80px 40px"
+            : "60px 40px",
       display: "flex",
       // Mobile: always column. On wider containers split = row, else column.
       flexDirection: isSplit ? "row" : "column",
@@ -803,13 +809,13 @@ function HeroComponent({
       color: "#fff",
       borderRadius: 20,
       padding: "4px 14px",
-      fontSize: 12,
+      fontSize: mobile ? 11 : 12,
       fontWeight: 600,
       letterSpacing: 1,
       marginBottom: 16,
     },
     headline: {
-      fontSize: variant === "centered" ? 48 : 40,
+      fontSize: mobile ? (variant === "centered" ? 28 : 24) : variant === "centered" ? 48 : 40,
       fontWeight: 800,
       color: "#fff",
       lineHeight: 1.1,
@@ -817,7 +823,7 @@ function HeroComponent({
       textAlign: variant === "centered" ? "center" : "left",
     },
     sub: {
-      fontSize: 18,
+      fontSize: mobile ? 14 : 18,
       color: "rgba(255,255,255,0.85)",
       marginBottom: 32,
       maxWidth: 560,
@@ -835,8 +841,8 @@ function HeroComponent({
       color: t.primary,
       border: "none",
       borderRadius: 10,
-      padding: "14px 28px",
-      fontSize: 15,
+      padding: mobile ? "10px 20px" : "14px 28px",
+      fontSize: mobile ? 13 : 15,
       fontWeight: 700,
       cursor: "pointer",
     },
@@ -845,15 +851,15 @@ function HeroComponent({
       color: "#fff",
       border: "2px solid rgba(255,255,255,0.5)",
       borderRadius: 10,
-      padding: "14px 28px",
-      fontSize: 15,
+      padding: mobile ? "10px 20px" : "14px 28px",
+      fontSize: mobile ? 13 : 15,
       fontWeight: 600,
       cursor: "pointer",
     },
     statsRow: {
       display: "flex",
-      gap: 32,
-      marginTop: 40,
+      gap: mobile ? 16 : 32,
+      marginTop: mobile ? 24 : 40,
       justifyContent: variant === "centered" ? "center" : "flex-start",
     },
     imagePlaceholder: {
@@ -964,8 +970,8 @@ function HeroComponent({
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 20,
-              marginTop: 24,
+              gap: mobile ? 12 : 20,
+              marginTop: mobile ? 16 : 24,
               flexWrap: "wrap",
             }}
           >
@@ -975,10 +981,14 @@ function HeroComponent({
                 {(() => {
                   const IconComp = ICON_MAP[st.icon];
                   if (!IconComp) return null;
-                  return <IconComp size={16} color="#fff" style={{ opacity: 0.8 }} />;
+                  return <IconComp size={mobile ? 14 : 16} color="#fff" style={{ opacity: 0.8 }} />;
                 })()}
-                <span style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>{st.num}</span>
-                <span style={{ fontSize: 13, color: "rgba(255,255,255,0.75)" }}>{st.label}</span>
+                <span style={{ fontSize: mobile ? 13 : 15, fontWeight: 800, color: "#fff" }}>
+                  {st.num}
+                </span>
+                <span style={{ fontSize: mobile ? 11 : 13, color: "rgba(255,255,255,0.75)" }}>
+                  {st.label}
+                </span>
                 {i < stats.length - 1 && (
                   <div
                     style={{
@@ -1039,8 +1049,16 @@ function HeroComponent({
               ]
             ).map((st: any, i: number) => (
               <div key={i} style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 28, fontWeight: 800, color: "#fff" }}>{st.num}</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 2 }}>
+                <div style={{ fontSize: mobile ? 20 : 28, fontWeight: 800, color: "#fff" }}>
+                  {st.num}
+                </div>
+                <div
+                  style={{
+                    fontSize: mobile ? 10 : 12,
+                    color: "rgba(255,255,255,0.7)",
+                    marginTop: 2,
+                  }}
+                >
                   {st.label}
                 </div>
               </div>
@@ -2902,7 +2920,7 @@ function StatsComponent({ data, theme: t, selected, onClick, mobile }: Component
             className="ib-card"
             style={{
               textAlign: "center",
-              padding: "32px 16px",
+              padding: mobile ? "16px 8px" : "32px 16px",
               background: t.surface,
               borderRadius: 20,
               boxShadow: "0 2px 16px rgba(0,0,0,0.05)",
@@ -2914,14 +2932,18 @@ function StatsComponent({ data, theme: t, selected, onClick, mobile }: Component
               if (!IconComp) return null;
               return (
                 <IconComp
-                  size={44}
+                  size={mobile ? 28 : 44}
                   color={t.secondary}
-                  style={{ marginBottom: 16, marginInline: "auto" }}
+                  style={{ marginBottom: mobile ? 8 : 16, marginInline: "auto" }}
                 />
               );
             })()}
-            <div style={{ fontSize: 36, fontWeight: 800, color: t.secondary }}>{s.num}</div>
-            <div style={{ fontSize: 13, color: "#666", marginTop: 6 }}>{s.label}</div>
+            <div style={{ fontSize: mobile ? 22 : 36, fontWeight: 800, color: t.secondary }}>
+              {s.num}
+            </div>
+            <div style={{ fontSize: mobile ? 11 : 13, color: "#666", marginTop: mobile ? 4 : 6 }}>
+              {s.label}
+            </div>
           </div>
         ))}
       </div>
@@ -5933,23 +5955,31 @@ export default function InstituteBuilder() {
         {/* Top Bar */}
         <div
           style={{
-            minHeight: 52,
+            minHeight: isMobileViewport ? 44 : 52,
             background: "#fff",
             borderBottom: "1px solid rgba(0,0,0,0.08)",
             display: "flex",
             alignItems: "center",
             flexWrap: "wrap",
-            padding: "8px 12px",
-            gap: 8,
+            padding: isMobileViewport ? "4px 8px" : "8px 12px",
+            gap: isMobileViewport ? 4 : 8,
             flexShrink: 0,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ fontSize: 10 }}>🏫</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#1a1a2e" }}>{instituteName}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: isMobileViewport ? 4 : 6 }}>
+            <span style={{ fontSize: isMobileViewport ? 11 : 10 }}>🏫</span>
+            <span
+              style={{ fontSize: isMobileViewport ? 11 : 13, fontWeight: 600, color: "#1a1a2e" }}
+            >
+              {instituteName}
+            </span>
           </div>
           <div style={{ flex: 1 }} />
-          {saving && <span style={{ fontSize: 11, color: "rgba(0,0,0,0.3)" }}>Saving…</span>}
+          {saving && (
+            <span style={{ fontSize: isMobileViewport ? 9 : 11, color: "rgba(0,0,0,0.3)" }}>
+              Saving…
+            </span>
+          )}
 
           {/* Edit / Preview toggle */}
           <div
@@ -5957,7 +5987,7 @@ export default function InstituteBuilder() {
               display: "flex",
               background: "rgba(0,0,0,0.06)",
               borderRadius: 8,
-              padding: 3,
+              padding: 2,
               gap: 2,
             }}
           >
@@ -5969,11 +5999,11 @@ export default function InstituteBuilder() {
                   if (mode === "Edit") setSelectedId(null);
                 }}
                 style={{
-                  padding: "5px 14px",
+                  padding: isMobileViewport ? "4px 8px" : "5px 14px",
                   borderRadius: 6,
                   border: "none",
                   cursor: "pointer",
-                  fontSize: 12,
+                  fontSize: isMobileViewport ? 10 : 12,
                   fontWeight: 600,
                   background: (previewMode ? mode === "Preview" : mode === "Edit")
                     ? "rgba(99,102,241,0.85)"
@@ -5996,7 +6026,7 @@ export default function InstituteBuilder() {
                 display: "flex",
                 background: "rgba(0,0,0,0.06)",
                 borderRadius: 8,
-                padding: 3,
+                padding: 2,
                 gap: 2,
               }}
             >
@@ -6004,8 +6034,8 @@ export default function InstituteBuilder() {
                 onClick={() => setPreviewDevice("desktop")}
                 title="Desktop view"
                 style={{
-                  width: 32,
-                  height: 28,
+                  width: isMobileViewport ? 26 : 32,
+                  height: isMobileViewport ? 24 : 28,
                   borderRadius: 6,
                   border: "none",
                   cursor: "pointer",
@@ -6017,7 +6047,7 @@ export default function InstituteBuilder() {
                 }}
               >
                 <Monitor
-                  size={15}
+                  size={isMobileViewport ? 12 : 15}
                   color={previewDevice === "desktop" ? "#4f46e5" : "rgba(0,0,0,0.35)"}
                 />
               </button>
@@ -6025,8 +6055,8 @@ export default function InstituteBuilder() {
                 onClick={() => setPreviewDevice("mobile")}
                 title="Mobile view"
                 style={{
-                  width: 32,
-                  height: 28,
+                  width: isMobileViewport ? 26 : 32,
+                  height: isMobileViewport ? 24 : 28,
                   borderRadius: 6,
                   border: "none",
                   cursor: "pointer",
@@ -6038,7 +6068,7 @@ export default function InstituteBuilder() {
                 }}
               >
                 <Smartphone
-                  size={15}
+                  size={isMobileViewport ? 12 : 15}
                   color={previewDevice === "mobile" ? "#4f46e5" : "rgba(0,0,0,0.35)"}
                 />
               </button>
@@ -6047,8 +6077,8 @@ export default function InstituteBuilder() {
 
           <div
             style={{
-              width: 20,
-              height: 20,
+              width: isMobileViewport ? 14 : 20,
+              height: isMobileViewport ? 14 : 20,
               borderRadius: "50%",
               background: theme.primary,
               border: "2px solid rgba(0,0,0,0.12)",
@@ -6064,8 +6094,8 @@ export default function InstituteBuilder() {
                   color: mobilePanel === "sections" ? "#fff" : "#111827",
                   border: "1px solid rgba(0,0,0,0.12)",
                   borderRadius: 8,
-                  padding: "7px 10px",
-                  fontSize: 12,
+                  padding: "5px 6px",
+                  fontSize: 10,
                   fontWeight: 700,
                   cursor: "pointer",
                 }}
@@ -6079,8 +6109,8 @@ export default function InstituteBuilder() {
                   color: mobilePanel === "editor" ? "#fff" : "#111827",
                   border: "1px solid rgba(0,0,0,0.12)",
                   borderRadius: 8,
-                  padding: "7px 10px",
-                  fontSize: 12,
+                  padding: "5px 6px",
+                  fontSize: 10,
                   fontWeight: 700,
                   cursor: "pointer",
                 }}
@@ -6094,8 +6124,8 @@ export default function InstituteBuilder() {
                   color: mobilePanel === "canvas" ? "#fff" : "#111827",
                   border: "1px solid rgba(0,0,0,0.12)",
                   borderRadius: 8,
-                  padding: "7px 10px",
-                  fontSize: 12,
+                  padding: "5px 6px",
+                  fontSize: 10,
                   fontWeight: 700,
                   cursor: "pointer",
                 }}
@@ -6112,8 +6142,8 @@ export default function InstituteBuilder() {
               color: "#b91c1c",
               border: "1px solid rgba(185,28,28,0.25)",
               borderRadius: 8,
-              padding: "7px 12px",
-              fontSize: 12,
+              padding: isMobileViewport ? "5px 6px" : "7px 12px",
+              fontSize: isMobileViewport ? 10 : 12,
               fontWeight: 700,
               cursor: sections.length === 0 ? "not-allowed" : "pointer",
               opacity: sections.length === 0 ? 0.5 : 1,
@@ -6129,20 +6159,20 @@ export default function InstituteBuilder() {
               color: "#fff",
               border: "none",
               borderRadius: 8,
-              padding: "7px 18px",
-              fontSize: 13,
+              padding: isMobileViewport ? "5px 10px" : "7px 18px",
+              fontSize: isMobileViewport ? 11 : 13,
               fontWeight: 700,
               cursor: "pointer",
               boxShadow: "0 2px 12px rgba(99,102,241,0.4)",
               opacity: publishing ? 0.7 : 1,
               display: "flex",
               alignItems: "center",
-              gap: 6,
+              gap: isMobileViewport ? 3 : 6,
             }}
           >
             {publishing ? (
               <>
-                <Loader2 size={14} className="animate-spin" /> Publishing…
+                <Loader2 size={isMobileViewport ? 12 : 14} className="animate-spin" /> Publishing…
               </>
             ) : (
               "Publish Site →"
