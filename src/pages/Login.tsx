@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff, Loader2, Home, Mail } from "lucide-react";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, arrayUnion } from "firebase/firestore";
 import { auth, db } from "@shared/lib/firebase";
 import { Button } from "@shared/ui/button";
 import { Input } from "@shared/ui/input";
@@ -157,9 +157,30 @@ export default function Login() {
           return;
         }
 
-        const isEnrolled =
+        let isEnrolled =
           enrolledTenants.includes(tenantSlug) ||
           (typeof data?.tenantSlug === "string" && data.tenantSlug === tenantSlug);
+
+        // Fallback for users invited via Join.tsx who might miss the enrolledTenants array
+        if (!isEnrolled && tenantSlug) {
+          const tenantSnap = await getDoc(doc(db, "tenants", tenantSlug));
+          const educatorId = tenantSnap.data()?.educatorId;
+          if (educatorId) {
+            const studentSnap = await getDoc(
+              doc(db, "educators", educatorId, "students", cred.user.uid)
+            );
+            if (studentSnap.exists()) {
+              isEnrolled = true;
+              // Auto-heal the user's document for future logins
+              await setDoc(
+                doc(db, "users", cred.user.uid),
+                { enrolledTenants: arrayUnion(tenantSlug) },
+                { merge: true }
+              );
+            }
+          }
+        }
+
         if (!isEnrolled) {
           toast.error(
             "You are not enrolled in this coaching. Please signup on this coaching URL first."
@@ -302,7 +323,7 @@ export default function Login() {
             </form>
 
             {role === "student" && (
-              <div className="text-center text-sm text-muted-foreground">
+              <div className="relative z-10 pb-8 pt-4 text-center text-sm text-muted-foreground">
                 Don’t have an account?{" "}
                 <Link
                   className="font-medium text-[#4F46E5] hover:underline"
