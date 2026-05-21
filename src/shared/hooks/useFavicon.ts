@@ -11,7 +11,7 @@ import { useEffect } from "react";
 export function useFavicon(logoUrl?: string | null, coachingName?: string | null) {
   useEffect(() => {
     // --- Favicon ---
-    const faviconUrl = logoUrl?.trim() || "/logo.png";
+    const faviconUrl = logoUrl?.trim() || "/logo-compact.png";
 
     // Find or create the <link rel="icon"> tag
     let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
@@ -30,7 +30,7 @@ export function useFavicon(logoUrl?: string | null, coachingName?: string | null
 
     // Restore defaults when the component unmounts (navigating away from tenant page)
     return () => {
-      if (link) link.href = "/logo.png";
+      if (link) link.href = "/logo-compact.png";
     };
   }, [logoUrl, coachingName]);
 }

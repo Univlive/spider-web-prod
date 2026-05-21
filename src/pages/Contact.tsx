@@ -32,8 +32,8 @@ const Contact = () => {
   return (
     <Layout>
       <SEO
-        title="Contact Us — Univ.live AI Test Series Platform"
-        description="Get in touch with Univ.live. Book a demo, ask about pricing, or get support for setting up your coaching institute's AI-powered test series platform."
+        title="Contact Us — PrepareKaro AI Test Series Platform"
+        description="Get in touch with PrepareKaro. Book a demo, ask about pricing, or get support for setting up your coaching institute's AI-powered test series platform."
         canonical="https://preparekaro.in/contact"
       />
       <section className="section-padding section-1">
@@ -113,7 +113,7 @@ const Contact = () => {
               >
                 <h3 className="mb-2 text-lg font-bold">Book a Demo</h3>
                 <p className="mb-4 text-sm text-muted-foreground">
-                  See how Univ.live can transform your coaching center's CUET preparation.
+                  See how PrepareKaro can transform your coaching center's CUET preparation.
                 </p>
                 <a
                   href="https://calendly.com/info-univlive"

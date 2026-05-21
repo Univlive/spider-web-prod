@@ -66,8 +66,8 @@ const Pricing = () => {
   return (
     <Layout>
       <SEO
-        title="Pricing Plans — Affordable AI Test Series Platform for Coaching | Univ.live"
-        description="Choose the right plan for your coaching institute. Univ.live offers affordable pricing for AI-powered test series covering JEE, NEET, CUET, CBSE and more."
+        title="Pricing Plans — Affordable AI Test Series Platform for Coaching | PrepareKaro"
+        description="Choose the right plan for your coaching institute. PrepareKaro offers affordable pricing for AI-powered test series covering JEE, NEET, CUET, CBSE and more."
         canonical="https://preparekaro.in/pricing"
       />
       {/* Pricing Header */}
@@ -148,7 +148,7 @@ const Pricing = () => {
             transition={{ duration: 0.5 }}
           >
             <h2 className="mb-4 text-3xl font-bold sm:text-4xl lg:text-5xl">
-              OMR vs Univ.live CBT — Per Student Comparison
+              OMR vs PrepareKaro CBT — Per Student Comparison
             </h2>
           </motion.div>
 
@@ -168,7 +168,7 @@ const Pricing = () => {
                       Traditional OMR Tests
                     </th>
                     <th className="bg-green-50 p-4 text-center font-semibold">
-                      Univ.live CBT Platform
+                      PrepareKaro CBT Platform
                     </th>
                   </tr>
                 </thead>

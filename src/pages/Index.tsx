@@ -2069,8 +2069,8 @@ export default function Index() {
   return (
     <>
       <SEO
-        title="preparekaro.in : AI Test Series Platform for Coaching Institutes | JEE, NEET, CUET & More"
-        description="Launch your AI-powered test series platform in minutes. Preparekaro.in supports JEE, NEET, CUET, CBSE, State Board and all exam types — objective & subjective. Built for coaching institutes."
+        title="PrepareKaro: AI Test Series Platform for Coaching Institutes | JEE, NEET, CUET & More"
+        description="Launch your AI-powered test series platform in minutes. PrepareKaro supports JEE, NEET, CUET, CBSE, State Board and all exam types — objective & subjective. Built for coaching institutes."
         canonical="https://preparekaro.in/"
       />
       <LandingNavbar />

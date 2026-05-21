@@ -57,8 +57,8 @@ export default function HowItWorks() {
   return (
     <Layout>
       <SEO
-        title="How It Works — Launch Any Test Series in Minutes | Univ.live"
-        description="See how Univ.live works: set up your coaching portal, create test series for JEE, NEET, CUET, CBSE and more, and track student performance — all in minutes with AI."
+        title="How It Works — Launch Any Test Series in Minutes | PrepareKaro"
+        description="See how PrepareKaro works: set up your coaching portal, create test series for JEE, NEET, CUET, CBSE and more, and track student performance — all in minutes with AI."
         canonical="https://preparekaro.in/how-it-works"
       />
       <div className="pb-20">
