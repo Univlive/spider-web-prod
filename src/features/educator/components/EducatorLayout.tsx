@@ -23,6 +23,7 @@ import {
   Building2,
   UserCheck,
   Palette,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@shared/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@shared/ui/avatar";
@@ -168,6 +169,13 @@ function EducatorLayoutInner() {
       });
       testChildren.push({ icon: Zap, label: "DPP Generator", href: "/educator/dpp" });
     }
+
+    // Reported Questions
+    testChildren.push({
+      icon: AlertTriangle,
+      label: "Reported Questions",
+      href: "/educator/reported-questions",
+    });
 
     const showTests =
       !isEmployee ||
