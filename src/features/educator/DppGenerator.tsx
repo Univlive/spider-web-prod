@@ -229,7 +229,7 @@ export default function DppGenerator() {
       })
       .catch(() => toast.error("Failed to load content"))
       .finally(() => {
-        setContent(items.sort((a, b) => b.id.localeCompare(a.id))); // mock sort for recent
+        setContent(items.sort((a, b) => b.id.localeCompare(a.id)));
         setCoursesList(uniqueCourses);
         setLoadingContent(false);
       });
@@ -241,7 +241,6 @@ export default function DppGenerator() {
       setBatches([]);
       return;
     }
-    // We fetch batches for all courses in this branch for simplicity
     const courseObj = coursesList.find((c) => c.branchId === selectedBranchId);
     if (!courseObj) return;
 
@@ -314,13 +313,15 @@ export default function DppGenerator() {
   const courseObj = coursesList[parseInt(selectedCourseIdx)] || coursesList[0];
   const genCourseId = courseObj?.courseId || "";
 
+  // BUG 4 FIX: require courseObj to be defined before enabling the generate button
   const canGenerate =
     !generating &&
     !uploading &&
+    !!courseObj &&
     usageToday < dailyLimit &&
-    ((genSource === "upload" && uploadFile) ||
+    ((genSource === "upload" && !!uploadFile) ||
       (genSource === "content" && genSelectedIds.size > 0) ||
-      (genSource === "qb" && (genTopicFilters.length > 0 || genSubject || genTopicName)));
+      (genSource === "qb" && (genTopicFilters.length > 0 || !!genSubject || !!genTopicName)));
 
   const performGeneration = async (finalContentIds: string[], finalContentTitles: string[]) => {
     if (!firebaseUser) return;
@@ -355,9 +356,7 @@ export default function DppGenerator() {
           time_of_day: schedTime,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           topic_rotation: [],
-          question_count: genNumQuestions,
           num_questions: genNumQuestions,
-          questionCount: genNumQuestions,
           topic_hint: genTopicName.trim(),
           title: customTitle,
           type: "dpp",
@@ -366,10 +365,15 @@ export default function DppGenerator() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.detail || "Failed to save schedule");
+
+      // BUG 3 FIX: resolve scheduleId defensively — backend may return any of these keys
+      const schedId = data.scheduleId ?? data.id ?? data.schedule_id;
+      if (!schedId) throw new Error("No schedule ID returned from server");
+
       toast.success("DPP Schedule activated!");
       setSchedules((prev) => [
         {
-          id: data.scheduleId,
+          id: schedId,
           contentTitles: finalContentTitles,
           difficulty: genDifficulty,
           startDate: startDate.toISOString().split("T")[0],
@@ -404,9 +408,7 @@ export default function DppGenerator() {
           subject_filter: genSubject,
           chapter_filter: genChapter,
           target_batches: [...selectedBatchIds],
-          question_count: genNumQuestions,
           num_questions: genNumQuestions,
-          questionCount: genNumQuestions,
           title: customTitle,
           type: "dpp",
           folderId: "dpp_folder",
@@ -428,6 +430,13 @@ export default function DppGenerator() {
 
   const handleGenerate = async () => {
     if (!canGenerate || !firebaseUser) return;
+
+    // BUG 4 FIX: explicit course guard with user-visible error before any async work
+    if (!genCourseId) {
+      toast.error("Please select a course before generating");
+      return;
+    }
+
     setGenerating(true);
     try {
       let finalContentIds = [...genSelectedIds];
@@ -472,6 +481,7 @@ export default function DppGenerator() {
 
       await performGeneration(finalContentIds, finalContentTitles);
     } catch (e: any) {
+      console.log(e.message);
       toast.error(e?.message || "Failed to process DPP");
       setUploading(false);
     } finally {
@@ -558,14 +568,12 @@ export default function DppGenerator() {
                 {branches.length > 1 && (
                   <div className="w-full space-y-1.5">
                     <Label>Choose Branch</Label>
-
                     <select
                       className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                       value={selectedBranchId}
                       onChange={(e) => setSelectedBranchId(e.target.value)}
                     >
                       <option value="">Select branch...</option>
-
                       {branches.map((b) => (
                         <option key={b.id} value={b.id}>
                           {b.name}
