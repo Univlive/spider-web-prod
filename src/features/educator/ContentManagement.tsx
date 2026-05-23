@@ -504,9 +504,9 @@ export default function ContentManagement() {
           "educators",
           educatorId,
           "branches",
-          selectedBranchId,
+          item.branchId!, // ✅ use item's own branchId
           "courses",
-          selectedCourseId,
+          item.courseId!, // ✅ use item's own courseId
           "content",
           item.id
         )
@@ -525,9 +525,9 @@ export default function ContentManagement() {
           "educators",
           educatorId,
           "branches",
-          selectedBranchId,
+          item.branchId!, // ✅ use item's own branchId
           "courses",
-          selectedCourseId,
+          item.courseId!, // ✅ use item's own courseId
           "content",
           item.id
         ),
@@ -622,11 +622,7 @@ export default function ContentManagement() {
             </SelectContent>
           </Select>
 
-          <Select
-            value={selectedBatchId}
-            onValueChange={setSelectedBatchId}
-            disabled={selectedCourseId === "all" && selectedBranchId === "all"}
-          >
+          <Select value={selectedBatchId} onValueChange={setSelectedBatchId}>
             <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="All Batches" />
             </SelectTrigger>
@@ -827,8 +823,8 @@ export default function ContentManagement() {
             <div className="space-y-1">
               <Label>Type</Label>
               <Select value={type} onValueChange={setType}>
-                <SelectTrigger>
-                  <SelectValue />
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Type" />
                 </SelectTrigger>
                 <SelectContent>
                   {activeTypes.map((t) => (

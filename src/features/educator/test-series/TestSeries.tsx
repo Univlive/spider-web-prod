@@ -14,7 +14,6 @@ import {
   X,
   Copy,
   CheckCircle2,
-  FileUp,
   Folder,
   MoreVertical,
   Move,
@@ -1400,6 +1399,12 @@ export default function TestSeries() {
                       !!test.linkedAdminTestId ||
                       !!test.originalTestId;
 
+                    const isDpp =
+                      test.type === "dpp" ||
+                      String(test.title || "")
+                        .toLowerCase()
+                        .includes("dpp");
+
                     return (
                       <Card className="relative flex h-full flex-col transition-shadow hover:shadow-md">
                         <CardHeader>
@@ -1591,47 +1596,22 @@ export default function TestSeries() {
 
                           <div className="mt-4 space-y-2 border-t pt-4">
                             {/* Quick actions */}
-                            <div className="flex items-center gap-1">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="flex-1 rounded-xl text-xs"
-                                onClick={() => {
-                                  setTestToSchedule(test);
-                                  setScheduleOpen(true);
-                                }}
-                              >
-                                <Clock className="mr-1 h-3 w-3" />
-                                Schedule
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="flex-1 rounded-xl text-xs"
-                                onClick={() => {
-                                  setBatchAssignTest(test);
-                                  setSelectedBatchIds(test.targetBatches || []);
-                                  setBatchAssignOpen(true);
-                                }}
-                              >
-                                <Award className="mr-1 h-3 w-3" />
-                                Batches
-                                {(test.targetBatches || []).length > 0 && (
-                                  <span className="ml-1 rounded-full bg-primary/10 px-1 text-[10px] font-medium text-primary">
-                                    {test.targetBatches.length}
-                                  </span>
-                                )}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="flex-1 rounded-xl text-xs"
-                                onClick={() => openAccessCode(test)}
-                              >
-                                <Key className="mr-1 h-3 w-3" />
-                                Code
-                              </Button>
-                            </div>
+                            {isDpp && test.targetBatches && test.targetBatches.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 pb-1">
+                                {test.targetBatches.map((bId: string) => {
+                                  const bMeta = batchMap.get(bId);
+                                  return (
+                                    <Badge
+                                      key={bId}
+                                      variant="secondary"
+                                      className="rounded-md border border-border/40 bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground"
+                                    >
+                                      {bMeta?.name || bId}
+                                    </Badge>
+                                  );
+                                })}
+                              </div>
+                            )}
                             {/* Primary actions */}
                             <div className="flex min-w-0 gap-2">
                               <Button
@@ -1646,22 +1626,6 @@ export default function TestSeries() {
                                   {isAdminLinked ? "View Qs" : "Manage Qs"}
                                 </span>
                               </Button>
-                              {!isAdminLinked && (test.sections || []).length > 0 && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="min-w-0 flex-1 rounded-xl"
-                                  disabled={autoFillTestId === test.id}
-                                  onClick={() => handleAutoFill(test)}
-                                >
-                                  {autoFillTestId === test.id ? (
-                                    <Loader2 className="mr-1.5 h-3 w-3 shrink-0 animate-spin" />
-                                  ) : (
-                                    <FileUp className="mr-1.5 h-3 w-3 shrink-0" />
-                                  )}
-                                  <span className="truncate">Auto-fill</span>
-                                </Button>
-                              )}
                             </div>
                           </div>
                         </CardContent>
