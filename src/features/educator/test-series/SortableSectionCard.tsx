@@ -23,6 +23,8 @@ type SortableSectionCardProps = {
   totalQuestionCount: number;
   questionLimit: number | null;
   editingId: string | null;
+  /** When false (sectionless test), hides the section header entirely and renders questions flat */
+  canManageSection?: boolean;
   onToggleCollapse: (sectionId: string) => void;
   onRename: (sectionId: string, name: string) => void;
   onDelete: (sectionId: string) => void;
@@ -52,6 +54,7 @@ function SortableSectionCard({
   totalQuestionCount,
   questionLimit,
   editingId,
+  canManageSection = true,
   onToggleCollapse,
   onRename,
   onDelete,
@@ -91,6 +94,75 @@ function SortableSectionCard({
     disabled: !questionDndEnabled,
   });
   const isAtCapacity = questionLimit != null && totalQuestionCount >= questionLimit;
+
+  // Sectionless mode: render questions flat, no section header/footer
+  if (!canManageSection) {
+    return (
+      <div className="space-y-2">
+        {questions.length === 0 ? (
+          <div className="space-y-2">
+            <div className="rounded-xl border border-dashed border-border bg-muted/10 px-4 py-6 text-center text-sm text-muted-foreground">
+              <p>No questions yet.</p>
+              {!readOnly ? (
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <Button
+                    type="button"
+                    className="mt-3 rounded-xl"
+                    onClick={() => onAddQuestion(section.id)}
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Add first question
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-3 rounded-xl"
+                    onClick={() => onImportFromBank(section.id)}
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Import from question bank
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+            {inlineEditor}
+          </div>
+        ) : (
+          <SortableContext
+            items={questions.map((q) => q.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-2">
+              {questions.map((question, questionIndex) => (
+                <div key={question.id} className="space-y-2">
+                  {editingId === question.id ? (
+                    inlineEditor
+                  ) : (
+                    <SortableQuestionListItem
+                      q={question}
+                      displayOrder={questionIndex + 1}
+                      dragDisabled={!questionDndEnabled}
+                      readOnly={readOnly}
+                      onOpenEdit={onOpenEdit}
+                      onAddAfterQuestion={onAddAfterQuestion}
+                      onImportAfterQuestion={onImportAfterQuestion}
+                      onDuplicate={onDuplicate}
+                      onDelete={onDeleteQuestion}
+                      onToggleActive={onToggleActive}
+                      contextId={contextId}
+                      isReported={reportedQuestionIds.has(question.id)}
+                    />
+                  )}
+                  {!(editingId === question.id) && inlineEditorAfterQuestionId === question.id
+                    ? inlineEditor
+                    : null}
+                </div>
+              ))}
+              {inlineEditorAtEnd ? inlineEditor : null}
+            </div>
+          </SortableContext>
+        )}
+      </div>
+    );
+  }
 
   // Section Card
   return (

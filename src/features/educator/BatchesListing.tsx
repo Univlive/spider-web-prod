@@ -1,5 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { buildTenantUrl } from "@shared/lib/tenant";
+import { useTenant } from "@app/providers/TenantProvider";
 import {
   addDoc,
   collection,
@@ -69,6 +71,7 @@ type Subject = { id: string; name: string; courseId?: string };
 export default function BatchesListing() {
   const navigate = useNavigate();
   const { profile, firebaseUser, loading: authLoading } = useAuth();
+  const { tenantSlug: currentTenantSlug } = useTenant();
   const educatorId = profile?.uid || firebaseUser?.uid || "";
 
   const { courses: globalCourses } = useAccessibleCourses(educatorId);
@@ -312,17 +315,18 @@ export default function BatchesListing() {
         wCourseId,
         "batches"
       );
+      const effectivePlanId = wPlanId || pools[0]?.planId;
       const newDoc = await addDoc(ref, {
         name: wName.trim(),
         seatLimit: 0,
         usedSeats: 0,
+        ...(effectivePlanId ? { planId: effectivePlanId } : {}),
         startDate: wStartDate,
         endDate: wEndDate,
         createdAt: Timestamp.now(),
       });
 
-      const effectivePlanId = wPlanId || pools[0]?.planId;
-      if (wCapacityNum > 0 && effectivePlanId && hasSufficientSeats) {
+      if (effectivePlanId && (wCapacityNum === 0 || hasSufficientSeats)) {
         try {
           await apiFetch("/api/payment/allocate", {
             method: "POST",
@@ -335,7 +339,10 @@ export default function BatchesListing() {
             }),
           });
         } catch (e: any) {
-          toast.warning(`Batch created, but seat allocation failed: ${e.message}`);
+          if (wCapacityNum > 0) {
+            toast.warning(`Batch created, but seat allocation failed: ${e.message}`);
+          }
+          // silently ignore registration-only (0-seat) failures
         }
       }
 
@@ -463,19 +470,43 @@ export default function BatchesListing() {
     const globalCourse = globalCourses.find((c) => c.id === inviteGlobalCourseId);
     setInviteLoading(true);
     try {
-      const data = await apiFetch("/api/invites/create", {
-        method: "POST",
-        body: JSON.stringify({
-          branch_id: inviteBatch.branchId,
-          course_id: inviteBatch.courseId,
-          batch_id: inviteBatch.id,
-          global_course_id: inviteGlobalCourseId,
-          global_course_name: globalCourse?.name ?? "",
-          subject_ids: course?.subjectIds ?? [],
-          expires_in_minutes: inviteTimeoutMinutes,
-        }),
-      });
-      setInviteLink(`${window.location.origin}/join/${data.token}`);
+      const payload = {
+        branch_id: inviteBatch.branchId,
+        course_id: inviteBatch.courseId,
+        batch_id: inviteBatch.id,
+        global_course_id: inviteGlobalCourseId,
+        global_course_name: globalCourse?.name ?? "",
+        subject_ids: course?.subjectIds ?? [],
+        expires_in_minutes: inviteTimeoutMinutes,
+      };
+      let data: any;
+      try {
+        data = await apiFetch("/api/invites/create", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+      } catch (e: any) {
+        if (e.message === "Batch not found" && pools[0]?.planId) {
+          // Batch not registered in monkey-king yet — register it then retry
+          await apiFetch("/api/payment/allocate", {
+            method: "POST",
+            body: JSON.stringify({
+              branch_id: inviteBatch.branchId,
+              course_id: inviteBatch.courseId,
+              batch_id: inviteBatch.id,
+              plan_id: pools[0].planId,
+              seats: 0,
+            }),
+          });
+          data = await apiFetch("/api/invites/create", {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+        } else {
+          throw e;
+        }
+      }
+      setInviteLink(buildTenantUrl(currentTenantSlug || "", `/join/${data.token}`));
     } catch (e: any) {
       toast.error(e.message || "Failed to generate link");
     } finally {
@@ -659,7 +690,9 @@ export default function BatchesListing() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {branchBatches.map((batch) => {
                   const course = courses.find((c) => c.id === batch.courseId);
-                  const plan = plans.find((p) => p.id === batch.planId);
+                  const resolvedPlanId =
+                    batch.planId || (pools.length === 1 ? pools[0].planId : undefined);
+                  const plan = plans.find((p) => p.id === resolvedPlanId);
                   const count = studentCounts[batch.id] ?? 0;
                   const limit = batch.seatLimit;
                   const pct = limit > 0 ? Math.min(100, Math.round((count / limit) * 100)) : 0;
@@ -923,7 +956,7 @@ export default function BatchesListing() {
                 />
               </div>
 
-              {plans.length > 1 && pools.length > 1 && (
+              {pools.length > 1 && (
                 <div className="space-y-1">
                   <Label>Plan</Label>
                   <Select value={wPlanId} onValueChange={setWPlanId}>

@@ -99,11 +99,10 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (profile?.tenantSlug) {
+    // Only use profile.tenantSlug as fallback during admin impersonation (main domain, no hostname slug)
+    if (imp && profile?.tenantSlug) {
       setTenantSlug(profile.tenantSlug);
-      // During impersonation we stay on main domain; treat as tenant domain so all
-      // student components get the right context without individual isImpersonating checks.
-      setIsTenantDomain(imp);
+      setIsTenantDomain(true);
       return;
     }
 

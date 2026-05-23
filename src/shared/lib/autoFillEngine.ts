@@ -1,3 +1,5 @@
+import { normalizeQuestionType } from "@shared/lib/questionTypes";
+
 /**
  * autoFillEngine — shared, group-aware question selection logic.
  *
@@ -16,6 +18,7 @@ export type PoolQuestion = {
   difficulty?: string;
   subject?: string;
   subjectName?: string;
+  chapter?: string;
   topic?: string;
   topics?: string[];
   tags?: string[];
@@ -32,6 +35,7 @@ export type SectionConstraints = {
   name: string;
   questionsCount: number;
   subject?: string;
+  chapter?: string;
   topics?: string[];
   tags?: string[];
   format?: string;
@@ -129,10 +133,18 @@ function matchesSectionConstraints(q: PoolQuestion, s: SectionConstraints): bool
     if (!qSub || qSub !== s.subject.trim().toLowerCase()) return false;
   }
 
-  // Format hard filter
+  // Format hard filter — normalize both sides so "single_correct_mcq" matches "MCQ_SINGLE"
   if (s.format) {
-    const qFmt = String(q.questionType || q.format || "").trim();
-    if (qFmt && qFmt !== s.format) return false;
+    const rawQFmt = String(q.questionType || q.format || "").trim();
+    if (rawQFmt && normalizeQuestionType(rawQFmt) !== normalizeQuestionType(s.format)) return false;
+  }
+
+  // Chapter hard filter
+  if (s.chapter) {
+    const qChapter = String(q.chapter || "")
+      .trim()
+      .toLowerCase();
+    if (!qChapter || qChapter !== s.chapter.trim().toLowerCase()) return false;
   }
 
   // Topics hard filter (question must match at least one)

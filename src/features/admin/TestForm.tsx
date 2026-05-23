@@ -65,6 +65,9 @@ import { TagInput } from "@shared/ui/tag-input";
 import ImageTextarea from "@features/educator/components/ImageTextarea";
 import { Slider } from "@shared/ui/slider";
 import { TopicMultiSelect } from "@shared/ui/topic-multi-select";
+import { MultiSelect } from "@shared/ui/MultiSelect";
+import { SearchableSingleSelect } from "@shared/ui/searchable-single-select";
+import { useQBOptions } from "@shared/hooks/useQBOptions";
 
 function getDifficultyLabel(level: number): string {
   if (level <= 0.3) return "Easy";
@@ -116,7 +119,9 @@ type Section = {
   selectionRule?: "UPTO" | "EXACT" | null;
   durationMinutes?: number;
   difficultyLevel?: number;
+  chapter?: string;
   topics?: string[];
+  tags?: string[];
 };
 
 type MarkingScheme = {
@@ -145,6 +150,9 @@ type SortableSectionCardProps = {
   questions: QuestionDoc[];
   editingQuestionId: string | null;
   savingQuestion: boolean;
+  qbChapters?: string[];
+  qbTopics?: string[];
+  qbTags?: string[];
   onDuplicate: (sectionId: string) => void;
   onToggleCollapse: (sectionId: string) => void;
   onRemove: (sectionId: string) => void;
@@ -546,6 +554,9 @@ function SortableSectionCard({
   questions,
   editingQuestionId,
   savingQuestion,
+  qbChapters,
+  qbTopics,
+  qbTags,
   onDuplicate,
   onToggleCollapse,
   onRemove,
@@ -595,6 +606,9 @@ function SortableSectionCard({
     transition,
   };
   const sectionDifficulty = clampDifficulty(section.difficultyLevel ?? 0.5);
+  const [sectionAdvancedOpen, setSectionAdvancedOpen] = useState(
+    !!(section.chapter || (section.topics?.length ?? 0) > 0 || (section.tags?.length ?? 0) > 0)
+  );
 
   return (
     <div
@@ -795,7 +809,7 @@ function SortableSectionCard({
         )}
 
         {!collapsed && (
-          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="space-y-3">
             <div className="space-y-2">
               <Label>Section Difficulty</Label>
               <div className="flex items-center gap-3">
@@ -816,13 +830,66 @@ function SortableSectionCard({
                 </span>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Section Topics</Label>
-              <TopicMultiSelect
-                selectedTopics={section.topics || []}
-                setSelectedTopics={(topics) => onUpdate(section.id, { topics })}
-                placeholder="Search and select section topics..."
-              />
+
+            {/* Advanced: QB filter fields */}
+            <div className="rounded-xl border border-border">
+              <button
+                type="button"
+                className="flex w-full items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+                onClick={() => setSectionAdvancedOpen((v) => !v)}
+              >
+                <span>Advanced Settings</span>
+                {sectionAdvancedOpen ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </button>
+              {sectionAdvancedOpen && (
+                <div className="space-y-3 border-t px-3 pb-3 pt-3">
+                  <p className="text-xs text-muted-foreground">
+                    Used by auto-fill and AI fill to narrow the question pool.
+                  </p>
+                  <div className="space-y-2">
+                    <Label>Chapter (optional)</Label>
+                    {qbChapters && qbChapters.length > 0 ? (
+                      <SearchableSingleSelect
+                        options={qbChapters}
+                        value={section.chapter || ""}
+                        onChange={(v) => onUpdate(section.id, { chapter: v })}
+                        placeholder="Any chapter"
+                        searchPlaceholder="Search chapters..."
+                        className="rounded-xl"
+                      />
+                    ) : (
+                      <Input
+                        value={section.chapter || ""}
+                        onChange={(e) => onUpdate(section.id, { chapter: e.target.value })}
+                        className="rounded-xl"
+                        placeholder="e.g. Kinematics"
+                      />
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Section Topics</Label>
+                    <MultiSelect
+                      options={qbTopics || []}
+                      selected={section.topics || []}
+                      onChange={(topics) => onUpdate(section.id, { topics })}
+                      placeholder="Select topics..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Tags (optional)</Label>
+                    <MultiSelect
+                      options={qbTags || []}
+                      selected={section.tags || []}
+                      onChange={(tags) => onUpdate(section.id, { tags })}
+                      placeholder="Select tags..."
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1091,6 +1158,15 @@ export default function TestForm() {
   const [formNegMarks, setFormNegMarks] = useState<string>("");
   const [formActive, setFormActive] = useState(true);
   const [sectionWarnings, setSectionWarnings] = useState<string[]>([]);
+  const [useSections, setUseSections] = useState(false);
+  const [questionFormat, setQuestionFormat] = useState("MCQ_SINGLE");
+  const [globalChapter, setGlobalChapter] = useState("");
+  const [globalTopics, setGlobalTopics] = useState<string[]>([]);
+  const [globalTags, setGlobalTags] = useState<string[]>([]);
+
+  // Admin sees entire QB (no subject scoping)
+  const qbOptions = useQBOptions();
+  const [globalAdvancedOpen, setGlobalAdvancedOpen] = useState(false);
 
   const computedQuestionsCount = useMemo(() => {
     return sections.reduce((acc, s) => acc + safeNum(s.questionsCount, 0), 0);
@@ -1199,7 +1275,9 @@ export default function TestForm() {
                   s?.difficultyLevel ??
                     normalizeLegacyDifficulty(s?.difficulty ?? s?.level ?? baseDifficulty)
                 ),
+                chapter: String(s?.chapter || ""),
                 topics: Array.isArray(s?.topics) ? s.topics.map(String) : [],
+                tags: Array.isArray(s?.tags) ? s.tags.map(String) : [],
               }))
             : [
                 {
@@ -1215,6 +1293,11 @@ export default function TestForm() {
 
         setSections(parsed);
         setCollapsedSectionIds([]);
+        setUseSections(d?.useSections !== false);
+        setQuestionFormat(String(d?.questionFormat || "MCQ_SINGLE"));
+        setGlobalChapter(String(d?.chapter || ""));
+        setGlobalTopics(Array.isArray(d?.topics) ? d.topics.map(String) : []);
+        setGlobalTags(Array.isArray(d?.tags) ? d.tags.map(String) : []);
       } catch (e) {
         console.error(e);
         toast.error("Failed to load test");
@@ -1281,10 +1364,15 @@ export default function TestForm() {
   }, [testId, firebaseUser?.uid, isAdmin]);
 
   useEffect(() => {
+    if (!useSections) {
+      setSectionValidationMap({});
+      setSectionWarnings([]);
+      return;
+    }
     const validation = validateSections(sections, durationMinutes);
     setSectionValidationMap(validation.sectionMap);
     setSectionWarnings(validation.warnings);
-  }, [sections, durationMinutes]);
+  }, [sections, durationMinutes, useSections]);
 
   function addSection() {
     setSections((prev) => [
@@ -1296,7 +1384,9 @@ export default function TestForm() {
         attemptConstraints: null,
         selectionRule: null,
         difficultyLevel: computedDifficultyLevel,
+        chapter: "",
         topics: [],
+        tags: [],
       },
     ]);
   }
@@ -1501,45 +1591,52 @@ export default function TestForm() {
     const attempts = Math.max(1, safeNum(attemptsAllowed, 3));
     const p = Math.max(0, safeNum(price, 0)); // payment upcoming
 
-    const sectionsValidation = validateSections(sections, durationMinutes);
-    setSectionValidationMap(sectionsValidation.sectionMap);
-    setSectionWarnings(sectionsValidation.warnings);
+    let cleanedSections: any[] = [];
+    let averagedDifficultyLevel = 0.5;
 
-    if (sectionsValidation.blockingErrors.length > 0) {
-      return toast.error(sectionsValidation.blockingErrors[0]);
+    if (useSections) {
+      const sectionsValidation = validateSections(sections, durationMinutes);
+      setSectionValidationMap(sectionsValidation.sectionMap);
+      setSectionWarnings(sectionsValidation.warnings);
+
+      if (sectionsValidation.blockingErrors.length > 0) {
+        return toast.error(sectionsValidation.blockingErrors[0]);
+      }
+
+      cleanedSections = sections
+        .map((s, idx) => {
+          const totalQ = Math.max(0, safeNum(s.questionsCount, 0));
+          const ac = s.attemptConstraints;
+          let validatedConstraints = ac;
+          if (ac) {
+            const min = Math.max(0, Math.min(ac.min, totalQ));
+            const max = Math.max(min, Math.min(ac.max, totalQ));
+            validatedConstraints = { min, max };
+          }
+          return {
+            id: String(s.id || `sec_${idx + 1}`),
+            name: String(s.name ?? "").trim(),
+            questionsCount: totalQ,
+            attemptConstraints: validatedConstraints || null,
+            selectionRule: s.selectionRule || null,
+            durationMinutes:
+              s.durationMinutes != null && String(s.durationMinutes) !== ""
+                ? Math.max(0, safeNum(s.durationMinutes, 0))
+                : null,
+            difficultyLevel: clampDifficulty(s.difficultyLevel),
+            chapter: s.chapter || "",
+            topics: Array.isArray(s.topics) ? s.topics : [],
+            tags: Array.isArray(s.tags) ? s.tags : [],
+          };
+        })
+        .filter((s) => s.name);
+
+      if (cleanedSections.length === 0) {
+        return toast.error("Please add at least one section");
+      }
+
+      averagedDifficultyLevel = getAverageDifficulty(cleanedSections, 0.5);
     }
-
-    const cleanedSections = sections
-      .map((s, idx) => {
-        const totalQ = Math.max(0, safeNum(s.questionsCount, 0));
-        const ac = s.attemptConstraints;
-        let validatedConstraints = ac;
-        if (ac) {
-          const min = Math.max(0, Math.min(ac.min, totalQ));
-          const max = Math.max(min, Math.min(ac.max, totalQ));
-          validatedConstraints = { min, max };
-        }
-        return {
-          id: String(s.id || `sec_${idx + 1}`),
-          name: String(s.name ?? "").trim(),
-          questionsCount: totalQ,
-          attemptConstraints: validatedConstraints || null,
-          selectionRule: s.selectionRule || null,
-          durationMinutes:
-            s.durationMinutes != null && String(s.durationMinutes) !== ""
-              ? Math.max(0, safeNum(s.durationMinutes, 0))
-              : null,
-          difficultyLevel: clampDifficulty(s.difficultyLevel),
-          topics: Array.isArray(s.topics) ? s.topics : [],
-        };
-      })
-      .filter((s) => s.name);
-
-    if (cleanedSections.length === 0) {
-      return toast.error("Please add at least one section");
-    }
-
-    const averagedDifficultyLevel = getAverageDifficulty(cleanedSections, 0.5);
 
     const payload: Record<string, any> = {
       title: t,
@@ -1564,23 +1661,33 @@ export default function TestForm() {
 
       syllabus: syllabusTags,
 
-      sections: cleanedSections.map((s: any) => ({
-        id: s.id,
-        name: s.name,
-        questionsCount: s.questionsCount,
-        attemptConstraints: s.attemptConstraints || null,
-        selectionRule: s.selectionRule || null,
-        difficultyLevel: s.difficultyLevel,
-        topics: s.topics,
-        // store as durationMinutes, keep backward compat too
-        durationMinutes: s.durationMinutes,
-      })),
+      useSections,
+      ...(useSections
+        ? {}
+        : {
+            questionFormat,
+            chapter: globalChapter || null,
+            topics: globalTopics,
+            tags: globalTags,
+          }),
+      sections: useSections
+        ? cleanedSections.map((s: any) => ({
+            id: s.id,
+            name: s.name,
+            questionsCount: s.questionsCount,
+            attemptConstraints: s.attemptConstraints || null,
+            selectionRule: s.selectionRule || null,
+            difficultyLevel: s.difficultyLevel,
+            chapter: s.chapter,
+            topics: s.topics,
+            tags: s.tags,
+            durationMinutes: s.durationMinutes,
+          }))
+        : [],
 
-      // this is only “declared” count (Questions page can update real count later)
-      questionsCount: cleanedSections.reduce(
-        (acc: number, s: any) => acc + (s.questionsCount || 0),
-        0
-      ),
+      questionsCount: useSections
+        ? cleanedSections.reduce((acc: number, s: any) => acc + (s.questionsCount || 0), 0)
+        : 0,
 
       isPublished,
       updatedAt: serverTimestamp(),
@@ -1849,113 +1956,209 @@ export default function TestForm() {
       {/* Sections */}
       <Card className="card-soft border-0">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Sections</CardTitle>
-          <Button variant="outline" className="rounded-xl" onClick={addSection}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Section
-          </Button>
+          <div className="flex items-center gap-3">
+            <CardTitle className="text-base">Sections</CardTitle>
+            <div className="flex items-center gap-2">
+              <Switch checked={useSections} onCheckedChange={setUseSections} />
+              <span className="text-xs text-muted-foreground">
+                {useSections ? "Enabled" : "Disabled"}
+              </span>
+            </div>
+          </div>
+          {useSections && (
+            <Button variant="outline" className="rounded-xl" onClick={addSection}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Section
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <div className="rounded-xl border border-border bg-muted/20 p-3">
-              <p className="text-xs text-muted-foreground">Section count</p>
-              <p className="text-base font-semibold">{sections.length}</p>
-            </div>
-            <div className="rounded-xl border border-border bg-muted/20 p-3">
-              <p className="text-xs text-muted-foreground">Declared questions</p>
-              <p className="text-base font-semibold">{computedQuestionsCount}</p>
-            </div>
-            <div className="rounded-xl border border-border bg-muted/20 p-3">
-              <p className="text-xs text-muted-foreground">Section duration sum</p>
-              <p className="text-base font-semibold">{computedSectionDuration} min</p>
-            </div>
-            <div className="rounded-xl border border-border bg-muted/20 p-3">
-              <p className="text-xs text-muted-foreground">Test duration</p>
-              <div className="flex items-center gap-2">
-                <p className="text-base font-semibold">{testDurationValue} min</p>
-                {sectionDurationMismatch && (
-                  <Badge variant="destructive" className="rounded-full">
-                    Mismatch
-                  </Badge>
+          {!useSections ? (
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label>Question Format</Label>
+                <Select value={questionFormat} onValueChange={setQuestionFormat}>
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MCQ_SINGLE">MCQ (Single Correct)</SelectItem>
+                    <SelectItem value="MCQ_MULTI">MCQ (Multiple Correct)</SelectItem>
+                    <SelectItem value="MCQ_CASE_STUDY">MCQ (Case Study)</SelectItem>
+                    <SelectItem value="SUBJECTIVE_SHORT">Subjective (Short)</SelectItem>
+                    <SelectItem value="SUBJECTIVE_LONG">Subjective (Long)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Advanced: QB filter fields */}
+              <div className="rounded-xl border border-border">
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+                  onClick={() => setGlobalAdvancedOpen((v) => !v)}
+                >
+                  <span>Advanced Settings</span>
+                  {globalAdvancedOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </button>
+                {globalAdvancedOpen && (
+                  <div className="space-y-3 border-t px-3 pb-3 pt-3">
+                    <p className="text-xs text-muted-foreground">
+                      Used by auto-fill and AI fill to narrow the question pool.
+                    </p>
+                    <div className="space-y-2">
+                      <Label>Chapter (optional)</Label>
+                      {qbOptions.chapters.length > 0 ? (
+                        <SearchableSingleSelect
+                          options={qbOptions.chapters}
+                          value={globalChapter}
+                          onChange={setGlobalChapter}
+                          placeholder="Any chapter"
+                          searchPlaceholder="Search chapters..."
+                          className="rounded-xl"
+                        />
+                      ) : (
+                        <Input
+                          value={globalChapter}
+                          onChange={(e) => setGlobalChapter(e.target.value)}
+                          className="rounded-xl"
+                          placeholder="e.g. Kinematics"
+                        />
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Topics (optional)</Label>
+                      <MultiSelect
+                        options={qbOptions.topics}
+                        selected={globalTopics}
+                        onChange={setGlobalTopics}
+                        placeholder="Select topics..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Tags (optional)</Label>
+                      <MultiSelect
+                        options={qbOptions.tags}
+                        selected={globalTags}
+                        onChange={setGlobalTags}
+                        placeholder="Select tags..."
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
-          </div>
-
-          {sectionWarnings.map((warning) => (
-            <p key={warning} className="text-xs text-amber-600">
-              {warning}
-            </p>
-          ))}
-
-          <p className="text-xs text-muted-foreground">
-            Drag sections using the handle to reorder.
-          </p>
-
-          <DndContext
-            sensors={sectionSensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleSectionDragEnd}
-          >
-            <SortableContext
-              items={sections.map((section) => section.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="space-y-3">
-                {sections.map((section, index) => {
-                  const sectionQuestions = questions.filter((q) => q.sectionId === section.id);
-                  return (
-                    <SortableSectionCard
-                      key={section.id}
-                      section={section}
-                      index={index}
-                      totalSections={sections.length}
-                      collapsed={collapsedSectionIds.includes(section.id)}
-                      validation={sectionValidationMap[section.id]}
-                      questions={sectionQuestions}
-                      editingQuestionId={editingQuestionId}
-                      savingQuestion={savingQuestion}
-                      onDuplicate={duplicateSection}
-                      onToggleCollapse={toggleSectionCollapse}
-                      onRemove={removeSection}
-                      onUpdate={updateSection}
-                      onCreateQuestion={openCreateQuestion}
-                      onEditQuestion={openEditQuestion}
-                      onDeleteQuestion={deleteQuestion}
-                      onToggleQuestionActive={toggleQuestionActive}
-                      onSaveQuestion={saveQuestion}
-                      onCancelEdit={resetQuestionForm}
-                      formQuestion={formQuestion}
-                      setFormQuestion={setFormQuestion}
-                      formOptions={formOptions}
-                      setFormOptions={setFormOptions}
-                      formCorrect={formCorrect}
-                      setFormCorrect={setFormCorrect}
-                      formExplanation={formExplanation}
-                      setFormExplanation={setFormExplanation}
-                      formDifficulty={formDifficulty}
-                      setFormDifficulty={setFormDifficulty}
-                      formSubject={formSubject}
-                      setFormSubject={setFormSubject}
-                      formTopic={formTopic}
-                      setFormTopic={setFormTopic}
-                      formMarks={formMarks}
-                      setFormMarks={setFormMarks}
-                      formNegMarks={formNegMarks}
-                      setFormNegMarks={setFormNegMarks}
-                      formActive={formActive}
-                      setFormActive={setFormActive}
-                    />
-                  );
-                })}
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <div className="rounded-xl border border-border bg-muted/20 p-3">
+                  <p className="text-xs text-muted-foreground">Section count</p>
+                  <p className="text-base font-semibold">{sections.length}</p>
+                </div>
+                <div className="rounded-xl border border-border bg-muted/20 p-3">
+                  <p className="text-xs text-muted-foreground">Declared questions</p>
+                  <p className="text-base font-semibold">{computedQuestionsCount}</p>
+                </div>
+                <div className="rounded-xl border border-border bg-muted/20 p-3">
+                  <p className="text-xs text-muted-foreground">Section duration sum</p>
+                  <p className="text-base font-semibold">{computedSectionDuration} min</p>
+                </div>
+                <div className="rounded-xl border border-border bg-muted/20 p-3">
+                  <p className="text-xs text-muted-foreground">Test duration</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-base font-semibold">{testDurationValue} min</p>
+                    {sectionDurationMismatch && (
+                      <Badge variant="destructive" className="rounded-full">
+                        Mismatch
+                      </Badge>
+                    )}
+                  </div>
+                </div>
               </div>
-            </SortableContext>
-          </DndContext>
 
-          <p className="text-xs text-muted-foreground">
-            Note: the <b>Questions</b> page can maintain the real count later by syncing with
-            question docs.
-          </p>
+              {sectionWarnings.map((warning) => (
+                <p key={warning} className="text-xs text-amber-600">
+                  {warning}
+                </p>
+              ))}
+
+              <p className="text-xs text-muted-foreground">
+                Drag sections using the handle to reorder.
+              </p>
+
+              <DndContext
+                sensors={sectionSensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleSectionDragEnd}
+              >
+                <SortableContext
+                  items={sections.map((section) => section.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-3">
+                    {sections.map((section, index) => {
+                      const sectionQuestions = questions.filter((q) => q.sectionId === section.id);
+                      return (
+                        <SortableSectionCard
+                          key={section.id}
+                          section={section}
+                          index={index}
+                          totalSections={sections.length}
+                          collapsed={collapsedSectionIds.includes(section.id)}
+                          validation={sectionValidationMap[section.id]}
+                          questions={sectionQuestions}
+                          editingQuestionId={editingQuestionId}
+                          savingQuestion={savingQuestion}
+                          qbChapters={qbOptions.chapters}
+                          qbTopics={qbOptions.topics}
+                          qbTags={qbOptions.tags}
+                          onDuplicate={duplicateSection}
+                          onToggleCollapse={toggleSectionCollapse}
+                          onRemove={removeSection}
+                          onUpdate={updateSection}
+                          onCreateQuestion={openCreateQuestion}
+                          onEditQuestion={openEditQuestion}
+                          onDeleteQuestion={deleteQuestion}
+                          onToggleQuestionActive={toggleQuestionActive}
+                          onSaveQuestion={saveQuestion}
+                          onCancelEdit={resetQuestionForm}
+                          formQuestion={formQuestion}
+                          setFormQuestion={setFormQuestion}
+                          formOptions={formOptions}
+                          setFormOptions={setFormOptions}
+                          formCorrect={formCorrect}
+                          setFormCorrect={setFormCorrect}
+                          formExplanation={formExplanation}
+                          setFormExplanation={setFormExplanation}
+                          formDifficulty={formDifficulty}
+                          setFormDifficulty={setFormDifficulty}
+                          formSubject={formSubject}
+                          setFormSubject={setFormSubject}
+                          formTopic={formTopic}
+                          setFormTopic={setFormTopic}
+                          formMarks={formMarks}
+                          setFormMarks={setFormMarks}
+                          formNegMarks={formNegMarks}
+                          setFormNegMarks={setFormNegMarks}
+                          formActive={formActive}
+                          setFormActive={setFormActive}
+                        />
+                      );
+                    })}
+                  </div>
+                </SortableContext>
+              </DndContext>
+
+              <p className="text-xs text-muted-foreground">
+                Note: the <b>Questions</b> page can maintain the real count later by syncing with
+                question docs.
+              </p>
+            </>
+          )}
         </CardContent>
       </Card>
 

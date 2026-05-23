@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card } from "@shared/ui/card";
-import { Edit, Trash2, X } from "lucide-react";
+import { Edit, Trash2, X, ChevronDown, ChevronRight } from "lucide-react";
 import { Badge } from "@shared/ui/badge";
 import { Button } from "@shared/ui/button";
 import {
@@ -17,6 +17,7 @@ import { Switch } from "@shared/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
 import { TopicMultiSelect } from "@shared/ui/topic-multi-select";
 import { MultiSelect } from "@shared/ui/MultiSelect";
+import { SearchableSingleSelect } from "@shared/ui/searchable-single-select";
 
 type MarkingScheme = {
   correct: number;
@@ -25,10 +26,11 @@ type MarkingScheme = {
 } | null;
 
 const QUESTION_FORMATS = [
-  { value: "single_correct_mcq", label: "Single Correct MCQ" },
-  { value: "multicorrect_mcq", label: "Multi-Correct MCQ" },
-  { value: "subjective", label: "Subjective (Short)" },
-  { value: "subjective_long", label: "Subjective (Long)" },
+  { value: "MCQ_SINGLE", label: "MCQ (Single Correct)" },
+  { value: "MCQ_MULTI", label: "MCQ (Multiple Correct)" },
+  { value: "MCQ_CASE_STUDY", label: "MCQ (Case Study)" },
+  { value: "SUBJECTIVE_SHORT", label: "Subjective (Short)" },
+  { value: "SUBJECTIVE_LONG", label: "Subjective (Long)" },
 ];
 
 type SectionCardProps = {
@@ -38,10 +40,12 @@ type SectionCardProps = {
   attemptLimit?: number;
   durationMinutes?: number;
   sectionDifficulty?: number;
+  sectionChapter?: string;
   sectionTopics?: string[];
   sectionSubject?: string;
   sectionTags?: string[];
   sectionFormat?: string;
+  availableChapters?: string[];
   availableTopics?: string[];
   availableTagOptions?: string[];
   showSubjectPicker?: boolean;
@@ -58,6 +62,7 @@ type SectionCardProps = {
     attemptLimit?: number | null;
     durationMinutes?: number | null;
     difficultyLevel: number;
+    chapter: string;
     topics: string[];
     markingScheme: MarkingScheme;
     subject: string;
@@ -91,10 +96,12 @@ const SectionCard = ({
   attemptLimit,
   durationMinutes,
   sectionDifficulty,
+  sectionChapter,
   sectionTopics,
   sectionSubject,
   sectionTags,
   sectionFormat,
+  availableChapters,
   availableTopics,
   availableTagOptions,
   showSubjectPicker,
@@ -116,11 +123,13 @@ const SectionCard = ({
   const [draftDifficultyLevel, setDraftDifficultyLevel] = useState(
     clampDifficulty(sectionDifficulty)
   );
+  const [draftChapter, setDraftChapter] = useState(sectionChapter || "");
   const [draftTopics, setDraftTopics] = useState<string[]>(sectionTopics || []);
   const [draftSubject, setDraftSubject] = useState(sectionSubject || "");
   const [draftTags, setDraftTags] = useState<string[]>(sectionTags || []);
   const [draftFormat, setDraftFormat] = useState(sectionFormat || "");
   const [draftMarkingEnabled, setDraftMarkingEnabled] = useState(!!markingScheme);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const fallbackScheme = defaultMarkingScheme || { correct: 4, incorrect: -1, unanswered: 0 };
   const [draftMarkingScheme, setDraftMarkingScheme] = useState({
     correct: markingScheme?.correct ?? fallbackScheme.correct,
@@ -134,11 +143,15 @@ const SectionCard = ({
     setDraftAttemptLimit(attemptLimit == null ? "" : String(attemptLimit));
     setDraftDurationMinutes(durationMinutes == null ? "" : String(durationMinutes));
     setDraftDifficultyLevel(clampDifficulty(sectionDifficulty));
+    setDraftChapter(sectionChapter || "");
     setDraftTopics(sectionTopics || []);
     setDraftSubject(sectionSubject || "");
     setDraftTags(sectionTags || []);
     setDraftFormat(sectionFormat || "");
     setDraftMarkingEnabled(!!markingScheme);
+    setAdvancedOpen(
+      !!(sectionChapter || (sectionTopics?.length ?? 0) > 0 || (sectionTags?.length ?? 0) > 0)
+    );
     setDraftMarkingScheme({
       correct: markingScheme?.correct ?? fallbackScheme.correct,
       incorrect: markingScheme?.incorrect ?? fallbackScheme.incorrect,
@@ -176,6 +189,7 @@ const SectionCard = ({
                   Difficulty: {getDifficultyLabel(clampDifficulty(sectionDifficulty))}
                 </Badge>
               )}
+              {sectionChapter && <Badge variant="outline">Ch: {sectionChapter}</Badge>}
               {sectionSubject && <Badge variant="secondary">{sectionSubject}</Badge>}
               {sectionFormat && (
                 <Badge variant="secondary" className="capitalize">
@@ -295,16 +309,6 @@ const SectionCard = ({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Topics</Label>
-              <TopicMultiSelect
-                selectedTopics={draftTopics}
-                setSelectedTopics={setDraftTopics}
-                placeholder="Search and select topics for this section..."
-                availableTopics={availableTopics}
-              />
-            </div>
-
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Question Format</Label>
@@ -348,28 +352,79 @@ const SectionCard = ({
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label>Tags</Label>
-              {availableTagOptions && availableTagOptions.length > 0 ? (
-                <MultiSelect
-                  options={availableTagOptions}
-                  selected={draftTags}
-                  onChange={setDraftTags}
-                  placeholder="Select tags..."
-                />
-              ) : (
-                <div className="flex flex-wrap gap-1">
-                  {draftTags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="gap-1">
-                      {tag}
-                      <button onClick={() => setDraftTags((prev) => prev.filter((t) => t !== tag))}>
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                  <span className="text-xs text-muted-foreground">
-                    No tags in question bank yet.
-                  </span>
+            {/* Advanced: QB filter fields */}
+            <div className="rounded-xl border border-border">
+              <button
+                type="button"
+                className="flex w-full items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+                onClick={() => setAdvancedOpen((v) => !v)}
+              >
+                <span>Advanced Settings</span>
+                {advancedOpen ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </button>
+              {advancedOpen && (
+                <div className="space-y-3 border-t px-3 pb-3 pt-3">
+                  <p className="text-xs text-muted-foreground">
+                    Used by auto-fill and AI fill to narrow the question pool.
+                  </p>
+                  <div className="space-y-2">
+                    <Label>Chapter</Label>
+                    {availableChapters && availableChapters.length > 0 ? (
+                      <SearchableSingleSelect
+                        options={availableChapters}
+                        value={draftChapter}
+                        onChange={setDraftChapter}
+                        placeholder="Any chapter"
+                        searchPlaceholder="Search chapters..."
+                      />
+                    ) : (
+                      <Input
+                        value={draftChapter}
+                        onChange={(e) => setDraftChapter(e.target.value)}
+                        placeholder="e.g. Kinematics"
+                      />
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Topics</Label>
+                    <TopicMultiSelect
+                      selectedTopics={draftTopics}
+                      setSelectedTopics={setDraftTopics}
+                      placeholder="Search and select topics..."
+                      availableTopics={availableTopics}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Tags</Label>
+                    {availableTagOptions && availableTagOptions.length > 0 ? (
+                      <MultiSelect
+                        options={availableTagOptions}
+                        selected={draftTags}
+                        onChange={setDraftTags}
+                        placeholder="Select tags..."
+                      />
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {draftTags.map((tag) => (
+                          <Badge key={tag} variant="secondary" className="gap-1">
+                            {tag}
+                            <button
+                              onClick={() => setDraftTags((prev) => prev.filter((t) => t !== tag))}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                        <span className="text-xs text-muted-foreground">
+                          No tags in question bank yet.
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -457,6 +512,7 @@ const SectionCard = ({
                     attemptLimit: attemptLimitValue,
                     durationMinutes: durationValue,
                     difficultyLevel: clampDifficulty(draftDifficultyLevel),
+                    chapter: draftChapter,
                     topics: draftTopics,
                     markingScheme: nextMarking,
                     subject: draftSubject,

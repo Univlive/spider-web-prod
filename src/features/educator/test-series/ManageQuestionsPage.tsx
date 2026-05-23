@@ -15,6 +15,12 @@ type TestMeta = {
   subject?: string;
   source?: string;
   originSource?: string;
+  questionsCount?: number | null;
+  useSections?: boolean;
+  questionFormat?: string;
+  chapter?: string;
+  topics?: string[];
+  tags?: string[];
   sections?: {
     id: string;
     name: string;
@@ -92,6 +98,14 @@ export default function ManageQuestionsPage() {
                   }))
                   .filter((section: any) => section.id)
               : [],
+            questionsCount: Number.isFinite(Number(data?.questionsCount))
+              ? Number(data.questionsCount)
+              : null,
+            useSections: data?.useSections !== false,
+            questionFormat: String(data?.questionFormat || ""),
+            chapter: String(data?.chapter || ""),
+            topics: Array.isArray(data?.topics) ? data.topics.map(String) : [],
+            tags: Array.isArray(data?.tags) ? data.tags.map(String) : [],
             linkedAdminTestId: String(data?.linkedAdminTestId || ""),
             originalTestId: String(data?.originalTestId || ""),
             isQuestionSourceShared: data?.isQuestionSourceShared === true,
@@ -156,7 +170,24 @@ export default function ManageQuestionsPage() {
       testId={testId}
       testTitle={testMeta.title}
       testSubject={testMeta.subject}
-      testSections={testMeta.sections}
+      useSections={testMeta.useSections}
+      testSections={
+        testMeta.sections?.length
+          ? testMeta.sections
+          : testMeta.questionsCount
+            ? [
+                {
+                  id: "main",
+                  name: testMeta.subject || "General",
+                  questionsCount: testMeta.questionsCount,
+                  format: testMeta.questionFormat || "",
+                  chapter: testMeta.chapter || "",
+                  topics: testMeta.topics || [],
+                  tags: testMeta.tags || [],
+                },
+              ]
+            : []
+      }
       educatorUid={firebaseUser.uid}
       readOnly={isAdminLinked}
       questionSource={isAdminLinked ? "admin" : "educator"}

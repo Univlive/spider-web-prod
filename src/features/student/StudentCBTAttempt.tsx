@@ -85,7 +85,7 @@ type AttemptResponse = {
 type AttemptQuestion = {
   id: string;
   sectionId: string;
-  type: "mcq" | "integer" | "short_answer" | "upload";
+  type: "mcq" | "integer" | "short_answer";
   stem: string;
   options?: { id: string; text: string }[];
   correctAnswer?: string;
@@ -178,9 +178,11 @@ const mapQuestion = (id: string, data: any): AttemptQuestion => {
   // Determine question type using canonical normalizer
   const rawType = normalizeQuestionType(data.questionType);
   let mappedType: AttemptQuestion["type"] = "mcq";
-  if (rawType === "SHORT_ANSWER") mappedType = "short_answer";
-  else if (rawType === "UPLOAD") mappedType = "upload";
-  else if (data.type === "integer") mappedType = "integer";
+  if (rawType === "SUBJECTIVE_SHORT" || rawType === "SUBJECTIVE_LONG") {
+    mappedType = "short_answer";
+  } else if (data.type === "integer") {
+    mappedType = "integer";
+  }
 
   return {
     id,
@@ -1013,7 +1015,7 @@ export default function StudentCBTAttempt() {
       }
 
       // Subjective types are scored by AI separately — skip here
-      if (q.type === "short_answer" || q.type === "upload") {
+      if (q.type === "short_answer") {
         continue;
       }
 
@@ -1067,7 +1069,7 @@ export default function StudentCBTAttempt() {
 
       // Identify subjective questions that have answers
       const subjectiveToEvaluate = questions.filter((q) => {
-        if (q.type !== "short_answer" && q.type !== "upload") return false;
+        if (q.type !== "short_answer") return false;
         const ans = submissionResponses[q.id]?.answer;
         return ans !== null && ans !== undefined && String(ans).trim() !== "";
       });
@@ -1091,7 +1093,9 @@ export default function StudentCBTAttempt() {
           const evaluations = subjectiveToEvaluate.map((q) => ({
             questionId: q.id,
             questionText: q.stem,
-            questionType: q.type === "upload" ? ("UPLOAD" as const) : ("SHORT_ANSWER" as const),
+            questionType: String(submissionResponses[q.id]?.answer || "").startsWith("https://")
+              ? ("UPLOAD" as const)
+              : ("SHORT_ANSWER" as const),
             referenceAnswer: q.referenceAnswer || "",
             referenceKeywords: q.referenceKeywords || [],
             referenceAnswerImageUrl: q.referenceAnswerFileUrl || "",
@@ -2255,194 +2259,229 @@ export default function StudentCBTAttempt() {
                 </div>
               )}
 
-              {/* Short Answer type */}
-              {currentQuestion.type === "short_answer" && (
-                <div style={{ marginTop: 8 }}>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: "#6b7280",
-                      marginBottom: 6,
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Your Answer :
-                  </div>
-                  <textarea
-                    placeholder="Type your answer here..."
-                    value={selectedAnswer || ""}
-                    onChange={(e) => handleSelectOption(e.target.value)}
-                    disabled={!isStarted}
-                    rows={6}
-                    style={{
-                      width: "100%",
-                      padding: "10px 12px",
-                      border: "1.5px solid #d1d5db",
-                      borderRadius: 8,
-                      fontSize: 14,
-                      lineHeight: 1.6,
-                      outline: "none",
-                      resize: "vertical",
-                      fontFamily: "inherit",
-                      background: isStarted ? "#fff" : "#f3f4f6",
-                    }}
-                  />
-                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-                    <span style={{ fontSize: 11, color: "#9ca3af" }}>
-                      Write a clear, complete answer. This will be evaluated by AI.
-                    </span>
-                    <span style={{ fontSize: 11, color: "#9ca3af" }}>
-                      {(selectedAnswer || "").length} chars
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Upload Answer type */}
-              {currentQuestion.type === "upload" &&
+              {/* Short Answer type — text OR image upload */}
+              {currentQuestion.type === "short_answer" &&
                 (() => {
+                  const isImageAnswer = Boolean(
+                    selectedAnswer &&
+                    selectedAnswer !== "__uploading__" &&
+                    selectedAnswer.startsWith("https://")
+                  );
                   const isUploading = saving && selectedAnswer === "__uploading__";
                   return (
-                    <div style={{ marginTop: 8 }}>
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color: "#6b7280",
-                          marginBottom: 6,
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        Upload Your Answer :
-                      </div>
-                      {selectedAnswer && selectedAnswer !== "__uploading__" ? (
-                        <div style={{ position: "relative", display: "inline-block" }}>
-                          <img
-                            src={selectedAnswer}
-                            alt="Uploaded answer"
+                    <div
+                      style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 12 }}
+                    >
+                      {/* Text input — hidden when an image is uploaded */}
+                      {!isImageAnswer && (
+                        <div>
+                          <div
                             style={{
-                              maxWidth: "100%",
-                              maxHeight: 300,
-                              borderRadius: 8,
-                              border: "1.5px solid #d1d5db",
-                              objectFit: "contain",
-                            }}
-                          />
-                          <button
-                            onClick={() => handleSelectOption("")}
-                            disabled={!isStarted}
-                            style={{
-                              position: "absolute",
-                              top: 4,
-                              right: 4,
-                              background: "#ef4444",
-                              color: "#fff",
-                              border: "none",
-                              borderRadius: "50%",
-                              width: 28,
-                              height: 28,
-                              fontSize: 14,
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: "#6b7280",
+                              marginBottom: 6,
+                              textTransform: "uppercase",
                             }}
                           >
-                            ✕
-                          </button>
-                        </div>
-                      ) : (
-                        <label
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            padding: "32px 16px",
-                            border: isUploading ? "2px solid #6366f1" : "2px dashed #d1d5db",
-                            borderRadius: 12,
-                            cursor: isStarted && !isUploading ? "pointer" : "not-allowed",
-                            background: isUploading ? "#eef2ff" : "#f9fafb",
-                            transition: "all 0.2s",
-                            opacity: isUploading ? 0.8 : 1,
-                          }}
-                          onClick={() => {
-                            if (!isStarted || isUploading) return;
-                            resumeFullscreenRef.current = Boolean(document.fullscreenElement);
-                            ignoreProctoringRef.current = true;
-                          }}
-                        >
-                          {isUploading ? (
-                            <>
-                              <div
-                                style={{
-                                  width: 36,
-                                  height: 36,
-                                  borderRadius: "50%",
-                                  border: "3px solid #c7d2fe",
-                                  borderTopColor: "#6366f1",
-                                  animation: "cbt-eval-spin 0.8s linear infinite",
-                                  marginBottom: 8,
-                                }}
-                              />
-                              <span style={{ fontSize: 13, color: "#6366f1", fontWeight: 600 }}>
-                                Uploading your answer...
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <Upload size={32} style={{ color: "#9ca3af", marginBottom: 8 }} />
-                              <span style={{ fontSize: 13, color: "#6b7280", fontWeight: 600 }}>
-                                Click to upload image
-                              </span>
-                              <span style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>
-                                JPG, PNG up to 10MB
-                              </span>
-                            </>
-                          )}
-                          <input
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
+                            Your Answer :
+                          </div>
+                          <textarea
+                            placeholder="Type your answer here..."
+                            value={selectedAnswer === "__uploading__" ? "" : selectedAnswer || ""}
+                            onChange={(e) => handleSelectOption(e.target.value)}
                             disabled={!isStarted || isUploading}
-                            style={{ display: "none" }}
-                            onChange={async (e) => {
-                              ignoreProctoringRef.current = false;
-                              const file = e.target.files?.[0];
-                              e.target.value = "";
-                              if (!file) return;
-                              if (file.size > 10 * 1024 * 1024) {
-                                toast.error("File too large. Max 10MB.");
-                                return;
-                              }
-                              if (!file.type.startsWith("image/")) {
-                                toast.error("Only image files are allowed.");
-                                return;
-                              }
-                              try {
-                                handleSelectOption("__uploading__");
-                                setSaving(true);
-                                const { url } = await uploadToImageKit(
-                                  file,
-                                  `student_ans_${currentQuestion.id}_${Date.now()}.${file.name.split(".").pop() || "jpg"}`,
-                                  "/student-answers",
-                                  "student"
-                                );
-                                handleSelectOption(url);
-                                toast.success("Image uploaded successfully");
-                              } catch (err: any) {
-                                console.error("[StudentCBT] Upload failed:", err);
-                                handleSelectOption("");
-                                toast.error(err?.message || "Upload failed. Please try again.");
-                              } finally {
-                                setSaving(false);
-                              }
+                            rows={6}
+                            style={{
+                              width: "100%",
+                              padding: "10px 12px",
+                              border: "1.5px solid #d1d5db",
+                              borderRadius: 8,
+                              fontSize: 14,
+                              lineHeight: 1.6,
+                              outline: "none",
+                              resize: "vertical",
+                              fontFamily: "inherit",
+                              background: isStarted ? "#fff" : "#f3f4f6",
                             }}
                           />
-                        </label>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              marginTop: 4,
+                            }}
+                          >
+                            <span style={{ fontSize: 11, color: "#9ca3af" }}>
+                              Write a clear, complete answer. This will be evaluated by AI.
+                            </span>
+                            <span style={{ fontSize: 11, color: "#9ca3af" }}>
+                              {
+                                (selectedAnswer && !selectedAnswer.startsWith("https://")
+                                  ? selectedAnswer
+                                  : ""
+                                ).length
+                              }{" "}
+                              chars
+                            </span>
+                          </div>
+                        </div>
                       )}
-                      <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>
-                        Upload a clear photo of your handwritten answer.
+
+                      {/* Divider */}
+                      {!isImageAnswer && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
+                          <span style={{ fontSize: 11, color: "#9ca3af", whiteSpace: "nowrap" }}>
+                            OR upload an image
+                          </span>
+                          <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
+                        </div>
+                      )}
+
+                      {/* Image upload */}
+                      <div>
+                        {isImageAnswer ? (
+                          <div>
+                            <div
+                              style={{
+                                fontSize: 12,
+                                fontWeight: 700,
+                                color: "#6b7280",
+                                marginBottom: 6,
+                                textTransform: "uppercase",
+                              }}
+                            >
+                              Uploaded Answer :
+                            </div>
+                            <div style={{ position: "relative", display: "inline-block" }}>
+                              <img
+                                src={selectedAnswer!}
+                                alt="Uploaded answer"
+                                style={{
+                                  maxWidth: "100%",
+                                  maxHeight: 300,
+                                  borderRadius: 8,
+                                  border: "1.5px solid #d1d5db",
+                                  objectFit: "contain",
+                                }}
+                              />
+                              <button
+                                onClick={() => handleSelectOption("")}
+                                disabled={!isStarted}
+                                style={{
+                                  position: "absolute",
+                                  top: 4,
+                                  right: 4,
+                                  background: "#ef4444",
+                                  color: "#fff",
+                                  border: "none",
+                                  borderRadius: "50%",
+                                  width: 28,
+                                  height: 28,
+                                  fontSize: 14,
+                                  cursor: "pointer",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                            <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>
+                              Clear the image to type a text answer instead.
+                            </div>
+                          </div>
+                        ) : (
+                          <label
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              padding: "20px 16px",
+                              border: isUploading ? "2px solid #6366f1" : "2px dashed #d1d5db",
+                              borderRadius: 12,
+                              cursor: isStarted && !isUploading ? "pointer" : "not-allowed",
+                              background: isUploading ? "#eef2ff" : "#f9fafb",
+                              transition: "all 0.2s",
+                              opacity: isUploading ? 0.8 : 1,
+                            }}
+                            onClick={() => {
+                              if (!isStarted || isUploading) return;
+                              resumeFullscreenRef.current = Boolean(document.fullscreenElement);
+                              ignoreProctoringRef.current = true;
+                            }}
+                          >
+                            {isUploading ? (
+                              <>
+                                <div
+                                  style={{
+                                    width: 36,
+                                    height: 36,
+                                    borderRadius: "50%",
+                                    border: "3px solid #c7d2fe",
+                                    borderTopColor: "#6366f1",
+                                    animation: "cbt-eval-spin 0.8s linear infinite",
+                                    marginBottom: 8,
+                                  }}
+                                />
+                                <span style={{ fontSize: 13, color: "#6366f1", fontWeight: 600 }}>
+                                  Uploading your answer...
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <Upload size={28} style={{ color: "#9ca3af", marginBottom: 6 }} />
+                                <span style={{ fontSize: 13, color: "#6b7280", fontWeight: 600 }}>
+                                  Click to upload image
+                                </span>
+                                <span style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>
+                                  JPG, PNG up to 10MB
+                                </span>
+                              </>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              disabled={!isStarted || isUploading}
+                              style={{ display: "none" }}
+                              onChange={async (e) => {
+                                ignoreProctoringRef.current = false;
+                                const file = e.target.files?.[0];
+                                e.target.value = "";
+                                if (!file) return;
+                                if (file.size > 10 * 1024 * 1024) {
+                                  toast.error("File too large. Max 10MB.");
+                                  return;
+                                }
+                                if (!file.type.startsWith("image/")) {
+                                  toast.error("Only image files are allowed.");
+                                  return;
+                                }
+                                try {
+                                  handleSelectOption("__uploading__");
+                                  setSaving(true);
+                                  const { url } = await uploadToImageKit(
+                                    file,
+                                    `student_ans_${currentQuestion.id}_${Date.now()}.${file.name.split(".").pop() || "jpg"}`,
+                                    "/student-answers",
+                                    "student"
+                                  );
+                                  handleSelectOption(url);
+                                  toast.success("Image uploaded successfully");
+                                } catch (err: any) {
+                                  console.error("[StudentCBT] Upload failed:", err);
+                                  handleSelectOption("");
+                                  toast.error(err?.message || "Upload failed. Please try again.");
+                                } finally {
+                                  setSaving(false);
+                                }
+                              }}
+                            />
+                          </label>
+                        )}
                       </div>
                     </div>
                   );

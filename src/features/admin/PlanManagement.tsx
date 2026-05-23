@@ -1,14 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  orderBy,
-  query,
-  updateDoc,
-} from "firebase/firestore";
+import { addDoc, collection, doc, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
 import { db } from "@shared/lib/firebase";
 import { toast } from "sonner";
 import { Button } from "@shared/ui/button";
@@ -35,6 +26,8 @@ export type Plan = {
   pricePerSeat: number;
   features: string[];
   isActive: boolean;
+  isArchived?: boolean;
+  purchaseCount?: number;
   featureDefaults?: PlanFeatureDefaults;
 };
 
@@ -62,7 +55,11 @@ export default function PlanManagement() {
   useEffect(() => {
     const q = query(collection(db, "plans"), orderBy("name"));
     return onSnapshot(q, (snap) => {
-      setPlans(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Plan, "id">) })));
+      setPlans(
+        snap.docs
+          .map((d) => ({ id: d.id, ...(d.data() as Omit<Plan, "id">) }))
+          .filter((p) => !p.isArchived)
+      );
       setLoading(false);
     });
   }, []);
@@ -125,10 +122,16 @@ export default function PlanManagement() {
     }
   }
 
-  async function handleDelete(plan: Plan) {
-    if (!confirm(`Delete plan "${plan.name}"?`)) return;
-    await deleteDoc(doc(db, "plans", plan.id));
-    toast.success("Deleted");
+  async function handleArchive(plan: Plan) {
+    if (plan.purchaseCount && plan.purchaseCount > 0) {
+      toast.error(
+        `"${plan.name}" has been purchased by ${plan.purchaseCount} educator(s) and cannot be deleted. Deactivate it instead.`
+      );
+      return;
+    }
+    if (!confirm(`Archive plan "${plan.name}"? This cannot be undone.`)) return;
+    await updateDoc(doc(db, "plans", plan.id), { isActive: false, isArchived: true });
+    toast.success("Plan archived");
   }
 
   async function toggleActive(plan: Plan) {
@@ -211,7 +214,17 @@ export default function PlanManagement() {
                 <Button size="sm" variant="outline" onClick={() => toggleActive(plan)}>
                   {plan.isActive ? "Deactivate" : "Activate"}
                 </Button>
-                <Button size="sm" variant="destructive" onClick={() => handleDelete(plan)}>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => handleArchive(plan)}
+                  disabled={!!(plan.purchaseCount && plan.purchaseCount > 0)}
+                  title={
+                    plan.purchaseCount && plan.purchaseCount > 0
+                      ? "Plan has active purchases — deactivate instead"
+                      : "Archive plan"
+                  }
+                >
                   <Trash2 className="h-3 w-3" />
                 </Button>
               </div>

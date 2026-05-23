@@ -464,8 +464,8 @@ const QuestionEditor = (props: QuestionEditorProps) => {
           </div>
         )}
 
-        {/* SHORT_ANSWER: Reference answer + keywords */}
-        {formQuestionType === "SHORT_ANSWER" && (
+        {/* Subjective: reference answer (text + optional image) */}
+        {(formQuestionType === "SUBJECTIVE_SHORT" || formQuestionType === "SUBJECTIVE_LONG") && (
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Expected / Reference Answer</Label>
@@ -476,7 +476,8 @@ const QuestionEditor = (props: QuestionEditorProps) => {
                 className="min-h-[100px] rounded-xl"
               />
               <p className="text-xs text-muted-foreground">
-                This answer will be used by AI to evaluate student responses.
+                Used by AI to evaluate student responses. Students can answer by typing or uploading
+                an image.
               </p>
             </div>
             <div className="space-y-2">
@@ -493,19 +494,15 @@ const QuestionEditor = (props: QuestionEditorProps) => {
                 Comma-separated keywords that should appear in the answer.
               </p>
             </div>
+            <UploadReferenceSection
+              formReferenceAnswer={formReferenceAnswer}
+              setFormReferenceAnswer={setFormReferenceAnswer}
+              formReferenceAnswerFileUrl={formReferenceAnswerFileUrl}
+              setFormReferenceAnswerFileUrl={setFormReferenceAnswerFileUrl}
+              formEvaluationInstructions={formEvaluationInstructions}
+              setFormEvaluationInstructions={setFormEvaluationInstructions}
+            />
           </div>
-        )}
-
-        {/* UPLOAD: Reference answer + instructions */}
-        {formQuestionType === "UPLOAD" && (
-          <UploadReferenceSection
-            formReferenceAnswer={formReferenceAnswer}
-            setFormReferenceAnswer={setFormReferenceAnswer}
-            formReferenceAnswerFileUrl={formReferenceAnswerFileUrl}
-            setFormReferenceAnswerFileUrl={setFormReferenceAnswerFileUrl}
-            formEvaluationInstructions={formEvaluationInstructions}
-            setFormEvaluationInstructions={setFormEvaluationInstructions}
-          />
         )}
 
         {/* Question Settings */}
@@ -596,7 +593,7 @@ const QuestionEditor = (props: QuestionEditorProps) => {
       </div>
 
       {/* Preview — MCQ */}
-      {formQuestionType === "MCQ" && (
+      {(formQuestionType === "MCQ_SINGLE" || formQuestionType === "MCQ_MULTI") && (
         <div className="mt-5 rounded-xl border border-border bg-muted/20 p-3">
           <p className="mb-2 text-xs font-medium text-muted-foreground">Question Preview</p>
           {hasPreviewContent(formQuestion) ? (
@@ -648,36 +645,21 @@ const QuestionEditor = (props: QuestionEditorProps) => {
         </div>
       )}
 
-      {/* Preview — SHORT_ANSWER */}
-      {formQuestionType === "SHORT_ANSWER" && hasPreviewContent(formQuestion) && (
-        <div className="mt-5 rounded-xl border border-border bg-muted/20 p-3">
-          <p className="mb-2 text-xs font-medium text-muted-foreground">Question Preview</p>
-          <div className="rounded-lg border border-border/60 bg-background p-3">
-            <HtmlView html={formQuestion} className="break-words text-sm" />
+      {/* Preview — Subjective */}
+      {(formQuestionType === "SUBJECTIVE_SHORT" || formQuestionType === "SUBJECTIVE_LONG") &&
+        hasPreviewContent(formQuestion) && (
+          <div className="mt-5 rounded-xl border border-border bg-muted/20 p-3">
+            <p className="mb-2 text-xs font-medium text-muted-foreground">Question Preview</p>
+            <div className="rounded-lg border border-border/60 bg-background p-3">
+              <HtmlView html={formQuestion} className="break-words text-sm" />
+            </div>
+            <div className="mt-3 rounded-lg border border-dashed border-border/60 bg-background p-3">
+              <p className="text-xs italic text-muted-foreground">
+                Student can type their answer or upload an image
+              </p>
+            </div>
           </div>
-          <div className="mt-3 rounded-lg border border-dashed border-border/60 bg-background p-3">
-            <p className="text-xs italic text-muted-foreground">
-              Student will see a text input area here
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Preview — UPLOAD */}
-      {formQuestionType === "UPLOAD" && hasPreviewContent(formQuestion) && (
-        <div className="mt-5 rounded-xl border border-border bg-muted/20 p-3">
-          <p className="mb-2 text-xs font-medium text-muted-foreground">Question Preview</p>
-          <div className="rounded-lg border border-border/60 bg-background p-3">
-            <HtmlView html={formQuestion} className="break-words text-sm" />
-          </div>
-          <div className="mt-3 rounded-lg border border-dashed border-border/60 bg-background p-4 text-center">
-            <Upload className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-            <p className="text-xs text-muted-foreground">
-              Student will see a file upload area here
-            </p>
-          </div>
-        </div>
-      )}
+        )}
 
       {!readOnly ? (
         <div className="mt-5 flex items-center justify-end">

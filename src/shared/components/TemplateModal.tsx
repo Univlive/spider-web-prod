@@ -9,7 +9,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { toast } from "sonner";
-import { Plus, Loader2, Save } from "lucide-react";
+import { Plus, Loader2, Save, ChevronDown, ChevronRight } from "lucide-react";
 
 import {
   Dialog,
@@ -23,12 +23,16 @@ import { Input } from "@shared/ui/input";
 import { Label } from "@shared/ui/label";
 import { Textarea } from "@shared/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
+import { Switch } from "@shared/ui/switch";
+import { MultiSelect } from "@shared/ui/MultiSelect";
+import { SearchableSingleSelect } from "@shared/ui/searchable-single-select";
 import FloatingInput from "@shared/ui/FloatingInput";
 import SectionCard from "@features/admin/components/SectionCard";
 
 import { db } from "@shared/lib/firebase";
 import { useAuth } from "@app/providers/AuthProvider";
 import { useAccessibleCourses } from "@shared/hooks/useAccessibleCourses";
+import { useQBOptions } from "@shared/hooks/useQBOptions";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -67,6 +71,7 @@ type Section = {
   attemptlimit: number | null;
   durationMinutes?: number | null;
   difficultyLevel?: number;
+  chapter?: string;
   topics?: string[];
   subject?: string;
   tags?: string[];
@@ -80,6 +85,7 @@ const BLANK_SECTION = (): Section => ({
   questionsCount: 0,
   attemptlimit: null,
   difficultyLevel: 0.5,
+  chapter: "",
   topics: [],
   subject: "",
   tags: [],
@@ -107,48 +113,39 @@ export default function TemplateModal({
   const { firebaseUser } = useAuth();
 
   // Educator-scoped course/subject data
-  const { courses: accessibleCourses, subjects: accessibleSubjects } = useAccessibleCourses(
-    !isAdmin ? (firebaseUser?.uid ?? "") : ""
-  );
+  const {
+    courses: accessibleCourses,
+    subjects: accessibleSubjects,
+    allowedSubjectIds,
+  } = useAccessibleCourses(!isAdmin ? (firebaseUser?.uid ?? "") : "");
 
-  // Admin-scoped course/subject/QB data
+  // QB options scoped: admin sees all, educator sees only their subjects
+  const qbOptions = useQBOptions(isAdmin ? undefined : allowedSubjectIds);
+
+  // Admin-scoped course/subject data
   const [allCourses, setAllCourses] = useState<{ id: string; name: string }[]>([]);
   const [allSubjects, setAllSubjects] = useState<{ id: string; name: string; courseId: string }[]>(
     []
   );
-  const [qbTopics, setQbTopics] = useState<string[]>([]);
-  const [qbTags, setQbTags] = useState<string[]>([]);
 
   useEffect(() => {
     if (!open || !isAdmin) return;
-    Promise.all([
-      getDocs(collection(db, "courses")),
-      getDocs(collection(db, "subjects")),
-      getDocs(collection(db, "question_bank")),
-    ]).then(([courseSnap, subjectSnap, qbSnap]) => {
-      setAllCourses(
-        courseSnap.docs
-          .filter((d) => d.data()?.isActive !== false)
-          .map((d) => ({ id: d.id, name: d.data().name as string }))
-      );
-      setAllSubjects(
-        subjectSnap.docs.map((d) => ({
-          id: d.id,
-          name: d.data().name as string,
-          courseId: d.data().courseId as string,
-        }))
-      );
-      const topics = new Set<string>();
-      const tags = new Set<string>();
-      qbSnap.docs.forEach((d) => {
-        const data = d.data() as any;
-        (data.topics || []).forEach((t: string) => t && topics.add(t));
-        if (data.topic) topics.add(data.topic);
-        (data.tags || []).forEach((t: string) => t && tags.add(t));
-      });
-      setQbTopics(Array.from(topics).sort());
-      setQbTags(Array.from(tags).sort());
-    });
+    Promise.all([getDocs(collection(db, "courses")), getDocs(collection(db, "subjects"))]).then(
+      ([courseSnap, subjectSnap]) => {
+        setAllCourses(
+          courseSnap.docs
+            .filter((d) => d.data()?.isActive !== false)
+            .map((d) => ({ id: d.id, name: d.data().name as string }))
+        );
+        setAllSubjects(
+          subjectSnap.docs.map((d) => ({
+            id: d.id,
+            name: d.data().name as string,
+            courseId: d.data().courseId as string,
+          }))
+        );
+      }
+    );
   }, [open, isAdmin]);
 
   // ─── form state ─────────────────────────────────────────────────────────────
@@ -171,6 +168,12 @@ export default function TemplateModal({
   const [sections, setSections] = useState<Section[]>([
     { ...BLANK_SECTION(), id: "sec_1", name: "Section 1" },
   ]);
+  const [useSections, setUseSections] = useState(false);
+  const [questionFormat, setQuestionFormat] = useState("MCQ_SINGLE");
+  const [globalChapter, setGlobalChapter] = useState("");
+  const [globalTopics, setGlobalTopics] = useState<string[]>([]);
+  const [globalTags, setGlobalTags] = useState<string[]>([]);
+  const [globalAdvancedOpen, setGlobalAdvancedOpen] = useState(false);
 
   const computedDifficulty = useMemo(() => avgDifficulty(sections), [sections]);
 
@@ -193,7 +196,7 @@ export default function TemplateModal({
         incorrect: templateToEdit.markingScheme?.incorrect ?? -1,
         unanswered: templateToEdit.markingScheme?.unanswered ?? 0,
       });
-      setSections(
+      const loadedSections =
         templateToEdit.sections?.length > 0
           ? templateToEdit.sections.map((s: any) => ({
               ...s,
@@ -201,12 +204,25 @@ export default function TemplateModal({
               difficultyLevel: clamp(
                 s.difficultyLevel ?? normalizeLegacy(s.difficulty ?? s.level ?? base)
               ),
+              chapter: s.chapter || "",
               topics: Array.isArray(s.topics) ? s.topics.map(String) : [],
               subject: s.subject || "",
               tags: Array.isArray(s.tags) ? s.tags : [],
               format: s.format || "",
             }))
-          : [{ ...BLANK_SECTION(), id: "sec_1", difficultyLevel: base }]
+          : [{ ...BLANK_SECTION(), id: "sec_1", difficultyLevel: base }];
+      setSections(loadedSections);
+      const hasSections =
+        typeof templateToEdit.useSections === "boolean"
+          ? templateToEdit.useSections
+          : (templateToEdit.sections?.length ?? 0) > 0;
+      setUseSections(hasSections);
+      setQuestionFormat(templateToEdit.questionFormat || "MCQ_SINGLE");
+      setGlobalChapter(templateToEdit.chapter || "");
+      setGlobalTopics(Array.isArray(templateToEdit.topics) ? templateToEdit.topics : []);
+      setGlobalTags(Array.isArray(templateToEdit.tags) ? templateToEdit.tags : []);
+      setGlobalAdvancedOpen(
+        !!(templateToEdit.chapter || templateToEdit.topics?.length || templateToEdit.tags?.length)
       );
     } else if (!isEdit) {
       // Reset for create mode
@@ -221,6 +237,12 @@ export default function TemplateModal({
       setIsPublished(true);
       setMarkingScheme({ correct: isAdmin ? 5 : 4, incorrect: -1, unanswered: 0 });
       setSections([{ ...BLANK_SECTION(), id: "sec_1", name: "Section 1" }]);
+      setUseSections(false);
+      setQuestionFormat("MCQ_SINGLE");
+      setGlobalChapter("");
+      setGlobalTopics([]);
+      setGlobalTags([]);
+      setGlobalAdvancedOpen(false);
     }
   }, [open, templateToEdit]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -247,6 +269,7 @@ export default function TemplateModal({
       attemptLimit?: number | null;
       durationMinutes?: number | null;
       difficultyLevel: number;
+      chapter: string;
       topics: string[];
       markingScheme: MarkingScheme | null;
       subject: string;
@@ -263,6 +286,7 @@ export default function TemplateModal({
         attemptlimit: payload.attemptLimit ?? null,
         durationMinutes: payload.durationMinutes ?? null,
         difficultyLevel: clamp(payload.difficultyLevel),
+        chapter: payload.chapter || "",
         topics: payload.topics || [],
         markingScheme: payload.markingScheme,
         subject: payload.subject || "",
@@ -292,7 +316,7 @@ export default function TemplateModal({
       toast.error("Subject is required");
       return;
     }
-    if (!sections.length) {
+    if (useSections && !sections.length) {
       toast.error("At least one section is required");
       return;
     }
@@ -300,36 +324,40 @@ export default function TemplateModal({
 
     setLoading(true);
     try {
-      const difficulty = avgDifficulty(sections, 0.5);
-      const mappedSections = sections.map((s) => {
-        const totalQ = Number(s.questionsCount) || 0;
-        const attemptLimit =
-          s.attemptlimit == null
-            ? isAdmin
-              ? 0
-              : totalQ
-            : Math.min(Number(s.attemptlimit), totalQ);
-        return {
-          name: s.name.trim(),
-          questionsCount: totalQ,
-          attemptlimit: attemptLimit,
-          durationMinutes: s.durationMinutes ? Number(s.durationMinutes) : null,
-          difficultyLevel: clamp(s.difficultyLevel),
-          topics: Array.isArray(s.topics) ? s.topics : [],
-          subject: s.subject || "",
-          tags: Array.isArray(s.tags) ? s.tags : [],
-          format: s.format || "",
-          markingScheme: s.markingScheme
-            ? {
-                correct: Number(s.markingScheme.correct),
-                incorrect: Number(s.markingScheme.incorrect),
-                unanswered: Number(s.markingScheme.unanswered),
-              }
-            : null,
-        };
-      });
+      const mappedSections = useSections
+        ? sections.map((s) => {
+            const totalQ = Number(s.questionsCount) || 0;
+            const attemptLimit =
+              s.attemptlimit == null
+                ? isAdmin
+                  ? 0
+                  : totalQ
+                : Math.min(Number(s.attemptlimit), totalQ);
+            return {
+              name: s.name.trim(),
+              questionsCount: totalQ,
+              attemptlimit: attemptLimit,
+              durationMinutes: s.durationMinutes ? Number(s.durationMinutes) : null,
+              difficultyLevel: clamp(s.difficultyLevel),
+              chapter: s.chapter || "",
+              topics: Array.isArray(s.topics) ? s.topics : [],
+              subject: s.subject || "",
+              tags: Array.isArray(s.tags) ? s.tags : [],
+              format: s.format || "",
+              markingScheme: s.markingScheme
+                ? {
+                    correct: Number(s.markingScheme.correct),
+                    incorrect: Number(s.markingScheme.incorrect),
+                    unanswered: Number(s.markingScheme.unanswered),
+                  }
+                : null,
+            };
+          })
+        : [];
 
-      const base = {
+      const difficulty = useSections ? avgDifficulty(sections, 0.5) : 0.5;
+
+      const base: Record<string, any> = {
         title: title.trim(),
         description: description.trim(),
         subject: isAdmin && subjectMode !== "single" ? "" : subject.trim(),
@@ -343,8 +371,15 @@ export default function TemplateModal({
           incorrect: Number(markingScheme.incorrect),
           unanswered: Number(markingScheme.unanswered),
         },
+        useSections,
         sections: mappedSections,
         questionsCount: mappedSections.reduce((a, s) => a + s.questionsCount, 0),
+        ...(!useSections && {
+          questionFormat,
+          chapter: globalChapter || null,
+          topics: globalTopics,
+          tags: globalTags,
+        }),
         updatedAt: serverTimestamp(),
       };
 
@@ -573,40 +608,129 @@ export default function TemplateModal({
           {/* Sections */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Sections *</h3>
-              <Button size="sm" variant="outline" onClick={handleAddSection}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Section
-              </Button>
+              <div className="flex items-center gap-3">
+                <h3 className="text-sm font-semibold">Sections</h3>
+                <div className="flex items-center gap-2">
+                  <Switch checked={useSections} onCheckedChange={setUseSections} />
+                  <span className="text-xs text-muted-foreground">
+                    {useSections ? "Enabled" : "Disabled"}
+                  </span>
+                </div>
+              </div>
+              {useSections && (
+                <Button size="sm" variant="outline" onClick={handleAddSection}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Section
+                </Button>
+              )}
             </div>
-            {sections.map((sec, i) => (
-              <SectionCard
-                key={sec.id}
-                sectionId={sec.id}
-                sectionName={sec.name}
-                questionCount={sec.questionsCount}
-                attemptLimit={sec.attemptlimit ?? undefined}
-                durationMinutes={sec.durationMinutes ?? undefined}
-                sectionDifficulty={sec.difficultyLevel}
-                sectionTopics={sec.topics}
-                sectionSubject={sec.subject}
-                sectionTags={sec.tags}
-                sectionFormat={sec.format}
-                markingScheme={sec.markingScheme}
-                defaultMarkingScheme={markingScheme}
-                // Admin gets QB-sourced topic/tag options + section-wise subject picker
-                availableTopics={isAdmin ? qbTopics : undefined}
-                availableTagOptions={isAdmin ? qbTags : undefined}
-                showSubjectPicker={isAdmin && subjectMode === "section_wise"}
-                courseSubjects={
-                  isAdmin ? allSubjects.filter((s) => s.courseId === courseId) : undefined
-                }
-                // Educator gets their accessible subjects
-                availableSubjects={!isAdmin ? accessibleSubjects : undefined}
-                onEdit={(payload) => handleSectionEdit(i, payload)}
-                onRemove={() => handleRemoveSection(i)}
-              />
-            ))}
+
+            {!useSections ? (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label>Question Format</Label>
+                  <Select value={questionFormat} onValueChange={setQuestionFormat}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MCQ_SINGLE">MCQ (Single Correct)</SelectItem>
+                      <SelectItem value="MCQ_MULTI">MCQ (Multiple Correct)</SelectItem>
+                      <SelectItem value="MCQ_CASE_STUDY">MCQ (Case Study)</SelectItem>
+                      <SelectItem value="SUBJECTIVE_SHORT">Subjective (Short)</SelectItem>
+                      <SelectItem value="SUBJECTIVE_LONG">Subjective (Long)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Advanced: QB filter fields */}
+                <div className="rounded-xl border border-border">
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+                    onClick={() => setGlobalAdvancedOpen((v) => !v)}
+                  >
+                    <span>Advanced Settings</span>
+                    {globalAdvancedOpen ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                  </button>
+                  {globalAdvancedOpen && (
+                    <div className="space-y-3 border-t px-3 pb-3 pt-3">
+                      <p className="text-xs text-muted-foreground">
+                        Used by auto-fill and AI fill to narrow the question pool.
+                      </p>
+                      <div className="space-y-2">
+                        <Label>Chapter (optional)</Label>
+                        {qbOptions.chapters.length > 0 ? (
+                          <SearchableSingleSelect
+                            options={qbOptions.chapters}
+                            value={globalChapter}
+                            onChange={setGlobalChapter}
+                            placeholder="Any chapter"
+                            searchPlaceholder="Search chapters..."
+                          />
+                        ) : (
+                          <Input
+                            value={globalChapter}
+                            onChange={(e) => setGlobalChapter(e.target.value)}
+                            placeholder="e.g. Kinematics"
+                          />
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Topics (optional)</Label>
+                        <MultiSelect
+                          options={qbOptions.topics}
+                          selected={globalTopics}
+                          onChange={setGlobalTopics}
+                          placeholder="Select topics..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Tags (optional)</Label>
+                        <MultiSelect
+                          options={qbOptions.tags}
+                          selected={globalTags}
+                          onChange={setGlobalTags}
+                          placeholder="Select tags..."
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              sections.map((sec, i) => (
+                <SectionCard
+                  key={sec.id}
+                  sectionId={sec.id}
+                  sectionName={sec.name}
+                  questionCount={sec.questionsCount}
+                  attemptLimit={sec.attemptlimit ?? undefined}
+                  durationMinutes={sec.durationMinutes ?? undefined}
+                  sectionDifficulty={sec.difficultyLevel}
+                  sectionChapter={sec.chapter}
+                  sectionTopics={sec.topics}
+                  sectionSubject={sec.subject}
+                  sectionTags={sec.tags}
+                  sectionFormat={sec.format}
+                  markingScheme={sec.markingScheme}
+                  defaultMarkingScheme={markingScheme}
+                  availableChapters={qbOptions.chapters}
+                  availableTopics={qbOptions.topics}
+                  availableTagOptions={qbOptions.tags}
+                  showSubjectPicker={isAdmin && subjectMode === "section_wise"}
+                  courseSubjects={
+                    isAdmin ? allSubjects.filter((s) => s.courseId === courseId) : undefined
+                  }
+                  onEdit={(payload) => handleSectionEdit(i, payload)}
+                  onRemove={() => handleRemoveSection(i)}
+                />
+              ))
+            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-4">

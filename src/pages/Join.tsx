@@ -6,9 +6,14 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
 } from "firebase/auth";
-import { doc, setDoc, arrayUnion } from "firebase/firestore";
+import { arrayUnion, doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "@shared/lib/firebase";
-import { buildTenantUrl } from "@shared/lib/tenant";
+import { buildTenantUrl, getTenantSlugFromHostname } from "@shared/lib/tenant";
+import {
+  generateSessionId,
+  setLocalSessionId,
+  syncSessionWithFirestore,
+} from "@shared/lib/session";
 import { toast } from "sonner";
 import { Loader2, GraduationCap } from "lucide-react";
 import { Button } from "@shared/ui/button";
@@ -21,9 +26,44 @@ const API = import.meta.env.VITE_MONKEY_KING_API_URL;
 type InviteInfo = {
   batch_name: string;
   educator_name: string;
+  tenant_slug: string;
   prefilled_email: string | null;
   prefilled_name: string | null;
 };
+
+type AcceptResult = {
+  educator_id: string;
+  batch_id: string;
+  tenant_slug: string;
+};
+
+async function finalizeEnrollment(
+  uid: string,
+  result: AcceptResult,
+  displayName: string,
+  email: string
+) {
+  if (result.tenant_slug) {
+    await setDoc(
+      doc(db, "users", uid),
+      {
+        uid,
+        role: "STUDENT",
+        educatorId: result.educator_id,
+        tenantSlug: result.tenant_slug,
+        enrolledTenants: arrayUnion(result.tenant_slug),
+        displayName,
+        email,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  }
+
+  const sid = generateSessionId();
+  setLocalSessionId(sid);
+  await syncSessionWithFirestore(uid, sid);
+}
 
 export default function Join() {
   const { token } = useParams<{ token: string }>();
@@ -86,18 +126,19 @@ export default function Join() {
           }
           throw new Error(err.detail || "Enrollment failed");
         }
-        const result = await res.json().catch(() => ({}));
+        const result: AcceptResult = await res.json().catch(() => ({}) as AcceptResult);
 
-        if (result.tenant_slug) {
-          await setDoc(
-            doc(db, "users", user.uid),
-            { enrolledTenants: arrayUnion(result.tenant_slug) },
-            { merge: true }
-          );
-        }
+        const effectiveSlug =
+          result.tenant_slug || info?.tenant_slug || getTenantSlugFromHostname() || "";
+        await finalizeEnrollment(
+          user.uid,
+          { ...result, tenant_slug: effectiveSlug },
+          user.displayName || user.email || "",
+          user.email || ""
+        );
 
         toast.success("You've been enrolled successfully.");
-        window.location.href = buildTenantUrl(result.tenant_slug || "", "/student/dashboard");
+        window.location.href = buildTenantUrl(effectiveSlug, "/student/dashboard");
       } catch (e: any) {
         toast.error(e?.message || "Enrollment failed");
         setSubmitting(false);
@@ -115,14 +156,17 @@ export default function Join() {
     setSubmitting(true);
     try {
       let idToken: string;
+      let uid: string;
 
       if (mode === "signup") {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(cred.user, { displayName: name });
         idToken = await cred.user.getIdToken();
+        uid = cred.user.uid;
       } else {
         const cred = await signInWithEmailAndPassword(auth, email, password);
         idToken = await cred.user.getIdToken();
+        uid = cred.user.uid;
       }
 
       const res = await fetch(`${API}/api/invites/${token}/accept`, {
@@ -136,18 +180,14 @@ export default function Join() {
         throw new Error(err.detail || "Registration failed");
       }
 
-      const result = await res.json().catch(() => ({}));
+      const result: AcceptResult = await res.json().catch(() => ({}) as AcceptResult);
+      const effectiveSlug =
+        result.tenant_slug || info?.tenant_slug || getTenantSlugFromHostname() || "";
 
-      if (result.tenant_slug && auth.currentUser) {
-        await setDoc(
-          doc(db, "users", auth.currentUser.uid),
-          { enrolledTenants: arrayUnion(result.tenant_slug) },
-          { merge: true }
-        );
-      }
+      await finalizeEnrollment(uid, { ...result, tenant_slug: effectiveSlug }, name, email);
 
       toast.success("Welcome! You've been enrolled successfully.");
-      window.location.href = buildTenantUrl(result.tenant_slug || "", "/student/dashboard");
+      window.location.href = buildTenantUrl(effectiveSlug, "/student/dashboard");
     } catch (e: any) {
       const msg = e?.message || "Something went wrong";
       if (msg.includes("email-already-in-use") || msg.includes("EMAIL_EXISTS")) {

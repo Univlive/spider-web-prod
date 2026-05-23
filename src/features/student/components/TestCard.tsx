@@ -107,7 +107,7 @@ export function TestCard({ test, attemptsUsed = 0, onView, onStart, onUnlock }: 
   return (
     <div
       className={cn(
-        "flex flex-col justify-between gap-4 rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-all duration-200 hover:bg-muted/10 md:flex-row md:items-center",
+        "flex flex-col justify-between gap-3 rounded-lg border border-border/80 bg-card px-3 py-2.5 shadow-sm transition-all duration-200 hover:bg-muted/10 md:flex-row md:items-center",
         test.isLive
           ? "border-red-200 bg-red-50/30 dark:border-red-900/30 dark:bg-red-900/10"
           : test.isUpcoming
@@ -116,10 +116,10 @@ export function TestCard({ test, attemptsUsed = 0, onView, onStart, onUnlock }: 
       )}
     >
       {/* Left Column: Icon + Subject/Title */}
-      <div className="flex min-w-0 flex-1 items-center gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-2.5">
         <div
           className={cn(
-            "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl font-bold shadow-sm transition-transform",
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-bold shadow-sm",
             test.isLive
               ? "bg-red-500/10 text-red-500"
               : test.isUpcoming
@@ -160,7 +160,7 @@ export function TestCard({ test, attemptsUsed = 0, onView, onStart, onUnlock }: 
       </div>
 
       {/* Middle Column: Stats & Attempts */}
-      <div className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-2 md:min-w-[280px]">
+      <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1.5 md:min-w-[220px]">
         {/* Stats Badges */}
         <div className="flex items-center gap-2">
           <Badge
@@ -207,7 +207,7 @@ export function TestCard({ test, attemptsUsed = 0, onView, onStart, onUnlock }: 
       </div>
 
       {/* Right Column: Timing/Countdown & Actions */}
-      <div className="flex w-full shrink-0 flex-col items-stretch gap-4 sm:flex-row sm:items-center md:w-auto md:min-w-[280px] md:justify-end">
+      <div className="flex w-full shrink-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center md:w-auto md:min-w-[220px] md:justify-end">
         {/* Timing Information */}
         <div className="flex shrink-0 flex-col text-xs md:text-right">
           {!test.isLocked && timeLeft !== null && (
@@ -237,7 +237,7 @@ export function TestCard({ test, attemptsUsed = 0, onView, onStart, onUnlock }: 
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 rounded-lg bg-background/60 px-3 text-xs font-medium"
+                className="h-8 rounded-lg bg-background/60 px-3 text-xs font-medium"
                 onClick={() => onView(test.id)}
               >
                 <Eye className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
@@ -245,7 +245,7 @@ export function TestCard({ test, attemptsUsed = 0, onView, onStart, onUnlock }: 
               </Button>
               <Button
                 size="sm"
-                className="h-9 rounded-lg bg-amber-500 px-3 text-xs font-medium text-white hover:bg-amber-600"
+                className="h-8 rounded-lg bg-amber-500 px-3 text-xs font-medium text-white hover:bg-amber-600"
                 disabled
               >
                 <CalendarClock className="mr-1.5 h-3.5 w-3.5" />
@@ -266,7 +266,7 @@ export function TestCard({ test, attemptsUsed = 0, onView, onStart, onUnlock }: 
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 rounded-lg bg-background/60 px-3 text-xs font-medium"
+                className="h-8 rounded-lg bg-background/60 px-3 text-xs font-medium"
                 onClick={() => onView(test.id)}
               >
                 <Eye className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />

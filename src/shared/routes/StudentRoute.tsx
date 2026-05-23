@@ -25,15 +25,6 @@ export default function StudentRoute() {
   // Students must be on tenant domain — unless impersonating (admin opened /impersonate
   // which uses navigate() so no page reload; impAuth user stays in memory).
   if (!isTenantDomain && !isImpersonating) {
-    if (firebaseUser && profile?.tenantSlug) {
-      const full = buildTenantUrl(profile.tenantSlug, location.pathname);
-      const url = new URL(full, window.location.href);
-      if (url.origin !== window.location.origin) {
-        window.location.replace(full);
-        return null;
-      }
-      return <Navigate to={url.pathname + url.search} replace />;
-    }
     return <Navigate to="/" replace />;
   }
 

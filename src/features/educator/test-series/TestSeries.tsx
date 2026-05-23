@@ -74,6 +74,8 @@ import { db } from "@shared/lib/firebase";
 import { useAuth } from "@app/providers/AuthProvider";
 import MoveTest from "./MoveTest";
 
+const MONKEY_KING = import.meta.env.VITE_MONKEY_KING_API_URL || "";
+
 const ATTEMPTS_OPTIONS = [
   { value: "1", label: "1 Attempt" },
   { value: "2", label: "2 Attempts" },
@@ -540,7 +542,22 @@ export default function TestSeries() {
 
   const handleAutoFill = async (test: any) => {
     if (!currentUser) return;
-    const sections: any[] = test.sections || [];
+    const rawSections: any[] = test.sections || [];
+    const sections: any[] = rawSections.length
+      ? rawSections
+      : test.questionsCount
+        ? [
+            {
+              id: "main",
+              name: test.subject || "General",
+              questionsCount: test.questionsCount,
+              format: test.questionFormat || "",
+              chapter: test.chapter || "",
+              topics: Array.isArray(test.topics) ? test.topics : [],
+              tags: Array.isArray(test.tags) ? test.tags : [],
+            },
+          ]
+        : [];
     if (!sections.length) {
       toast.error("No sections configured");
       return;
@@ -602,6 +619,7 @@ export default function TestSeries() {
         name: s.name,
         questionsCount: Number(s.questionsCount) || 0,
         subject: s.subject,
+        chapter: s.chapter || undefined,
         topics: s.topics,
         tags: s.tags,
         format: s.format,
@@ -620,56 +638,103 @@ export default function TestSeries() {
         }
       );
 
-      // Coverage diagnostics toast
-      const shortfalls = coverage.filter((c) => c.shortfall > 0);
-      if (shortfalls.length > 0) {
-        const msg = shortfalls
-          .map((c) => `${c.sectionName}: found ${c.found}/${c.needed}`)
-          .join(", ");
-        toast.warning(`Partial fill — ${msg}. Add more matching questions to the bank.`);
-      }
+      if (!chosen.length && coverage.every((c) => c.shortfall === c.needed)) {
+        // QB found nothing at all — skip batch write, go straight to AI gap-fill
+      } else if (chosen.length > 0) {
+        // Batch-write chosen questions to the test
+        const CHUNK = 490;
+        let batch = writeBatch(db);
+        let ops = 0;
 
-      if (!chosen.length) {
-        toast.warning("No matching questions found. Check section subject/format/topic filters.");
-        return;
-      }
+        for (const q of chosen) {
+          const qRef = doc(
+            collection(db, "educators", currentUser.uid, "my_tests", test.id, "questions")
+          );
+          const { id, _source, ...rest } = q as any;
+          const qData: any = {
+            ...rest,
+            bankQuestionId: id,
+            questionOrder: order++,
+            addedAt: serverTimestamp(),
+          };
+          batch.set(qRef, qData);
+          usedIds.add(id);
+          ops++;
 
-      // Batch-write chosen questions to the test
-      const CHUNK = 490;
-      let batch = writeBatch(db);
-      let ops = 0;
+          if (ops >= CHUNK) {
+            await batch.commit();
+            batch = writeBatch(db);
+            ops = 0;
+          }
+        }
 
-      for (const q of chosen) {
-        const qRef = doc(
-          collection(db, "educators", currentUser.uid, "my_tests", test.id, "questions")
-        );
-        const { id, _source, ...rest } = q as any;
-        const qData: any = {
-          ...rest,
-          bankQuestionId: id,
-          questionOrder: order++,
-          addedAt: serverTimestamp(),
-        };
-        batch.set(qRef, qData);
-        usedIds.add(id);
-        ops++;
-
-        if (ops >= CHUNK) {
+        if (ops > 0) {
+          batch.update(doc(db, "educators", currentUser.uid, "my_tests", test.id), {
+            questionsCount: order,
+            updatedAt: serverTimestamp(),
+          });
           await batch.commit();
-          batch = writeBatch(db);
-          ops = 0;
         }
       }
 
-      if (ops > 0) {
-        batch.update(doc(db, "educators", currentUser.uid, "my_tests", test.id), {
-          questionsCount: order,
-          updatedAt: serverTimestamp(),
-        });
-        await batch.commit();
+      // AI gap-fill for shortfall sections
+      const shortfallSections = coverage.filter((c) => c.shortfall > 0);
+      let aiGenerated = 0;
+      if (shortfallSections.length > 0 && MONKEY_KING) {
+        const token = await currentUser.getIdToken();
+        for (const c of shortfallSections) {
+          const constraint = sectionConstraints.find((sc) => sc.id === c.sectionId);
+          const dl = constraint?.difficultyLevel ?? 0.5;
+          const diffStr = dl <= 0.33 ? "easy" : dl >= 0.67 ? "hard" : "medium";
+          try {
+            const res = await fetch(`${MONKEY_KING}/api/test/gap-fill`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                test_id: test.id,
+                section_id: c.sectionId,
+                needed: c.shortfall,
+                difficulty: diffStr,
+                topic_filters: constraint?.topics ?? [],
+                chapter_filter: constraint?.chapter ?? "",
+                subject: constraint?.subject ?? test.subject ?? "",
+                question_type: constraint?.format ?? test.questionFormat ?? "MCQ_SINGLE",
+                tags: constraint?.tags ?? [],
+                section_name: c.sectionName,
+                current_question_count: order,
+                positive_marks: Number(test.markingScheme?.correct ?? 4),
+                negative_marks: Number(test.markingScheme?.incorrect ?? -1),
+              }),
+            });
+            if (res.ok) {
+              const result = await res.json();
+              aiGenerated += result.generated ?? 0;
+              order += result.generated ?? 0;
+            }
+          } catch (gapErr) {
+            console.error("AI gap-fill failed for section", c.sectionId, gapErr);
+          }
+        }
+        if (aiGenerated > 0) {
+          toast.info(
+            `AI filled ${aiGenerated} gap question${aiGenerated !== 1 ? "s" : ""} — marked for review`
+          );
+        }
       }
 
-      toast.success(`Auto-filled ${chosen.length} question${chosen.length !== 1 ? "s" : ""}`);
+      const qbFilled = chosen.length;
+      if (qbFilled === 0 && aiGenerated === 0) {
+        toast.warning("No matching questions found. Check section subject/format/topic filters.");
+        return;
+      }
+      if (qbFilled > 0) {
+        toast.success(
+          `Auto-filled ${qbFilled} question${qbFilled !== 1 ? "s" : ""} from question bank`
+        );
+      }
     } catch (e) {
       console.error(e);
       toast.error("Auto-fill failed");
@@ -1038,16 +1103,24 @@ export default function TestSeries() {
       createdBy: currentUser.uid,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-      questionsCount: 0,
       targetBatches: [],
     };
 
-    if (values.sections) {
+    payload.useSections = values.useSections ?? true;
+
+    if (Array.isArray(values.sections) && values.sections.length > 0) {
       payload.sections = values.sections;
       payload.questionsCount = values.sections.reduce(
         (acc: number, s: any) => acc + (Number(s.questionsCount) || 0),
         0
       );
+    } else {
+      payload.sections = [];
+      payload.questionsCount = Number(values.questionsCount) || 0;
+      if (values.questionFormat) payload.questionFormat = values.questionFormat;
+      if (values.chapter) payload.chapter = values.chapter;
+      if (Array.isArray(values.topics) && values.topics.length) payload.topics = values.topics;
+      if (Array.isArray(values.tags) && values.tags.length) payload.tags = values.tags;
     }
     if (values.markingScheme) {
       payload.markingScheme = values.markingScheme;
@@ -1646,22 +1719,24 @@ export default function TestSeries() {
                                   {isAdminLinked ? "View Qs" : "Manage Qs"}
                                 </span>
                               </Button>
-                              {!isAdminLinked && (test.sections || []).length > 0 && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="min-w-0 flex-1 rounded-xl"
-                                  disabled={autoFillTestId === test.id}
-                                  onClick={() => handleAutoFill(test)}
-                                >
-                                  {autoFillTestId === test.id ? (
-                                    <Loader2 className="mr-1.5 h-3 w-3 shrink-0 animate-spin" />
-                                  ) : (
-                                    <FileUp className="mr-1.5 h-3 w-3 shrink-0" />
-                                  )}
-                                  <span className="truncate">Auto-fill</span>
-                                </Button>
-                              )}
+                              {!isAdminLinked &&
+                                ((test.sections || []).length > 0 ||
+                                  (test.questionsCount || 0) > 0) && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="min-w-0 flex-1 rounded-xl"
+                                    disabled={autoFillTestId === test.id}
+                                    onClick={() => handleAutoFill(test)}
+                                  >
+                                    {autoFillTestId === test.id ? (
+                                      <Loader2 className="mr-1.5 h-3 w-3 shrink-0 animate-spin" />
+                                    ) : (
+                                      <FileUp className="mr-1.5 h-3 w-3 shrink-0" />
+                                    )}
+                                    <span className="truncate">Auto-fill</span>
+                                  </Button>
+                                )}
                             </div>
                           </div>
                         </CardContent>

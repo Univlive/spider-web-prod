@@ -24,10 +24,22 @@ import {
 } from "@shared/ui/select";
 import { Badge } from "@shared/ui/badge";
 import { Slider } from "@shared/ui/slider";
-import { TopicMultiSelect } from "@shared/ui/topic-multi-select";
-import { Plus, Loader2, Clock, BookOpen, ListChecks, Sparkles } from "lucide-react";
+import { MultiSelect } from "@shared/ui/MultiSelect";
+import { SearchableSingleSelect } from "@shared/ui/searchable-single-select";
+import { useQBOptions } from "@shared/hooks/useQBOptions";
+import {
+  Plus,
+  Loader2,
+  Clock,
+  BookOpen,
+  ListChecks,
+  Sparkles,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
 import { toast } from "sonner";
 import SectionCard from "@features/admin/components/SectionCard";
+import { Switch } from "@shared/ui/switch";
 
 function getDifficultyLabel(level: number): string {
   if (level <= 0.3) return "Easy";
@@ -164,7 +176,22 @@ const CreateCustomTest = ({
   const [newSectionQuestionsCount, setNewSectionQuestionsCount] = useState("");
   const [newSectionDifficulty, setNewSectionDifficulty] = useState(0.5);
   const [newSectionTopics, setNewSectionTopics] = useState<string[]>([]);
+  const [newSectionChapter, setNewSectionChapter] = useState("");
+  const [newSectionTags, setNewSectionTags] = useState<string[]>([]);
   const [newSectionAttemptLimit, setNewSectionAttemptLimit] = useState("");
+  const [newSectionFormat, setNewSectionFormat] = useState("MCQ_SINGLE");
+  const [addSectionAdvancedOpen, setAddSectionAdvancedOpen] = useState(false);
+  const [useSections, setUseSections] = useState(false);
+  const [formQuestionFormat, setFormQuestionFormat] = useState("MCQ_SINGLE");
+  const [formQuestionsCount, setFormQuestionsCount] = useState("");
+  const [formGlobalChapter, setFormGlobalChapter] = useState("");
+  const [formGlobalTopics, setFormGlobalTopics] = useState<string[]>([]);
+  const [formGlobalTags, setFormGlobalTags] = useState<string[]>([]);
+  const [globalAdvancedOpen, setGlobalAdvancedOpen] = useState(false);
+
+  // QB options scoped to educator's accessible subjects
+  const allowedSubjectIds = accessibleSubjects.map((s) => s.id);
+  const qbOptions = useQBOptions(allowedSubjectIds);
 
   // Reset form & template selection when dialog opens
   useEffect(() => {
@@ -178,6 +205,13 @@ const CreateCustomTest = ({
       setFormSections([]);
       setFormMarkingScheme({ correct: 4, incorrect: -1, unanswered: 0 });
       setSelectedTemplateId("none");
+      setUseSections(false);
+      setFormQuestionFormat("MCQ_SINGLE");
+      setFormQuestionsCount("");
+      setFormGlobalChapter("");
+      setFormGlobalTopics([]);
+      setFormGlobalTags([]);
+      setGlobalAdvancedOpen(false);
     }
   }, [createOpen]);
 
@@ -213,20 +247,20 @@ const CreateCustomTest = ({
     setFormDuration(
       String(safeNum(resolvedTemplate.durationMinutes ?? resolvedTemplate.duration, 60))
     );
-    setFormSections(
-      resolvedTemplate.sections
-        ? JSON.parse(JSON.stringify(resolvedTemplate.sections)).map((s: any) => ({
-            ...s,
-            attemptlimit: s.attemptlimit ?? null,
-            durationMinutes: s.durationMinutes ?? null,
-            difficultyLevel: clampDifficulty(
-              s?.difficultyLevel ??
-                normalizeLegacyDifficulty(s?.difficulty ?? s?.level ?? baseDifficulty)
-            ),
-            topics: Array.isArray(s?.topics) ? s.topics.map(String) : [],
-          }))
-        : []
-    );
+    const loadedSections = resolvedTemplate.sections
+      ? JSON.parse(JSON.stringify(resolvedTemplate.sections)).map((s: any) => ({
+          ...s,
+          attemptlimit: s.attemptlimit ?? null,
+          durationMinutes: s.durationMinutes ?? null,
+          difficultyLevel: clampDifficulty(
+            s?.difficultyLevel ??
+              normalizeLegacyDifficulty(s?.difficulty ?? s?.level ?? baseDifficulty)
+          ),
+          topics: Array.isArray(s?.topics) ? s.topics.map(String) : [],
+        }))
+      : [];
+    setFormSections(loadedSections);
+    setUseSections(loadedSections.length > 0);
     setFormMarkingScheme(
       resolvedTemplate.markingScheme
         ? JSON.parse(JSON.stringify(resolvedTemplate.markingScheme))
@@ -255,8 +289,8 @@ const CreateCustomTest = ({
       return;
     }
 
-    // Validation: if sections exist, every section must have questionsCount > 0
-    if (formSections.length > 0) {
+    // Validation: if sections enabled, every section must have questionsCount > 0
+    if (useSections && formSections.length > 0) {
       const emptySections = formSections.filter((s) => (Number(s.questionsCount) || 0) <= 0);
       if (emptySections.length > 0) {
         const names = emptySections.map((s) => s.name?.trim() || "Unnamed").join(", ");
@@ -277,7 +311,17 @@ const CreateCustomTest = ({
       level: getDifficultyLabel(averagedDifficultyLevel),
       difficultyLevel: averagedDifficultyLevel,
       durationMinutes: Number(formDuration) || 60,
-      sections: formSections.map((s, index) => {
+      useSections,
+      ...(useSections
+        ? {}
+        : {
+            questionsCount: Number(formQuestionsCount) || 0,
+            questionFormat: formQuestionFormat,
+            chapter: formGlobalChapter || null,
+            topics: formGlobalTopics,
+            tags: formGlobalTags,
+          }),
+      sections: (useSections ? formSections : []).map((s, index) => {
         const totalQ = Number(s.questionsCount) || 0;
 
         const attemptLimit =
@@ -290,7 +334,11 @@ const CreateCustomTest = ({
           attemptlimit: attemptLimit,
           durationMinutes: s.durationMinutes ? Number(s.durationMinutes) : null,
           difficultyLevel: clampDifficulty(s.difficultyLevel),
+          chapter: s.chapter || "",
           topics: Array.isArray(s.topics) ? s.topics : [],
+          subject: s.subject || "",
+          tags: Array.isArray(s.tags) ? s.tags : [],
+          format: s.format || "",
           markingScheme: s.markingScheme
             ? {
                 correct: Number(s.markingScheme.correct),
@@ -331,6 +379,10 @@ const CreateCustomTest = ({
     setNewSectionAttemptLimit("");
     setNewSectionDifficulty(computedDifficultyLevel);
     setNewSectionTopics([]);
+    setNewSectionChapter("");
+    setNewSectionTags([]);
+    setNewSectionFormat("MCQ_SINGLE");
+    setAddSectionAdvancedOpen(false);
     setAddSectionOpen(true);
   };
 
@@ -355,6 +407,9 @@ const CreateCustomTest = ({
         durationMinutes: null,
         difficultyLevel: clampDifficulty(newSectionDifficulty),
         topics: newSectionTopics,
+        chapter: newSectionChapter || "",
+        tags: newSectionTags,
+        format: newSectionFormat || "",
       },
     ]);
     setAddSectionOpen(false);
@@ -575,16 +630,31 @@ const CreateCustomTest = ({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label>Duration (minutes)</Label>
-          <Input
-            value={formDuration}
-            onChange={(e) => setFormDuration(e.target.value)}
-            required
-            type="number"
-            min={1}
-            className="rounded-xl"
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Duration (minutes)</Label>
+            <Input
+              value={formDuration}
+              onChange={(e) => setFormDuration(e.target.value)}
+              required
+              type="number"
+              min={1}
+              className="rounded-xl"
+            />
+          </div>
+          {!useSections && (
+            <div className="space-y-2">
+              <Label>Question Count *</Label>
+              <Input
+                type="number"
+                min={1}
+                value={formQuestionsCount}
+                onChange={(e) => setFormQuestionsCount(e.target.value)}
+                placeholder="e.g. 30"
+                className="rounded-xl"
+              />
+            </div>
+          )}
         </div>
 
         <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-4">
@@ -628,13 +698,102 @@ const CreateCustomTest = ({
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold">Sections</h3>
-            <Button type="button" size="sm" variant="outline" onClick={openAddSectionDialog}>
-              <Plus className="mr-2 h-4 w-4" /> Add Section
-            </Button>
+            <div className="flex items-center gap-3">
+              <h3 className="text-sm font-semibold">Sections</h3>
+              <div className="flex items-center gap-2">
+                <Switch checked={useSections} onCheckedChange={setUseSections} />
+                <span className="text-xs text-muted-foreground">
+                  {useSections ? "Enabled" : "Disabled"}
+                </span>
+              </div>
+            </div>
+            {useSections && (
+              <Button type="button" size="sm" variant="outline" onClick={openAddSectionDialog}>
+                <Plus className="mr-2 h-4 w-4" /> Add Section
+              </Button>
+            )}
           </div>
 
-          {formSections.length === 0 ? (
+          {!useSections ? (
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label>Question Format</Label>
+                <Select value={formQuestionFormat} onValueChange={setFormQuestionFormat}>
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue placeholder="Select question format" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MCQ_SINGLE">MCQ (Single Correct)</SelectItem>
+                    <SelectItem value="MCQ_MULTI">MCQ (Multiple Correct)</SelectItem>
+                    <SelectItem value="MCQ_CASE_STUDY">MCQ (Case Study)</SelectItem>
+                    <SelectItem value="SUBJECTIVE_SHORT">Subjective (Short)</SelectItem>
+                    <SelectItem value="SUBJECTIVE_LONG">Subjective (Long)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Advanced: QB filter fields */}
+              <div className="rounded-xl border border-border">
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+                  onClick={() => setGlobalAdvancedOpen((v) => !v)}
+                >
+                  <span>Advanced Settings</span>
+                  {globalAdvancedOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </button>
+                {globalAdvancedOpen && (
+                  <div className="space-y-3 border-t px-3 pb-3 pt-3">
+                    <p className="text-xs text-muted-foreground">
+                      Used by auto-fill and AI fill to narrow the question pool.
+                    </p>
+                    <div className="space-y-2">
+                      <Label>Chapter (optional)</Label>
+                      {qbOptions.chapters.length > 0 ? (
+                        <SearchableSingleSelect
+                          options={qbOptions.chapters}
+                          value={formGlobalChapter}
+                          onChange={setFormGlobalChapter}
+                          placeholder="Any chapter"
+                          searchPlaceholder="Search chapters..."
+                          className="rounded-xl"
+                        />
+                      ) : (
+                        <Input
+                          value={formGlobalChapter}
+                          onChange={(e) => setFormGlobalChapter(e.target.value)}
+                          placeholder="e.g. Kinematics"
+                          className="rounded-xl"
+                        />
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Topics (optional)</Label>
+                      <MultiSelect
+                        options={qbOptions.topics}
+                        selected={formGlobalTopics}
+                        onChange={setFormGlobalTopics}
+                        placeholder="Select topics..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Tags (optional)</Label>
+                      <MultiSelect
+                        options={qbOptions.tags}
+                        selected={formGlobalTags}
+                        onChange={setFormGlobalTags}
+                        placeholder="Select tags..."
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : formSections.length === 0 ? (
             <p className="rounded-xl border border-dashed bg-muted/20 py-4 text-center text-xs italic text-muted-foreground">
               No sections defined. The test will be a single unsectioned list of questions.
             </p>
@@ -648,7 +807,13 @@ const CreateCustomTest = ({
                 attemptLimit={sec.attemptlimit ?? undefined}
                 durationMinutes={sec.durationMinutes ?? undefined}
                 sectionDifficulty={sec.difficultyLevel}
+                sectionChapter={sec.chapter}
                 sectionTopics={sec.topics}
+                sectionTags={sec.tags}
+                availableChapters={qbOptions.chapters}
+                availableTopics={qbOptions.topics}
+                availableTagOptions={qbOptions.tags}
+                sectionFormat={sec.format}
                 markingScheme={sec.markingScheme}
                 defaultMarkingScheme={formMarkingScheme}
                 onEdit={(payload) => {
@@ -660,7 +825,11 @@ const CreateCustomTest = ({
                     attemptlimit: payload.attemptLimit ?? null,
                     durationMinutes: payload.durationMinutes ?? null,
                     difficultyLevel: clampDifficulty(payload.difficultyLevel),
+                    chapter: payload.chapter || "",
                     topics: payload.topics || [],
+                    subject: payload.subject || "",
+                    tags: payload.tags || [],
+                    format: payload.format || "",
                     markingScheme: payload.markingScheme,
                   };
                   setFormSections(updated);
@@ -736,12 +905,80 @@ const CreateCustomTest = ({
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Topics (optional)</Label>
-                <TopicMultiSelect
-                  selectedTopics={newSectionTopics}
-                  setSelectedTopics={setNewSectionTopics}
-                  placeholder="Search and select topics..."
-                />
+                <Label>Question Format</Label>
+                <Select value={newSectionFormat} onValueChange={setNewSectionFormat}>
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MCQ_SINGLE">MCQ (Single Correct)</SelectItem>
+                    <SelectItem value="MCQ_MULTI">MCQ (Multiple Correct)</SelectItem>
+                    <SelectItem value="MCQ_CASE_STUDY">MCQ (Case Study)</SelectItem>
+                    <SelectItem value="SUBJECTIVE_SHORT">Subjective (Short)</SelectItem>
+                    <SelectItem value="SUBJECTIVE_LONG">Subjective (Long)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Advanced: QB filter fields */}
+              <div className="rounded-xl border border-border">
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+                  onClick={() => setAddSectionAdvancedOpen((v) => !v)}
+                >
+                  <span>Advanced Settings</span>
+                  {addSectionAdvancedOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </button>
+                {addSectionAdvancedOpen && (
+                  <div className="space-y-3 border-t px-3 pb-3 pt-3">
+                    <p className="text-xs text-muted-foreground">
+                      Used by auto-fill and AI fill to narrow the question pool.
+                    </p>
+                    <div className="space-y-2">
+                      <Label>Chapter (optional)</Label>
+                      {qbOptions.chapters.length > 0 ? (
+                        <SearchableSingleSelect
+                          options={qbOptions.chapters}
+                          value={newSectionChapter}
+                          onChange={setNewSectionChapter}
+                          placeholder="Any chapter"
+                          searchPlaceholder="Search chapters..."
+                          className="rounded-xl"
+                        />
+                      ) : (
+                        <Input
+                          value={newSectionChapter}
+                          onChange={(e) => setNewSectionChapter(e.target.value)}
+                          placeholder="e.g. Kinematics"
+                          className="rounded-xl"
+                        />
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Topics (optional)</Label>
+                      <MultiSelect
+                        options={qbOptions.topics}
+                        selected={newSectionTopics}
+                        onChange={setNewSectionTopics}
+                        placeholder="Select topics..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Tags (optional)</Label>
+                      <MultiSelect
+                        options={qbOptions.tags}
+                        selected={newSectionTags}
+                        onChange={setNewSectionTags}
+                        placeholder="Select tags..."
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <DialogFooter className="flex justify-end gap-2 pt-2">

@@ -49,6 +49,7 @@ const EXAM_OPTIONS = [
   "UPSC / Civil Services",
   "CAT / MBA",
   "State Board Exams",
+  "CBSE Board Exams",
   "CA Foundation",
   "Other",
 ];

@@ -9,7 +9,7 @@ import { Card, CardContent } from "@shared/ui/card";
 import { Input } from "@shared/ui/input";
 import {
   BookOpen,
-  ExternalLink,
+  Eye,
   FileText,
   Loader2,
   Network,
@@ -17,6 +17,7 @@ import {
   Search,
   Library,
 } from "lucide-react";
+import ContentViewer from "./ContentViewer";
 
 const TYPE_ICONS: Record<string, React.ElementType> = {
   book: BookOpen,
@@ -39,6 +40,7 @@ type ContentItem = {
   fileUrl: string;
   fileName: string;
   fileSize: number;
+  mimeType?: string;
   source: "educator" | "admin_library";
   createdAt: Timestamp;
   sharingScope?: "branch" | "program" | "batch";
@@ -64,6 +66,7 @@ export default function StudentContent() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
+  const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
 
   useEffect(() => {
     if (!educatorId || !branchId || !courseId) {
@@ -191,10 +194,8 @@ export default function StudentContent() {
                       {formatBytes(item.fileSize)}
                     </span>
                   </div>
-                  <Button size="sm" variant="outline" asChild>
-                    <a href={item.fileUrl} target="_blank" rel="noreferrer">
-                      <ExternalLink className="mr-1.5 h-3.5 w-3.5" /> Open
-                    </a>
+                  <Button size="sm" variant="outline" onClick={() => setSelectedItem(item)}>
+                    <Eye className="mr-1.5 h-3.5 w-3.5" /> View
                   </Button>
                 </div>
               </CardContent>
@@ -202,6 +203,12 @@ export default function StudentContent() {
           ))}
         </div>
       )}
+
+      <ContentViewer
+        item={selectedItem}
+        studentName={profile?.displayName ?? profile?.email ?? "Student"}
+        onClose={() => setSelectedItem(null)}
+      />
     </div>
   );
 }

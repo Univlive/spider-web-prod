@@ -40,7 +40,7 @@ const sidebarGroups = [
       { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
       { icon: BarChart3, label: "Analytics", path: "/admin/analytics" },
       { icon: Users, label: "Educators", path: "/admin/educators" },
-      { icon: ClipboardList, label: "Question Papers", path: "/admin/question-paper-requests" },
+      { icon: ClipboardList, label: "Upload Requests", path: "/admin/question-paper-requests" },
       { icon: AlertTriangle, label: "Reported Questions", path: "/admin/reported-questions" },
       { icon: BookMarked, label: "Courses", path: "/admin/subjects" },
       { icon: ShieldCheck, label: "Employee Roles", path: "/admin/roles" },

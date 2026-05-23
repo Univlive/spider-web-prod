@@ -65,6 +65,7 @@ import { uploadToImageKit } from "@shared/lib/imagekitUpload";
 import { Paginator } from "@shared/ui/Paginator";
 import { MultiSelect } from "@shared/ui/MultiSelect";
 import { useAccessibleCourses } from "@shared/hooks/useAccessibleCourses";
+import { normalizeQuestionType } from "@shared/lib/questionTypes";
 
 type Difficulty = "easy" | "medium" | "hard";
 
@@ -95,7 +96,7 @@ type QBQuestion = {
   explanationImage?: string;
 
   // Question format
-  format?: "single_correct_mcq" | "multicorrect_mcq" | "subjective" | "subjective_long";
+  format?: "MCQ_SINGLE" | "MCQ_MULTI" | "MCQ_CASE_STUDY" | "SUBJECTIVE_SHORT" | "SUBJECTIVE_LONG";
 
   // Multi-correct (CSV only)
   correctOptions?: number[]; // 0-based indices
@@ -545,7 +546,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
   const [negativeMarks, setNegativeMarks] = useState<number>(-1);
 
   // Extended editor fields
-  const [qFormat, setQFormat] = useState<NonNullable<QBQuestion["format"]>>("single_correct_mcq");
+  const [qFormat, setQFormat] = useState<NonNullable<QBQuestion["format"]>>("MCQ_SINGLE");
   const [qSubjectId, setQSubjectId] = useState("");
   const [topicsInput, setTopicsInput] = useState(""); // comma-separated
   const [multiCorrects, setMultiCorrects] = useState<number[]>([0]);
@@ -875,7 +876,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
     setExplanation("");
     setMarks(5);
     setNegativeMarks(-1);
-    setQFormat("single_correct_mcq");
+    setQFormat("MCQ_SINGLE");
     setQSubjectId("");
     setTopicsInput("");
     setMultiCorrects([0]);
@@ -918,7 +919,11 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
     setExplanation(x.explanation || "");
     setMarks(typeof x.marks === "number" ? x.marks : 5);
     setNegativeMarks(typeof x.negativeMarks === "number" ? x.negativeMarks : -1);
-    setQFormat(x.format || "single_correct_mcq");
+    setQFormat(
+      (x.format ? normalizeQuestionType(x.format) : "MCQ_SINGLE") as NonNullable<
+        QBQuestion["format"]
+      >
+    );
     setQSubjectId(x.subjectId || "");
     setTopicsInput((x.topics?.length ? x.topics : x.topic ? [x.topic] : []).join(", "));
     setMultiCorrects(x.correctOptions?.length ? x.correctOptions : [x.correctOption ?? 0]);
@@ -959,7 +964,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
       });
       return false;
     }
-    const isMcq = qFormat === "single_correct_mcq" || qFormat === "multicorrect_mcq";
+    const isMcq = qFormat === "MCQ_SINGLE" || qFormat === "MCQ_MULTI";
     if (isMcq) {
       const optClean = options.map((o) => stripHtml(o).trim());
       if (optClean.filter(Boolean).length < 2) {
@@ -971,7 +976,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         return false;
       }
       if (
-        qFormat === "single_correct_mcq" &&
+        qFormat === "MCQ_SINGLE" &&
         (correctOption < 0 || correctOption >= options.length || !optClean[correctOption])
       ) {
         toast({
@@ -981,7 +986,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         });
         return false;
       }
-      if (qFormat === "multicorrect_mcq" && multiCorrects.length === 0) {
+      if (qFormat === "MCQ_MULTI" && multiCorrects.length === 0) {
         toast({
           title: "Correct options required",
           description: "Select at least one correct option.",
@@ -998,7 +1003,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
 
     setBusy(true);
     try {
-      const isMcq = qFormat === "single_correct_mcq" || qFormat === "multicorrect_mcq";
+      const isMcq = qFormat === "MCQ_SINGLE" || qFormat === "MCQ_MULTI";
       const topicsArr = topicsInput
         .split(",")
         .map((s) => s.trim())
@@ -1012,7 +1017,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         tags: normalizeTags(tags),
         question: sanitizeHtml(question),
         options: isMcq ? options.map((o) => sanitizeHtml(o)) : [],
-        correctOption: qFormat === "single_correct_mcq" ? correctOption : (multiCorrects[0] ?? 0),
+        correctOption: qFormat === "MCQ_SINGLE" ? correctOption : (multiCorrects[0] ?? 0),
         explanation: sanitizeHtml(explanation || ""),
         marks: Number.isFinite(marks) ? marks : isMcq ? 5 : 10,
         negativeMarks: Number.isFinite(negativeMarks) ? negativeMarks : isMcq ? -1 : 0,
@@ -1035,7 +1040,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         base.subjectId = matchedSubject.id;
         base.subjectName = matchedSubject.name;
       }
-      if (qFormat === "multicorrect_mcq") base.correctOptions = multiCorrects;
+      if (qFormat === "MCQ_MULTI") base.correctOptions = multiCorrects;
       if (qImgUrl.trim()) base.questionImage = qImgUrl.trim();
       if (oImgUrls.some(Boolean)) base.optionImages = oImgUrls;
       if (eImgUrl.trim()) base.explanationImage = eImgUrl.trim();
@@ -1421,7 +1426,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         "Factoring: $(x-2)(x-3)=0$ gives roots $x=2$ and $x=3$.",
         "",
         "Quadratic Equations",
-        "multicorrect_mcq",
+        "MCQ_MULTI",
         "Mathematics",
         "medium",
         "5",
@@ -1450,7 +1455,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         "Net force equals $F = ma$ where $m$ is mass and $a$ is acceleration.",
         "",
         "Laws of Motion",
-        "subjective_long",
+        "SUBJECTIVE_LONG",
         "Physics",
         "easy",
         "10",
@@ -1479,7 +1484,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         "Photosynthesis: $6CO_2 + 6H_2O \\rightarrow C_6H_{12}O_6 + 6O_2$",
         "",
         "Photosynthesis",
-        "multicorrect_mcq",
+        "MCQ_MULTI",
         "Biology",
         "medium",
         "5",
@@ -1508,7 +1513,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         "Water ($H_2O$) and carbon dioxide ($CO_2$) are primary raw materials.",
         "",
         "Photosynthesis",
-        "single_correct_mcq",
+        "MCQ_SINGLE",
         "Biology",
         "easy",
         "5",
@@ -1649,7 +1654,8 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
       for (let i = 0; i < rowRefs.length; i++) {
         const { ref, row, csvGroupId } = rowRefs[i];
         const ques = (row.ques || "").trim();
-        const fmt = (row.format || "").trim().toLowerCase() as QBQuestion["format"];
+        const rawFmt = (row.format || "").trim();
+        const fmt = (rawFmt ? normalizeQuestionType(rawFmt) : "") as QBQuestion["format"];
 
         if (!ques || !fmt) {
           errors++;
@@ -1657,7 +1663,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
           continue;
         }
 
-        const isMcq = fmt === "single_correct_mcq" || fmt === "multicorrect_mcq";
+        const isMcq = fmt === "MCQ_SINGLE" || fmt === "MCQ_MULTI";
         const correctAnsRaw = (row.correct_ans || "").trim();
         if (isMcq && !correctAnsRaw) {
           errors++;
@@ -1744,7 +1750,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         if (row.ques_img?.trim()) payload.questionImage = row.ques_img.trim();
         if (optImgs.some(Boolean)) payload.optionImages = optImgs;
         if (row.soln_img?.trim()) payload.explanationImage = row.soln_img.trim();
-        if (fmt === "multicorrect_mcq" && correctAnswers.length > 1) {
+        if (fmt === "MCQ_MULTI" && correctAnswers.length > 1) {
           payload.correctOptions = correctAnswers;
         }
 
@@ -2117,10 +2123,11 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="single_correct_mcq">Single Correct MCQ</SelectItem>
-                  <SelectItem value="multicorrect_mcq">Multi-Correct MCQ</SelectItem>
-                  <SelectItem value="subjective">Subjective</SelectItem>
-                  <SelectItem value="subjective_long">Subjective Long</SelectItem>
+                  <SelectItem value="MCQ_SINGLE">MCQ (Single Correct)</SelectItem>
+                  <SelectItem value="MCQ_MULTI">MCQ (Multiple Correct)</SelectItem>
+                  <SelectItem value="MCQ_CASE_STUDY">MCQ (Case Study)</SelectItem>
+                  <SelectItem value="SUBJECTIVE_SHORT">Subjective (Short)</SelectItem>
+                  <SelectItem value="SUBJECTIVE_LONG">Subjective (Long)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -2419,11 +2426,11 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
           <Separator />
 
           {/* Options (MCQ only) */}
-          {(qFormat === "single_correct_mcq" || qFormat === "multicorrect_mcq") && (
+          {(qFormat === "MCQ_SINGLE" || qFormat === "MCQ_MULTI") && (
             <div className="space-y-3">
               <Label>
                 Options{" "}
-                {qFormat === "multicorrect_mcq" && (
+                {qFormat === "MCQ_MULTI" && (
                   <span className="ml-1 text-xs text-muted-foreground">(check all correct)</span>
                 )}
               </Label>
@@ -2437,12 +2444,12 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
                       <div className="flex items-center gap-2">
                         <Checkbox
                           checked={
-                            qFormat === "multicorrect_mcq"
+                            qFormat === "MCQ_MULTI"
                               ? multiCorrects.includes(idx)
                               : correctOption === idx
                           }
                           onCheckedChange={(checked) => {
-                            if (qFormat === "multicorrect_mcq") {
+                            if (qFormat === "MCQ_MULTI") {
                               setMultiCorrects((prev) =>
                                 checked ? [...prev, idx] : prev.filter((x) => x !== idx)
                               );
@@ -2691,7 +2698,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
               <p className="font-mono">opt_1, opt_2, correct_ans</p>
               <p className="font-medium">Formats:</p>
               <p className="font-mono">
-                single_correct_mcq · multicorrect_mcq · subjective · subjective_long
+                MCQ_SINGLE · MCQ_MULTI · MCQ_CASE_STUDY · SUBJECTIVE_SHORT · SUBJECTIVE_LONG
               </p>
             </div>
 

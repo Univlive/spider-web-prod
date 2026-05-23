@@ -250,7 +250,7 @@ export default function Signup() {
       const displayName = snap.data()?.displayName || pendingEnroll.email;
       await setDoc(
         doc(db, "users", cred2.user.uid),
-        { tenantSlug, enrolledTenants: arrayUnion(tenantSlug), updatedAt: serverTimestamp() },
+        { enrolledTenants: arrayUnion(tenantSlug), updatedAt: serverTimestamp() },
         { merge: true }
       );
       await setDoc(

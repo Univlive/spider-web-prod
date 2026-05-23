@@ -118,6 +118,7 @@ const QuestionsManager = ({
   testTitle,
   testSubject,
   testSections,
+  useSections = true,
   educatorUid,
   onClose,
   mode = "modal",
@@ -129,6 +130,7 @@ const QuestionsManager = ({
   testTitle?: string;
   testSubject?: string;
   testSections?: TestSection[];
+  useSections?: boolean;
   educatorUid: string;
   onClose: () => void;
   mode?: "modal" | "page";
@@ -157,7 +159,7 @@ const QuestionsManager = ({
   const [formMarks, setFormMarks] = useState("");
   const [formNegMarks, setFormNegMarks] = useState("");
   const [formActive, setFormActive] = useState(true);
-  const [formQuestionType, setFormQuestionType] = useState<QuestionType>("MCQ");
+  const [formQuestionType, setFormQuestionType] = useState<QuestionType>("MCQ_SINGLE");
   const [formReferenceAnswer, setFormReferenceAnswer] = useState("");
   const [formReferenceKeywords, setFormReferenceKeywords] = useState("");
   const [formReferenceAnswerFileUrl, setFormReferenceAnswerFileUrl] = useState("");
@@ -1046,7 +1048,7 @@ const QuestionsManager = ({
     setFormMarks("");
     setFormNegMarks("");
     setFormActive(true);
-    setFormQuestionType("MCQ");
+    setFormQuestionType("MCQ_SINGLE");
     setFormReferenceAnswer("");
     setFormReferenceKeywords("");
     setFormReferenceAnswerFileUrl("");
@@ -1098,7 +1100,7 @@ const QuestionsManager = ({
     setFormMarks(q.marks != null ? String(q.marks) : "");
     setFormNegMarks(q.negativeMarks != null ? String(q.negativeMarks) : "");
     setFormActive(isQuestionPublished(q.isActive));
-    setFormQuestionType(normalizeQuestionType(q.questionType || "MCQ"));
+    setFormQuestionType(normalizeQuestionType(q.questionType || "MCQ_SINGLE"));
     setFormReferenceAnswer(q.referenceAnswer || "");
     setFormReferenceKeywords(
       Array.isArray(q.referenceKeywords) ? q.referenceKeywords.join(", ") : ""
@@ -2731,11 +2733,13 @@ const QuestionsManager = ({
           <div className="order-2 flex min-h-0 w-full shrink-0 flex-col bg-muted/10">
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain p-3">
               <div className="space-y-3 p-4">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    Sections
-                  </p>
-                </div>
+                {useSections && (
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Sections
+                    </p>
+                  </div>
+                )}
                 <input
                   ref={pdfInputRef}
                   type="file"
@@ -2857,6 +2861,7 @@ const QuestionsManager = ({
                             questions={sectionQuestions}
                             collapsed={collapsed}
                             readOnly={readOnly}
+                            canManageSection={useSections}
                             editingId={editingId}
                             questionDndEnabled={dndEnabled}
                             totalQuestionCount={sectionQuestionCountById[section.id] || 0}

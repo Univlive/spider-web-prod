@@ -147,7 +147,11 @@ function computeFromQuestionsAndResponses(
     if (!isAnswered(userAnswer)) continue;
 
     const qType = (d.questionType || "").toUpperCase();
-    const isSubjective = qType === "SHORT_ANSWER" || qType === "UPLOAD";
+    const isSubjective =
+      qType === "SUBJECTIVE_SHORT" ||
+      qType === "SUBJECTIVE_LONG" ||
+      qType === "SHORT_ANSWER" ||
+      qType === "UPLOAD";
 
     if (isSubjective) {
       const aiScore = responses[q.id]?.aiEvaluation?.score;

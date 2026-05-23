@@ -43,9 +43,14 @@ export function TopicMultiSelect({
         if (cancelled) return;
         const topicSet = new Set<string>();
         snap.docs.forEach((d) => {
-          const t = (d.data() as any)?.topic;
-          if (t && typeof t === "string" && t.trim()) {
-            topicSet.add(t.trim());
+          const data = d.data() as any;
+          const t = data?.topic;
+          if (t && typeof t === "string" && t.trim()) topicSet.add(t.trim());
+          const ts = data?.topics;
+          if (Array.isArray(ts)) {
+            ts.forEach((tp) => {
+              if (tp && typeof tp === "string" && tp.trim()) topicSet.add(tp.trim());
+            });
           }
         });
         setAllTopics(Array.from(topicSet).sort());

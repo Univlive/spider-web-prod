@@ -1,4 +1,5 @@
 import type { TestSection, TestQuestion, EditorDraftSnapshot } from "./QuestionManagerTypes";
+import { normalizeQuestionType } from "@shared/lib/questionTypes";
 
 export const IMG_TAG_REGEX = /<img[^>]+src\s*=\s*["']([^"']+)["'][^>]*\/?>/gi;
 
@@ -19,7 +20,7 @@ export function buildSnapshotFromQuestion(question?: TestQuestion): EditorDraftS
       marks: "",
       negativeMarks: "",
       active: true,
-      questionType: "MCQ",
+      questionType: "MCQ_SINGLE",
       referenceAnswer: "",
       referenceKeywords: "",
       referenceAnswerFileUrl: "",
@@ -41,7 +42,7 @@ export function buildSnapshotFromQuestion(question?: TestQuestion): EditorDraftS
     marks: question.marks != null ? String(question.marks) : "",
     negativeMarks: question.negativeMarks != null ? String(question.negativeMarks) : "",
     active: isQuestionPublished(question.isActive),
-    questionType: question.questionType || "MCQ",
+    questionType: normalizeQuestionType(question.questionType),
     referenceAnswer: question.referenceAnswer || "",
     referenceKeywords: Array.isArray(question.referenceKeywords)
       ? question.referenceKeywords.join(", ")

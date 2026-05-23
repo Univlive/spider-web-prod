@@ -34,11 +34,11 @@ export function StudentMetricCard({
 }: StudentMetricCardProps) {
   return (
     <Card className={cn("card-soft card-hover border-0", colorClasses[color], className)}>
-      <CardContent className="p-5">
+      <CardContent className="p-4">
         <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold text-foreground">{value}</p>
+          <div className="space-y-0.5">
+            <p className="text-xs font-medium text-muted-foreground">{title}</p>
+            <p className="text-xl font-bold text-foreground">{value}</p>
             {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
             {trend && (
               <p
@@ -52,8 +52,8 @@ export function StudentMetricCard({
               </p>
             )}
           </div>
-          <div className="rounded-xl bg-background/60 p-3">
-            <Icon className="h-5 w-5 text-primary" />
+          <div className="rounded-lg bg-background/60 p-2">
+            <Icon className="h-4 w-4 text-primary" />
           </div>
         </div>
       </CardContent>

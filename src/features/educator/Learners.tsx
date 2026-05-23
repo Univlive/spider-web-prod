@@ -135,6 +135,7 @@ export default function Learners() {
   const [inviteUrl, setInviteUrl] = useState("");
   const [copied, setCopied] = useState(false);
   const [inviteTimeoutMinutes, setInviteTimeoutMinutes] = useState(15);
+  const [firstPoolPlanId, setFirstPoolPlanId] = useState<string | null>(null);
 
   // Bulk upload
   const [bulkOpen, setBulkOpen] = useState(false);
@@ -175,6 +176,11 @@ export default function Learners() {
     getDocs(collection(db, "educators", educatorId, "branches")).then((snap) =>
       setBranches(snap.docs.map((d) => ({ id: d.id, name: d.data().name || d.id })))
     );
+
+    // Load first seat pool plan ID for batch auto-registration
+    getDocs(collection(db, "educators", educatorId, "seatPools")).then((snap) => {
+      if (!snap.empty) setFirstPoolPlanId(snap.docs[0].id);
+    });
 
     // Load full hierarchy for name resolution + assign-batch dialog
     async function loadFullHierarchy() {
@@ -266,7 +272,11 @@ export default function Learners() {
 
   const selectedBatch = batches.find((b) => b.id === selBatch);
 
-  const seatLimit = Math.max(0, Number(educator?.seatLimit || 0));
+  const seatLimit = Math.max(
+    0,
+    Number(educator?.seatLimit || 0),
+    Number(educator?.purchasedSeatLimit || 0)
+  );
   const usedSeats = useMemo(() => Object.values(seatMap).filter(Boolean).length, [seatMap]);
   const canAssign = seatLimit > 0 && usedSeats < seatLimit;
 
@@ -387,20 +397,46 @@ export default function Learners() {
     }
     const globalCourse = globalCourses.find((c) => c.id === selGlobalCourse);
     setGeneratingLink(true);
+    const payload = {
+      branch_id: selBranch,
+      course_id: selCourse,
+      batch_id: selBatch,
+      global_course_id: selGlobalCourse,
+      global_course_name: globalCourse?.name ?? "",
+      subject_ids: selSubjectIds,
+      expires_in_minutes: inviteTimeoutMinutes,
+    };
     try {
-      const data = await apiFetch("/api/invites/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          branch_id: selBranch,
-          course_id: selCourse,
-          batch_id: selBatch,
-          global_course_id: selGlobalCourse,
-          global_course_name: globalCourse?.name ?? "",
-          subject_ids: selSubjectIds,
-          expires_in_minutes: inviteTimeoutMinutes,
-        }),
-      });
+      let data: any;
+      try {
+        data = await apiFetch("/api/invites/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } catch (e: any) {
+        if (e.message === "Batch not found" && firstPoolPlanId) {
+          // Batch not registered in monkey-king yet — register it then retry
+          await apiFetch("/api/payment/allocate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              branch_id: selBranch,
+              course_id: selCourse,
+              batch_id: selBatch,
+              plan_id: firstPoolPlanId,
+              seats: 0,
+            }),
+          });
+          data = await apiFetch("/api/invites/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+        } else {
+          throw e;
+        }
+      }
       setInviteUrl(`${window.location.origin}/join/${data.token}`);
     } catch (e: any) {
       toast.error(e.message || "Failed to generate link");

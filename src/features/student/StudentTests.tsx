@@ -484,37 +484,35 @@ export default function StudentTests() {
             <div key={groupId} className="space-y-3">
               <div
                 className={cn(
-                  "group flex cursor-pointer items-center justify-between rounded-xl border border-l-4 border-border border-l-primary/60 bg-card p-4 shadow-sm transition-all duration-300 hover:bg-muted/15 hover:shadow-md",
-                  isExpanded && "border-l-primary bg-muted/5 shadow-md"
+                  "group flex cursor-pointer items-center justify-between rounded-lg border border-l-4 border-border border-l-primary/60 bg-card px-3 py-2.5 shadow-sm transition-all duration-200 hover:bg-muted/15",
+                  isExpanded && "border-l-primary bg-muted/5"
                 )}
                 onClick={() => toggleFolder(groupId)}
               >
-                <div className="flex items-center gap-3.5">
+                <div className="flex items-center gap-2.5">
                   <div
                     className={cn(
-                      "flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm transition-all duration-300 group-hover:scale-105",
-                      isExpanded && "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                      "flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary transition-all duration-200",
+                      isExpanded && "bg-primary text-primary-foreground"
                     )}
                   >
-                    <Folder className="h-5 w-5" />
+                    <Folder className="h-4 w-4" />
                   </div>
-                  <div className="space-y-0.5">
-                    <h3 className="text-base font-bold tracking-tight text-foreground sm:text-lg">
-                      {group.name}
-                    </h3>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      {group.tests.length} test{group.tests.length !== 1 ? "s" : ""} available
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">{group.name}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {group.tests.length} test{group.tests.length !== 1 ? "s" : ""}
                     </p>
                   </div>
                 </div>
 
                 <div
                   className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-full border border-border/60 bg-background text-muted-foreground shadow-sm transition-all duration-300 group-hover:border-primary/45 group-hover:text-foreground",
-                    isExpanded && "rotate-180 border-primary/25 bg-primary/10 text-primary"
+                    "flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground transition-all duration-200",
+                    isExpanded && "rotate-180 text-primary"
                   )}
                 >
-                  <ChevronDown className="h-4 w-4 transition-transform duration-300" />
+                  <ChevronDown className="h-3.5 w-3.5" />
                 </div>
               </div>
 
