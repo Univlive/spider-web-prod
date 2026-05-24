@@ -171,7 +171,7 @@ export default function PlanManagement() {
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-2xl font-bold">
-                ₹{(plan.pricePerSeat / 100).toFixed(0)}
+                ₹{plan.pricePerSeat}
                 <span className="text-sm font-normal text-muted-foreground"> / seat</span>
               </p>
               {plan.features.length > 0 && (
@@ -253,17 +253,17 @@ export default function PlanManagement() {
               />
             </div>
             <div className="space-y-1">
-              <Label>Price Per Seat (paise)</Label>
+              <Label>Price Per Seat (₹)</Label>
               <Input
                 type="number"
                 value={pricePerSeat}
                 onChange={(e) => setPricePerSeat(e.target.value)}
-                placeholder="e.g. 19900 = ₹199"
+                placeholder="e.g. 199"
               />
               <p className="text-xs text-muted-foreground">
                 {pricePerSeat && !isNaN(parseInt(pricePerSeat))
-                  ? `= ₹${(parseInt(pricePerSeat) / 100).toFixed(2)}`
-                  : "Enter amount in paise (1 rupee = 100 paise)"}
+                  ? `= ₹${parseInt(pricePerSeat)}`
+                  : "Enter price in rupees"}
               </p>
             </div>
             <div className="space-y-1">
