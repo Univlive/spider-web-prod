@@ -247,6 +247,14 @@ export default function StudentLayout() {
     return <div className="py-12 text-center text-muted-foreground">Loading...</div>;
   }
 
+  if (isApp) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Outlet />
+      </div>
+    );
+  }
+
   // Root fixed height + overflow hidden => only main scrolls
   return (
     <div className="flex h-[100dvh] min-h-screen flex-col overflow-hidden bg-background">

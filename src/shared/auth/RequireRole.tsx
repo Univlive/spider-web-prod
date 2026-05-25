@@ -16,7 +16,11 @@ export default function RequireRole({ allow, redirectTo = "/login", children }: 
   const location = useLocation();
 
   const isApp = new URLSearchParams(window.location.search).get("_app") === "1";
-  const { isReady: appTokenReady } = useAppTokenBootstrap();
+  const {
+    isReady: appTokenReady,
+    status: appTokenStatus,
+    error: appTokenError,
+  } = useAppTokenBootstrap();
 
   // Wait for Firebase auth AND app-token exchange before making any decision.
   if (loading || (isApp && !appTokenReady)) {
@@ -24,6 +28,19 @@ export default function RequireRole({ allow, redirectTo = "/login", children }: 
       <div className="flex min-h-[60vh] items-center justify-center gap-2 text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
         Loading…
+      </div>
+    );
+  }
+
+  if (isApp && appTokenStatus === "error") {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center px-6 text-center">
+        <div>
+          <p className="mb-1 font-semibold text-destructive">Authentication error</p>
+          <p className="text-sm text-muted-foreground">
+            {appTokenError ?? "Unable to authenticate from the app. Please go back and try again."}
+          </p>
+        </div>
       </div>
     );
   }
