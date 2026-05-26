@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, CheckCircle, XCircle, Circle, BrainCircuit } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, CheckCircle, XCircle, Circle, BrainCircuit, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Card, CardContent, CardHeader } from "@shared/ui/card";
 import { Button } from "@shared/ui/button";
@@ -13,19 +14,27 @@ import { normalizeQuestionType } from "@shared/lib/questionTypes";
 import { useAuth } from "@app/providers/AuthProvider";
 import { db } from "@shared/lib/firebase";
 import { logError } from "@shared/lib/errorLogger";
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, updateDoc } from "firebase/firestore";
 
 type AttemptResponse = {
   answer: string | null;
   markedForReview: boolean;
   visited: boolean;
   answered: boolean;
+  needsManualReview?: boolean;
   aiEvaluation?: {
     score: number;
     maxScore: number;
     confidence: number;
     feedback: string;
     evaluatedAt?: number;
+  };
+  manualReview?: {
+    score: number;
+    maxScore: number;
+    feedback: string;
+    reviewedBy: string;
+    reviewedAt: number;
   };
 };
 
@@ -43,6 +52,7 @@ type AttemptDoc = {
 
   score?: number;
   maxScore?: number;
+  pendingManualReviewCount?: number;
 };
 
 type AttemptQuestion = {
@@ -133,9 +143,12 @@ function isCorrectAnswer(q: AttemptQuestion, userAnswer: string | null) {
   return String(userAnswer) === String(q.correctAnswer ?? "");
 }
 
+type GradeState = { score: string; feedback: string; saving: boolean; saved: boolean };
+
 export default function StudentAttemptDetails() {
   const { attemptId } = useParams();
   const { firebaseUser, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -144,6 +157,8 @@ export default function StudentAttemptDetails() {
   const [questions, setQuestions] = useState<AttemptQuestion[]>([]);
   const [responses, setResponses] = useState<Record<string, AttemptResponse>>({});
   const [sections, setSections] = useState<TestSection[]>([]);
+  const [isEducatorView, setIsEducatorView] = useState(false);
+  const [gradeStates, setGradeStates] = useState<Record<string, GradeState>>({});
 
   const title = useMemo(() => attempt?.testTitle || "Attempt Review", [attempt]);
 
@@ -173,9 +188,12 @@ export default function StudentAttemptDetails() {
 
         const a = aSnap.data() as AttemptDoc;
 
-        // Security: student can only see their own attempts
-        if (a.studentId !== firebaseUser.uid)
+        const eduView = a.educatorId === firebaseUser.uid;
+        if (a.studentId !== firebaseUser.uid && !eduView)
           throw new Error("You don't have permission to view this attempt.");
+
+        if (!mounted) return;
+        setIsEducatorView(eduView);
 
         const educatorId = a.educatorId;
         const testId = a.testId;
@@ -239,6 +257,23 @@ export default function StudentAttemptDetails() {
 
         if (!mounted) return;
 
+        if (eduView) {
+          const initial: Record<string, GradeState> = {};
+          qs.forEach((q) => {
+            if (q.type === "subjective") {
+              const resp = (a.responses || {})[q.id];
+              const existing = resp?.manualReview;
+              initial[q.id] = {
+                score: String(existing?.score ?? resp?.aiEvaluation?.score ?? 0),
+                feedback: existing?.feedback ?? resp?.aiEvaluation?.feedback ?? "",
+                saving: false,
+                saved: false,
+              };
+            }
+          });
+          setGradeStates(initial);
+        }
+
         const normalizedSections = testSections.map((s: any, index: number) => ({
           ...s,
           id: String(s?.id || `sec_${index + 1}`).trim() || `sec_${index + 1}`,
@@ -268,6 +303,65 @@ export default function StudentAttemptDetails() {
       mounted = false;
     };
   }, [attemptId, firebaseUser, authLoading]);
+
+  async function saveGrade(qId: string, maxScore: number) {
+    if (!attempt || !firebaseUser || !attemptId) return;
+    const state = gradeStates[qId];
+    if (!state) return;
+
+    const manualScore = Math.max(0, Math.min(maxScore, safeNumber(state.score, 0)));
+    setGradeStates((prev) => ({ ...prev, [qId]: { ...prev[qId], saving: true } }));
+
+    try {
+      const aiScore = safeNumber(attempt.responses?.[qId]?.aiEvaluation?.score, 0);
+      const currentTotal = safeNumber(attempt.score, 0);
+      const newTotal = Math.max(0, currentTotal - aiScore + manualScore);
+      const newMax = safeNumber(attempt.maxScore, 1);
+      const wasPending = !!responses[qId]?.needsManualReview;
+      const newPending = Math.max(
+        0,
+        safeNumber(attempt.pendingManualReviewCount, 0) - (wasPending ? 1 : 0)
+      );
+
+      await updateDoc(doc(db, "attempts", attemptId), {
+        [`responses.${qId}.manualReview`]: {
+          score: manualScore,
+          maxScore,
+          feedback: state.feedback.trim(),
+          reviewedBy: firebaseUser.uid,
+          reviewedAt: Date.now(),
+        },
+        [`responses.${qId}.needsManualReview`]: false,
+        score: newTotal,
+        accuracy: newMax > 0 ? newTotal / newMax : 0,
+        pendingManualReviewCount: newPending,
+      });
+
+      setAttempt((prev) =>
+        prev ? { ...prev, score: newTotal, pendingManualReviewCount: newPending } : prev
+      );
+      setResponses((prev) => ({
+        ...prev,
+        [qId]: {
+          ...prev[qId],
+          needsManualReview: false,
+          manualReview: {
+            score: manualScore,
+            maxScore,
+            feedback: state.feedback.trim(),
+            reviewedBy: firebaseUser.uid,
+            reviewedAt: Date.now(),
+          },
+        },
+      }));
+      setGradeStates((prev) => ({ ...prev, [qId]: { ...prev[qId], saving: false, saved: true } }));
+      toast.success("Grade saved");
+    } catch (err) {
+      console.error(err);
+      setGradeStates((prev) => ({ ...prev, [qId]: { ...prev[qId], saving: false } }));
+      toast.error("Failed to save grade");
+    }
+  }
 
   const questionsBySection = useMemo(() => {
     const map: Record<string, AttemptQuestion[]> = {};
@@ -308,12 +402,19 @@ export default function StudentAttemptDetails() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 pb-12">
-      <Button variant="ghost" asChild>
-        <Link to={`/student/results/${attemptId}`}>
+      {isEducatorView ? (
+        <Button variant="ghost" onClick={() => navigate(-1)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Results
-        </Link>
-      </Button>
+          Back
+        </Button>
+      ) : (
+        <Button variant="ghost" asChild>
+          <Link to={`/student/results/${attemptId}`}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Results
+          </Link>
+        </Button>
+      )}
 
       <Card className="card-soft border-0 bg-pastel-lavender">
         <CardContent className="p-6">
@@ -559,6 +660,76 @@ export default function StudentAttemptDetails() {
                                   </p>
                                 </div>
                               )}
+
+                              {isEducatorView &&
+                                gradeStates[q.id] &&
+                                (gradeStates[q.id].saved ? (
+                                  <div className="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 dark:bg-green-950/30">
+                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                    <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                                      Graded: {gradeStates[q.id].score}/{q.marks.correct}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">
+                                    <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                                      Manual Grade
+                                    </p>
+                                    <div className="space-y-3">
+                                      <div className="flex items-center gap-3">
+                                        <label className="text-sm font-medium">Score</label>
+                                        <input
+                                          type="number"
+                                          min={0}
+                                          max={q.marks.correct}
+                                          step={0.5}
+                                          value={gradeStates[q.id].score}
+                                          onChange={(e) =>
+                                            setGradeStates((prev) => ({
+                                              ...prev,
+                                              [q.id]: { ...prev[q.id], score: e.target.value },
+                                            }))
+                                          }
+                                          className="w-20 rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                        />
+                                        <span className="text-sm text-muted-foreground">
+                                          / {q.marks.correct}
+                                        </span>
+                                      </div>
+                                      <div>
+                                        <label className="mb-1 block text-sm font-medium">
+                                          Feedback
+                                        </label>
+                                        <textarea
+                                          rows={3}
+                                          value={gradeStates[q.id].feedback}
+                                          onChange={(e) =>
+                                            setGradeStates((prev) => ({
+                                              ...prev,
+                                              [q.id]: { ...prev[q.id], feedback: e.target.value },
+                                            }))
+                                          }
+                                          placeholder="Optional feedback for the student…"
+                                          className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        />
+                                      </div>
+                                      <Button
+                                        size="sm"
+                                        disabled={gradeStates[q.id].saving}
+                                        onClick={() => saveGrade(q.id, q.marks.correct)}
+                                      >
+                                        {gradeStates[q.id].saving ? (
+                                          <>
+                                            <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                            Saving…
+                                          </>
+                                        ) : (
+                                          "Save Grade"
+                                        )}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
                             </div>
                           )}
 

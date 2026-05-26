@@ -2,6 +2,7 @@ import { Route, Navigate } from "react-router-dom";
 
 import RequireRole from "@shared/auth/RequireRole";
 import EducatorLayout from "@features/educator/components/EducatorLayout";
+import StudentAttemptDetails from "@features/student/StudentAttemptDetails";
 import {
   AccessCodes,
   EducatorAnalytics,
@@ -46,6 +47,7 @@ export function getEducatorRoutes() {
       <Route path="students/:studentId" element={<StudentDetails />} />
       <Route path="batches" element={<BatchesListing />} />
       <Route path="learners" element={<Learners />} />
+      <Route path="learners/:studentId" element={<StudentDetails />} />
       <Route path="scheduled-tests" element={<ScheduledTests />} />
       <Route path="scheduled-dpps" element={<ScheduledDpps />} />
       <Route path="test-series" element={<TestSeries />} />
@@ -65,6 +67,7 @@ export function getEducatorRoutes() {
       <Route path="dpp" element={<DppGenerator />} />
       <Route path="website-builder" element={<InstituteBuilder />} />
       <Route path="question-papers" element={<QuestionPaperRequests />} />
+      <Route path="attempts/:attemptId" element={<StudentAttemptDetails />} />
       <Route path="review-submissions" element={<SubjectiveReviewQueue />} />
       <Route path="review-submissions/:attemptId" element={<SubjectiveAttemptGrader />} />
     </Route>
