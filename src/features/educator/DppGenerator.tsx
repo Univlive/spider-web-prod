@@ -784,7 +784,7 @@ export default function DppGenerator() {
 
               <div className="space-y-1">
                 <Label>
-                  Topic Name <span className="font-normal text-muted-foreground">(optional)</span>
+                  DPP (topic) Name <span className="font-normal text-muted-foreground">(optional)</span>
                 </Label>
                 <Input
                   placeholder="e.g. Newton's Laws"

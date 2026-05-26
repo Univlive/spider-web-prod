@@ -40,6 +40,8 @@ export default function EducatorDashboard() {
 
   const [educatorDoc, setEducatorDoc] = useState<EducatorProfileDoc | null>(null);
   const [usedSeatsCount, setUsedSeatsCount] = useState(0);
+  const [poolSeatTotal, setPoolSeatTotal] = useState(0);
+  const [poolPlanName, setPoolPlanName] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [allowedCourseNames, setAllowedCourseNames] = useState<string[]>([]);
@@ -73,6 +75,18 @@ export default function EducatorDashboard() {
       }
     );
 
+    const unsubPools = onSnapshot(
+      collection(db, "educators", educatorId, "seatPools"),
+      (snap) => {
+        setPoolSeatTotal(snap.docs.reduce((s, d) => s + (Number(d.data().totalSeats) || 0), 0));
+        setPoolPlanName(snap.docs[0]?.data().planName || null);
+      },
+      () => {
+        setPoolSeatTotal(0);
+        setPoolPlanName(null);
+      }
+    );
+
     const qTests = collection(db, "educators", educatorId, "my_tests");
     const unsubTests = onSnapshot(qTests, (snap) => {
       let tests = 0;
@@ -101,6 +115,7 @@ export default function EducatorDashboard() {
     return () => {
       unsubEdu();
       unsubSeats();
+      unsubPools();
       unsubTests();
     };
   }, [educatorId]);
@@ -136,8 +151,8 @@ export default function EducatorDashboard() {
   const coachingUrl = coachingSlug ? buildTenantUrl(coachingSlug, "/") : "";
 
   // Derived Plan & Seat Info
-  const planName = educatorDoc?.planName || "Free Tier";
-  const seatLimit = educatorDoc?.seatLimit || 0;
+  const planName = poolPlanName || "Free Tier";
+  const seatLimit = poolSeatTotal;
   const usedSeats = usedSeatsCount;
   const vacantSeats = Math.max(0, seatLimit - usedSeats);
 

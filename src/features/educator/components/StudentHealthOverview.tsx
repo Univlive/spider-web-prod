@@ -181,7 +181,7 @@ export default function StudentHealthOverview({
   const cards = [
     {
       id: "excellent",
-      title: "Excellent Students",
+      title: "The torch bearers",
       count: healthStats.excellent.count,
       pct: healthStats.excellent.pct,
       students: healthStats.excellent.students,
@@ -194,7 +194,7 @@ export default function StudentHealthOverview({
     },
     {
       id: "good",
-      title: "Good Students",
+      title: "The Challengers",
       count: healthStats.good.count,
       pct: healthStats.good.pct,
       students: healthStats.good.students,
@@ -207,7 +207,7 @@ export default function StudentHealthOverview({
     },
     {
       id: "average",
-      title: "Average Students",
+      title: "Needs Improvement",
       count: healthStats.average.count,
       pct: healthStats.average.pct,
       students: healthStats.average.students,
@@ -220,7 +220,7 @@ export default function StudentHealthOverview({
     },
     {
       id: "weak",
-      title: "Weak Students",
+      title: "Extra Care Needed",
       count: healthStats.weak.count,
       pct: healthStats.weak.pct,
       students: healthStats.weak.students,
