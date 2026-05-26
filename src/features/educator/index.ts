@@ -20,3 +20,5 @@ export { default as ScheduledDpps } from "./ScheduledDpps";
 export { default as SeatAllocation } from "./SeatAllocation";
 export { default as StudentHealthCategoryList } from "./StudentHealthCategoryList";
 export { default as ReportedQuestions } from "./ReportedQuestions";
+export { default as SubjectiveReviewQueue } from "./SubjectiveReviewQueue";
+export { default as SubjectiveAttemptGrader } from "./SubjectiveAttemptGrader";

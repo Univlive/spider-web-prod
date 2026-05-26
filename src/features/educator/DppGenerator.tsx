@@ -146,7 +146,6 @@ export default function DppGenerator() {
   const [genDifficulty, setGenDifficulty] = useState("medium");
   const [genTopicName, setGenTopicName] = useState("");
   const [generating, setGenerating] = useState(false);
-  const [genNumQuestions, setGenNumQuestions] = useState<number>(10);
 
   // File upload state for 'upload' mode
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -383,7 +382,6 @@ export default function DppGenerator() {
           time_of_day: schedTime,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           topic_rotation: [],
-          num_questions: genNumQuestions,
           topic_hint: genTopicName.trim(),
           title: customTitle,
           type: "dpp",
@@ -437,7 +435,6 @@ export default function DppGenerator() {
           subject_filter: genSubjects,
           chapter_filter: genChapters,
           target_batches: [...selectedBatchIds],
-          num_questions: genNumQuestions,
           title: customTitle,
           type: "dpp",
           folderId: "dpp_folder",
@@ -764,29 +761,17 @@ export default function DppGenerator() {
               )}
 
               {/* Shared Settings */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label>Difficulty</Label>
-                  <select
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={genDifficulty}
-                    onChange={(e) => setGenDifficulty(e.target.value)}
-                  >
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Number of Questions</Label>
-                  <Input
-                    type="number"
-                    min={5}
-                    max={50}
-                    value={genNumQuestions}
-                    onChange={(e) => setGenNumQuestions(parseInt(e.target.value) || 10)}
-                  />
-                </div>
+              <div className="space-y-1.5">
+                <Label>Difficulty</Label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={genDifficulty}
+                  onChange={(e) => setGenDifficulty(e.target.value)}
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
               </div>
 
               <div className="space-y-1">

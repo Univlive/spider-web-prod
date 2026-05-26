@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { ArrowLeft, GitBranch, GraduationCap, Users } from "lucide-react";
 import {
   Area,
@@ -55,6 +55,7 @@ type AttemptDoc = {
   maxScore?: number;
   timeTakenSec?: number;
   timeSpent?: number;
+  pendingManualReviewCount?: number;
 };
 
 function safeNum(v: any, fallback = 0) {
@@ -502,7 +503,19 @@ export default function StudentDetails() {
                     className="cursor-pointer transition-colors hover:bg-muted/20"
                     onClick={() => nav(`/educator/attempts/${a.id}`)}
                   >
-                    <td className="px-6 py-4 text-sm font-semibold">{a.testTitle || a.testId}</td>
+                    <td className="px-6 py-4 text-sm font-semibold">
+                      <span>{a.testTitle || a.testId}</span>
+                      {(a.pendingManualReviewCount ?? 0) > 0 && (
+                        <Link
+                          to={`/educator/review-submissions/${a.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Badge className="ml-2 bg-amber-100 text-xs text-amber-700">
+                            {a.pendingManualReviewCount} pending
+                          </Badge>
+                        </Link>
+                      )}
+                    </td>
                     <td className="px-6 py-4">
                       <Badge
                         variant="outline"

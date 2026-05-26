@@ -24,6 +24,7 @@ import {
   UserCheck,
   Palette,
   AlertTriangle,
+  ClipboardCheck,
 } from "lucide-react";
 import { Button } from "@shared/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@shared/ui/avatar";
@@ -66,6 +67,7 @@ function EducatorLayoutInner() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [pendingReviewCount, setPendingReviewCount] = useState(0);
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -143,6 +145,25 @@ function EducatorLayoutInner() {
     return () => unsub();
   }, [profile?.uid]);
 
+  useEffect(() => {
+    const uid = profile?.uid;
+    if (!uid) {
+      setPendingReviewCount(0);
+      return;
+    }
+    const q = query(
+      collection(db, "attempts"),
+      where("educatorId", "==", uid),
+      where("pendingManualReviewCount", ">", 0)
+    );
+    const unsub = onSnapshot(
+      q,
+      (snap) => setPendingReviewCount(snap.size),
+      () => {}
+    );
+    return () => unsub();
+  }, [profile?.uid]);
+
   const sidebarItems = useMemo<SidebarItem[]>(() => {
     // Don't build sidebar while employee permissions are still loading
     if (isEmployee && empLoading) return [];
@@ -185,6 +206,11 @@ function EducatorLayoutInner() {
         label: "Reported Questions",
         href: "/educator/reported-questions",
       });
+      testChildren.push({
+        icon: ClipboardCheck,
+        label: "Review Answers",
+        href: "/educator/review-submissions",
+      });
     }
 
     const showTests =
@@ -198,6 +224,7 @@ function EducatorLayoutInner() {
         icon: FileText,
         label: "Test Series",
         href: "/educator/test-series",
+        badge: pendingReviewCount || undefined,
         children: testChildren.length > 0 ? testChildren : undefined,
       });
     }
@@ -207,7 +234,7 @@ function EducatorLayoutInner() {
     }
 
     return items;
-  }, [isEmployee, empLoading, hasPermission]);
+  }, [isEmployee, empLoading, hasPermission, pendingReviewCount]);
 
   const isActive = (href: string) => {
     if (href === "/educator/dashboard")

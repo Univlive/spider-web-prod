@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import { GoogleGenerativeAI, SchemaType, type GenerationConfig } from "@google/generative-ai";
 import { getGeminiModelNameFromEnv } from "../_lib/geminiModel.js";
-import { notifyDiscord } from "../_lib/discordLogger.js";
+import { notifyDiscord, sendDiscordEmbed } from "../_lib/discordLogger.js";
 
 interface EvaluationRequest {
   questionId: string;
@@ -184,6 +184,11 @@ async function buildRequestParts(req: EvaluationRequest) {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.warn(`[evaluate-subjective] Student image skipped: ${msg}`);
+      void sendDiscordEmbed("warning", "⚠️ Student image could not be loaded", [
+        { name: "Question ID", value: req.questionId, inline: true },
+        { name: "Reason", value: msg, inline: true },
+        { name: "URL", value: req.studentAnswer.slice(0, 200) },
+      ]);
       parts.push(
         `Note: Student uploaded an image answer but it could not be loaded (${msg}). Evaluate based on available context; award 0 if the answer cannot be assessed.`
       );
@@ -253,10 +258,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       if (!process.env.GEMINI_API_KEY) {
+        void sendDiscordEmbed("error", "🔴 GEMINI_API_KEY not configured", [
+          {
+            name: "Impact",
+            value: `Batch of ${evaluations.length} subjective answers cannot be evaluated`,
+          },
+          { name: "Fix", value: "Add GEMINI_API_KEY to Vercel environment variables and redeploy" },
+        ]);
         return res.status(500).json({ error: "GEMINI_API_KEY is not configured" });
       }
 
+      void sendDiscordEmbed("info", "📝 Subjective evaluation started", [
+        { name: "Questions", value: String(evaluations.length), inline: true },
+        { name: "Types", value: evaluations.map((e) => e.questionType).join(", "), inline: true },
+        { name: "Model", value: getGeminiModelNameFromEnv(), inline: true },
+      ]);
+
       const results: Record<string, EvaluationResponse> = {};
+      const failed: string[] = [];
 
       for (const evalReq of evaluations) {
         try {
@@ -264,7 +283,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const result = await evaluateWithGemini(parts, evalReq.maxScore);
           results[evalReq.questionId] = result;
         } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
           console.error(`[evaluate-subjective] Failed for question ${evalReq.questionId}:`, err);
+          failed.push(evalReq.questionId);
+          void sendDiscordEmbed("error", "❌ Per-question evaluation failed", [
+            { name: "Question ID", value: evalReq.questionId, inline: true },
+            { name: "Type", value: evalReq.questionType, inline: true },
+            { name: "Max Score", value: String(evalReq.maxScore), inline: true },
+            { name: "Error", value: msg },
+          ]);
           results[evalReq.questionId] = {
             score: 0,
             maxScore: evalReq.maxScore,
@@ -275,9 +302,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
 
+      const succeeded = evaluations.length - failed.length;
+      const totalAwarded = Object.values(results).reduce((s, r) => s + r.score, 0);
+      const totalMax = Object.values(results).reduce((s, r) => s + r.maxScore, 0);
+      const avgConfidence =
+        succeeded > 0
+          ? Object.values(results)
+              .filter((r) => r.confidence > 0)
+              .reduce((s, r) => s + r.confidence, 0) / succeeded
+          : 0;
+
+      void sendDiscordEmbed(
+        failed.length > 0 ? "warning" : "success",
+        failed.length > 0
+          ? `⚠️ Batch done — ${failed.length} failed`
+          : "✅ Batch evaluation complete",
+        [
+          { name: "Evaluated", value: `${succeeded}/${evaluations.length}`, inline: true },
+          { name: "Score", value: `${totalAwarded}/${totalMax}`, inline: true },
+          { name: "Avg Confidence", value: `${Math.round(avgConfidence * 100)}%`, inline: true },
+          ...(failed.length > 0 ? [{ name: "Failed IDs", value: failed.join(", ") }] : []),
+        ]
+      );
+
       return res.status(200).json({ results } as BatchEvaluationResponse);
     }
 
+    // Single evaluation
     const evalReq = body as EvaluationRequest;
 
     if (!evalReq.questionText || !evalReq.studentAnswer) {
@@ -289,11 +340,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (!process.env.GEMINI_API_KEY) {
+      void sendDiscordEmbed("error", "🔴 GEMINI_API_KEY not configured", [
+        { name: "Impact", value: "Single subjective answer cannot be evaluated" },
+        { name: "Fix", value: "Add GEMINI_API_KEY to Vercel environment variables and redeploy" },
+      ]);
       return res.status(500).json({ error: "GEMINI_API_KEY is not configured" });
     }
 
     const parts = await buildRequestParts(evalReq);
     const result = await evaluateWithGemini(parts, evalReq.maxScore || 5);
+
+    void sendDiscordEmbed("success", "✅ Single evaluation complete", [
+      { name: "Question ID", value: evalReq.questionId, inline: true },
+      { name: "Score", value: `${result.score}/${result.maxScore}`, inline: true },
+      { name: "Confidence", value: `${Math.round(result.confidence * 100)}%`, inline: true },
+    ]);
 
     return res.status(200).json(result);
   } catch (error) {

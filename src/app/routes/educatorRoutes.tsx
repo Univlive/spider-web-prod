@@ -25,6 +25,8 @@ import {
   SeatAllocation,
   StudentHealthCategoryList,
   ReportedQuestions,
+  SubjectiveReviewQueue,
+  SubjectiveAttemptGrader,
 } from "@features/educator";
 import QuestionPaperRequests from "@features/educator/QuestionPaperRequests";
 
@@ -63,6 +65,8 @@ export function getEducatorRoutes() {
       <Route path="dpp" element={<DppGenerator />} />
       <Route path="website-builder" element={<InstituteBuilder />} />
       <Route path="question-papers" element={<QuestionPaperRequests />} />
+      <Route path="review-submissions" element={<SubjectiveReviewQueue />} />
+      <Route path="review-submissions/:attemptId" element={<SubjectiveAttemptGrader />} />
     </Route>
   );
 }

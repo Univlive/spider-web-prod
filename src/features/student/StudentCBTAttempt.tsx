@@ -1181,6 +1181,19 @@ export default function StudentCBTAttempt() {
         }
       }
 
+      // Flag subjective responses needing manual review (confidence < 0.5)
+      let pendingManualReviewCount = 0;
+      for (const q of subjectiveToEvaluate) {
+        const confidence = submissionResponses[q.id]?.aiEvaluation?.confidence ?? 0;
+        if (confidence < 0.5) {
+          submissionResponses[q.id] = {
+            ...submissionResponses[q.id],
+            needsManualReview: true,
+          };
+          pendingManualReviewCount += 1;
+        }
+      }
+
       const totalAnswered = questions.filter((q) => {
         const ans = submissionResponses[q.id]?.answer;
         return ans !== null && ans !== undefined && String(ans).trim() !== "";
@@ -1208,7 +1221,23 @@ export default function StudentCBTAttempt() {
         subjectiveEvaluatedCount: subjectiveToEvaluate.filter(
           (q) => submissionResponses[q.id]?.aiEvaluation
         ).length,
+        pendingManualReviewCount,
       });
+
+      // Notify educator if any answers need manual review
+      if (pendingManualReviewCount > 0 && educatorId) {
+        addDoc(collection(db, "users", educatorId, "notifications"), {
+          title: "📝 Answers need your review",
+          body: `${profile?.displayName || "A student"} submitted "${testMeta.title}" — ${pendingManualReviewCount} answer${pendingManualReviewCount > 1 ? "s" : ""} need manual grading`,
+          read: false,
+          type: "review_needed",
+          attemptId,
+          createdAt: serverTimestamp(),
+          createdByRole: "STUDENT",
+        }).catch(() => {
+          /* non-critical */
+        });
+      }
 
       localStorage.removeItem(attemptIdStorageKey);
       if (!didEvaluateSubjective) await exitFullscreenSafe();
