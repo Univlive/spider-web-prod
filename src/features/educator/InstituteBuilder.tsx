@@ -6531,7 +6531,7 @@ export default function InstituteBuilder() {
                     <Loader2 size={12} className="animate-spin" /> Switching…
                   </>
                 ) : (
-                  "Yes, Switch to Theme 2"
+                  "Yes, Switch to Default"
                 )}
               </button>
             </div>
