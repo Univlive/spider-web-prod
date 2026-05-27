@@ -333,7 +333,20 @@ export default function DppGenerator() {
     firebaseUser.getIdToken().then((token: string) => {
       fetch(`${MONKEY_KING}/api/dpp/schedules`, { headers: { Authorization: `Bearer ${token}` } })
         .then((r) => r.json())
-        .then((d) => setSchedules(Array.isArray(d) ? d : []))
+        .then(async (d) => {
+          const all: ScheduleRecord[] = Array.isArray(d) ? d : [];
+          const today = new Date().toISOString().slice(0, 10);
+          const expired = all.filter((s) => s.endDate !== "2099-12-31" && s.endDate < today);
+          const active = all.filter((s) => s.endDate === "2099-12-31" || s.endDate >= today);
+          if (expired.length > 0) {
+            await Promise.allSettled(
+              expired.map((s) =>
+                apiFetch(firebaseUser, `/api/dpp/schedules/${s.id}`, { method: "DELETE" })
+              )
+            );
+          }
+          setSchedules(active);
+        })
         .catch(() => {})
         .finally(() => setLoadingSchedules(false));
     });
@@ -793,9 +806,7 @@ export default function DppGenerator() {
               </div>
 
               <div className="space-y-1">
-                <Label>
-                  DPP (topic) Name
-                </Label>
+                <Label>DPP (topic) Name</Label>
                 <Input
                   placeholder="e.g. Newton's Laws"
                   value={genTopicName}
@@ -821,7 +832,10 @@ export default function DppGenerator() {
                         <Input
                           type="date"
                           value={schedStartDate}
-                          min={(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })()}
+                          min={(() => {
+                            const d = new Date();
+                            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                          })()}
                           onChange={(e) => setSchedStartDate(e.target.value)}
                         />
                       </div>
@@ -851,7 +865,9 @@ export default function DppGenerator() {
                             min={1}
                             max={365}
                             value={schedDays}
-                            onChange={(e) => setSchedDays(Math.max(1, parseInt(e.target.value) || 1))}
+                            onChange={(e) =>
+                              setSchedDays(Math.max(1, parseInt(e.target.value) || 1))
+                            }
                           />
                         </div>
                       )}
