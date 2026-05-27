@@ -43,7 +43,7 @@ export default function TenantHomeTheme2() {
   const coachingName = config.coachingName || (tenant as any)?.coachingName || "Your Institute";
   const tagline = config.tagline || (tenant as any)?.tagline || "Learn smarter. Score higher.";
   const heroImage: string | undefined = config.heroImage;
-  const logoUrl: string | undefined = config.logoUrl;
+  const logoUrl: string | undefined = tenant?.instituteLogo || config.logoUrl;
 
   useFavicon(logoUrl, coachingName);
 
