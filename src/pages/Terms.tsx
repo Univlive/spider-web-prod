@@ -1,9 +1,9 @@
-import Layout from "@widgets/layout/Layout";
+import LandingLayout from "@widgets/layout/LandingLayout";
 import { motion } from "framer-motion";
 
 const Terms = () => {
   return (
-    <Layout>
+    <LandingLayout>
       <section className="section-padding section-1">
         <div className="container-main">
           <motion.div
@@ -110,7 +110,7 @@ const Terms = () => {
           </motion.div>
         </div>
       </section>
-    </Layout>
+    </LandingLayout>
   );
 };
 

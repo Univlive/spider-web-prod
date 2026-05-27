@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
+import { buildTenantUrl } from "@shared/lib/tenant";
 
 export default function PayCallback() {
   const [phase, setPhase] = useState<"loading" | "redirecting">("loading");
@@ -14,10 +15,10 @@ export default function PayCallback() {
       setPhase("redirecting");
 
       const base = educatorSlug
-        ? `https://${educatorSlug}.preparekaro.in`
-        : "https://preparekaro.in";
+        ? buildTenantUrl(educatorSlug, "/educator/billing")
+        : "/educator/billing";
 
-      const redirectUrl = new URL(`${base}/educator/billing`);
+      const redirectUrl = new URL(base, window.location.href);
       redirectUrl.searchParams.set("payment", "success");
       if (orderId) redirectUrl.searchParams.set("order_id", orderId);
 

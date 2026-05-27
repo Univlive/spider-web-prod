@@ -1,9 +1,9 @@
-import Layout from "@widgets/layout/Layout";
+import LandingLayout from "@widgets/layout/LandingLayout";
 import { motion } from "framer-motion";
 
 const Refund = () => {
   return (
-    <Layout>
+    <LandingLayout>
       <section className="section-padding section-1">
         <div className="container-main">
           <motion.div
@@ -115,7 +115,7 @@ const Refund = () => {
           </motion.div>
         </div>
       </section>
-    </Layout>
+    </LandingLayout>
   );
 };
 
