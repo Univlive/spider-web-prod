@@ -2,6 +2,7 @@ import { VercelRequest, VercelResponse } from "@vercel/node";
 import { GoogleGenerativeAI, SchemaType, type GenerationConfig } from "@google/generative-ai";
 import { getGeminiModelNameFromEnv } from "../_lib/geminiModel.js";
 import { notifyDiscord, sendDiscordEmbed } from "../_lib/discordLogger.js";
+import { parseAiJson } from "../_lib/parseAiJson.js";
 
 interface EvaluationRequest {
   questionId: string;
@@ -213,30 +214,6 @@ async function buildRequestParts(req: EvaluationRequest) {
   return parts;
 }
 
-function escapeControlCharsInJsonStrings(raw: string): string {
-  let inString = false;
-  let escaped = false;
-  const chars: string[] = [];
-  for (let i = 0; i < raw.length; i++) {
-    const c = raw[i];
-    if (escaped) {
-      chars.push(c);
-      escaped = false;
-    } else if (c === "\\" && inString) {
-      chars.push(c);
-      escaped = true;
-    } else if (c === '"') {
-      chars.push(c);
-      inString = !inString;
-    } else if (inString && (c === "\n" || c === "\r" || c === "\t")) {
-      chars.push(c === "\n" ? "\\n" : c === "\r" ? "\\r" : "\\t");
-    } else {
-      chars.push(c);
-    }
-  }
-  return chars.join("");
-}
-
 const GEMINI_MAX_RETRIES = 3;
 const GEMINI_RETRY_BASE_MS = 1000;
 
@@ -271,12 +248,7 @@ async function evaluateWithGemini(parts: any[], maxScore: number): Promise<Evalu
       const text = result.response.text();
       if (!text) throw new Error("Gemini returned an empty response");
 
-      let parsed: EvaluationResponse;
-      try {
-        parsed = JSON.parse(text) as EvaluationResponse;
-      } catch {
-        parsed = JSON.parse(escapeControlCharsInJsonStrings(text)) as EvaluationResponse;
-      }
+      const parsed = await parseAiJson<EvaluationResponse>(text);
 
       parsed.score = Math.max(0, Math.min(maxScore, Number(parsed.score) || 0));
       parsed.maxScore = maxScore;
