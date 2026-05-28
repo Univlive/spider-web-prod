@@ -39,6 +39,13 @@ function formatTimeLeft(ms: number): string {
   return `${s}s left`;
 }
 
+function toMillis(v: any): number {
+  if (!v) return Date.now();
+  if (typeof v === "number") return v;
+  if (typeof v?.toMillis === "function") return v.toMillis();
+  if (typeof v?.seconds === "number") return v.seconds * 1000;
+  return Date.now();
+}
 function formatCountdown(ms: number): string {
   if (ms <= 0) return "Starting now";
   const totalSec = Math.floor(ms / 1000);
@@ -50,6 +57,31 @@ function formatCountdown(ms: number): string {
   if (h > 0) return `${h}h ${m}m`;
   if (m > 0) return `${m}m ${s}s`;
   return `${s}s`;
+}
+
+function timeAgo(createdAt: string) {
+  const now = toMillis(new Date());
+  const created = toMillis(createdAt);
+  const diffMs = now - created;
+
+  const seconds = Math.floor(diffMs / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) {
+    return `${days} day${days > 1 ? "s" : ""} ago`;
+  }
+
+  if (hours > 0) {
+    return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+  }
+
+  if (minutes > 0) {
+    return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+  }
+
+  return "Just now";
 }
 
 function safeNum(v: any, fallback: number) {
@@ -162,6 +194,12 @@ export function TestCard({ test, attemptsUsed = 0, onStart, onUnlock }: TestCard
       <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1.5 md:min-w-[220px]">
         {/* Stats Badges */}
         <div className="flex items-center gap-2">
+          <Badge
+            variant="secondary"
+            className="rounded-full bg-muted/60 px-2.5 py-0.5 text-xs font-medium"
+          >
+            {timeAgo(test.createdAt)}
+          </Badge>
           <Badge
             variant="secondary"
             className="rounded-full bg-muted/60 px-2.5 py-0.5 text-xs font-medium"

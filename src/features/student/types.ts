@@ -39,4 +39,5 @@ export type Test = {
   attemptsAllowed?: number;
   maxAttempts?: number;
   windowExpiresAt?: number | null;
+  createdAt?: string;
 };

@@ -70,6 +70,48 @@ function fmtDate(iso: string) {
   });
 }
 
+function parseRequestDetails(title: string, description: string) {
+  const parts = title.split(" - ");
+  const subject = parts[0] || "";
+  const chapterName = parts[1] || "";
+  const topic = parts[2] || "";
+
+  let subtopic = "";
+  let noOfQuestions = "";
+  let instructions = "";
+
+  if (description) {
+    const subtopicMatch = description.match(/Subtopic:\s*([^|\n]+)/);
+    const questionsMatch = description.match(/Questions:\s*([^|\n]+)/);
+    const instructionsMatch = description.match(/Instructions:\s*([\s\S]+)$/);
+
+    if (subtopicMatch) subtopic = subtopicMatch[1].trim();
+    if (questionsMatch) noOfQuestions = questionsMatch[1].trim();
+    if (instructionsMatch) instructions = instructionsMatch[1].trim();
+  }
+
+  // Fallback to legacy formats
+  if (!subject && !chapterName && !topic) {
+    return {
+      subject: title,
+      chapterName: "",
+      topic: "",
+      subtopic: "",
+      noOfQuestions: "",
+      instructions: description,
+    };
+  }
+
+  return {
+    subject,
+    chapterName,
+    topic,
+    subtopic: subtopic === "—" || subtopic === "None" ? "" : subtopic,
+    noOfQuestions: noOfQuestions === "—" || noOfQuestions === "Not specified" ? "" : noOfQuestions,
+    instructions: instructions === "—" || instructions === "None" ? "" : instructions,
+  };
+}
+
 function MonthlyUsage({ requests, limit }: { requests: QPRequest[]; limit: number }) {
   const now = new Date();
   const used = requests.filter((r) => {
@@ -139,16 +181,24 @@ export default function QuestionPaperRequests() {
 
   // Create dialog
   const [createOpen, setCreateOpen] = useState(false);
-  const [createTitle, setCreateTitle] = useState("");
-  const [createDesc, setCreateDesc] = useState("");
+  const [subject, setSubject] = useState("");
+  const [chapterName, setChapterName] = useState("");
+  const [topic, setTopic] = useState("");
+  const [subtopic, setSubtopic] = useState("");
+  const [noOfQuestions, setNoOfQuestions] = useState("");
+  const [instructions, setInstructions] = useState("");
   const [createFile, setCreateFile] = useState<File | null>(null);
   const [createBusy, setCreateBusy] = useState(false);
   const createFileRef = useRef<HTMLInputElement>(null);
 
   // Edit dialog
   const [editTarget, setEditTarget] = useState<QPRequest | null>(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [editDesc, setEditDesc] = useState("");
+  const [editSubject, setEditSubject] = useState("");
+  const [editChapterName, setEditChapterName] = useState("");
+  const [editTopic, setEditTopic] = useState("");
+  const [editSubtopic, setEditSubtopic] = useState("");
+  const [editNoOfQuestions, setEditNoOfQuestions] = useState("");
+  const [editInstructions, setEditInstructions] = useState("");
   const [editBusy, setEditBusy] = useState(false);
 
   // Re-upload dialog
@@ -185,19 +235,35 @@ export default function QuestionPaperRequests() {
   }
 
   async function handleCreate() {
-    if (!createTitle.trim()) return toast.error("Title is required");
+    if (!subject.trim()) return toast.error("Subject is required");
+    if (!chapterName.trim()) return toast.error("Chapter Name is required");
+    if (!topic.trim()) return toast.error("Topic is required");
     if (!createFile) return toast.error("Please select a file");
     setCreateBusy(true);
     try {
+      const title = `${subject.trim()} - ${chapterName.trim()} - ${topic.trim()}`;
+      const description = `Subtopic: ${subtopic.trim() || "—"} | Questions: ${noOfQuestions.trim() || "—"}\nInstructions: ${instructions.trim() || "None"}`;
+
       const fd = new FormData();
-      fd.append("title", createTitle.trim());
-      fd.append("description", createDesc.trim());
+      fd.append("title", title);
+      fd.append("description", description);
       fd.append("file", createFile);
+      fd.append("subject", subject.trim());
+      fd.append("chapter_name", chapterName.trim());
+      fd.append("topic", topic.trim());
+      if (subtopic.trim()) fd.append("subtopic", subtopic.trim());
+      if (noOfQuestions.trim()) fd.append("no_of_questions", noOfQuestions.trim());
+      if (instructions.trim()) fd.append("instructions", instructions.trim());
+
       const newReq = await apiUpload("/api/question-upload/", fd);
       setRequests((prev) => [newReq, ...prev]);
       setCreateOpen(false);
-      setCreateTitle("");
-      setCreateDesc("");
+      setSubject("");
+      setChapterName("");
+      setTopic("");
+      setSubtopic("");
+      setNoOfQuestions("");
+      setInstructions("");
       setCreateFile(null);
       toast.success("Request submitted");
     } catch (e: any) {
@@ -209,15 +275,27 @@ export default function QuestionPaperRequests() {
 
   async function handleEdit() {
     if (!editTarget) return;
-    if (!editTitle.trim() && !editDesc.trim()) return toast.error("Nothing to update");
+    if (!editSubject.trim()) return toast.error("Subject is required");
+    if (!editChapterName.trim()) return toast.error("Chapter Name is required");
+    if (!editTopic.trim()) return toast.error("Topic is required");
+
     setEditBusy(true);
     try {
+      const title = `${editSubject.trim()} - ${editChapterName.trim()} - ${editTopic.trim()}`;
+      const description = `Subtopic: ${editSubtopic.trim() || "—"} | Questions: ${editNoOfQuestions.trim() || "—"}\nInstructions: ${editInstructions.trim() || "None"}`;
+
       const updated = await apiFetch(`/api/question-upload/${editTarget.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: editTitle.trim() || null,
-          description: editDesc.trim() || null,
+          title,
+          description,
+          subject: editSubject.trim(),
+          chapter_name: editChapterName.trim(),
+          topic: editTopic.trim(),
+          subtopic: editSubtopic.trim() || null,
+          no_of_questions: editNoOfQuestions.trim() || null,
+          instructions: editInstructions.trim() || null,
         }),
       });
       setRequests((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
@@ -228,6 +306,17 @@ export default function QuestionPaperRequests() {
     } finally {
       setEditBusy(false);
     }
+  }
+
+  function openEdit(req: QPRequest) {
+    const details = parseRequestDetails(req.title, req.description);
+    setEditSubject(details.subject);
+    setEditChapterName(details.chapterName);
+    setEditTopic(details.topic);
+    setEditSubtopic(details.subtopic);
+    setEditNoOfQuestions(details.noOfQuestions);
+    setEditInstructions(details.instructions);
+    setEditTarget(req);
   }
 
   async function handleReupload() {
@@ -267,12 +356,6 @@ export default function QuestionPaperRequests() {
     } finally {
       setCancelBusy(false);
     }
-  }
-
-  function openEdit(req: QPRequest) {
-    setEditTitle(req.title);
-    setEditDesc(req.description);
-    setEditTarget(req);
   }
 
   return (
@@ -332,8 +415,16 @@ export default function QuestionPaperRequests() {
               <TableBody>
                 {requests.map((req) => (
                   <TableRow key={req.id}>
-                    <TableCell className="max-w-[200px] truncate font-medium">
-                      {req.title}
+                    <TableCell className="max-w-[200px] font-medium">
+                      <div className="truncate">{req.title}</div>
+                      {req.description && (
+                        <div
+                          className="mt-0.5 truncate text-xs text-muted-foreground"
+                          title={req.description}
+                        >
+                          {req.description}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       <a
@@ -410,25 +501,66 @@ export default function QuestionPaperRequests() {
             <DialogTitle>New Question Paper Request</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Subject </Label>
+                <Input
+                  placeholder="e.g. Physics"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Chapter Name </Label>
+                <Input
+                  placeholder="e.g. Thermodynamics"
+                  value={chapterName}
+                  onChange={(e) => setChapterName(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Topic </Label>
+                <Input
+                  placeholder="e.g. Heat Engines"
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Subtopic (If Any)</Label>
+                <Input
+                  placeholder="e.g. Carnot Cycle"
+                  value={subtopic}
+                  onChange={(e) => setSubtopic(e.target.value)}
+                />
+              </div>
+            </div>
+
             <div className="space-y-1.5">
-              <Label>Title *</Label>
+              <Label>No. of Questions</Label>
               <Input
-                placeholder="e.g. Class 10 Maths Term 2 2024"
-                value={createTitle}
-                onChange={(e) => setCreateTitle(e.target.value)}
+                type="number"
+                placeholder="e.g. 30"
+                value={noOfQuestions}
+                onChange={(e) => setNoOfQuestions(e.target.value)}
               />
             </div>
+
             <div className="space-y-1.5">
-              <Label>Description</Label>
+              <Label>Any Instructions</Label>
               <Textarea
-                placeholder="Any notes for admin (optional)"
-                rows={3}
-                value={createDesc}
-                onChange={(e) => setCreateDesc(e.target.value)}
+                placeholder="Specific instructions or formatting notes..."
+                rows={2}
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
               />
             </div>
+
             <div className="space-y-1.5">
-              <Label>Question Paper *</Label>
+              <Label>Upload Attachment </Label>
               <input
                 ref={createFileRef}
                 type="file"
@@ -471,13 +603,62 @@ export default function QuestionPaperRequests() {
             <DialogTitle>Edit Request</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label>Title</Label>
-              <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Subject *</Label>
+                <Input
+                  placeholder="e.g. Physics"
+                  value={editSubject}
+                  onChange={(e) => setEditSubject(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Chapter Name *</Label>
+                <Input
+                  placeholder="e.g. Thermodynamics"
+                  value={editChapterName}
+                  onChange={(e) => setEditChapterName(e.target.value)}
+                />
+              </div>
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Topic *</Label>
+                <Input
+                  placeholder="e.g. Heat Engines"
+                  value={editTopic}
+                  onChange={(e) => setEditTopic(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Subtopic (If Any)</Label>
+                <Input
+                  placeholder="e.g. Carnot Cycle"
+                  value={editSubtopic}
+                  onChange={(e) => setEditSubtopic(e.target.value)}
+                />
+              </div>
+            </div>
+
             <div className="space-y-1.5">
-              <Label>Description</Label>
-              <Textarea rows={3} value={editDesc} onChange={(e) => setEditDesc(e.target.value)} />
+              <Label>No. of Questions</Label>
+              <Input
+                type="number"
+                placeholder="e.g. 30"
+                value={editNoOfQuestions}
+                onChange={(e) => setEditNoOfQuestions(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Any Instructions</Label>
+              <Textarea
+                placeholder="Specific instructions or formatting notes..."
+                rows={2}
+                value={editInstructions}
+                onChange={(e) => setEditInstructions(e.target.value)}
+              />
             </div>
           </div>
           <DialogFooter>
