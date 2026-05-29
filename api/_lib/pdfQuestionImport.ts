@@ -1,4 +1,5 @@
 import { inflateRawSync, inflateSync } from "zlib";
+import { parseAiJson } from "./parseAiJson.js";
 
 export type ImportedQuestionStatus = "ready" | "partial" | "rejected";
 
@@ -274,11 +275,8 @@ export function segmentQuestionCandidates(text: string) {
   return fallback.slice(0, 150);
 }
 
-export function parseJsonResponse<T>(content: string): T {
-  const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/i) ||
-    content.match(/```\s*([\s\S]*?)\s*```/i) || [null, content];
-  const jsonString = (jsonMatch[1] || content || "").trim();
-  return JSON.parse(jsonString) as T;
+export async function parseJsonResponse<T>(content: string): Promise<T> {
+  return parseAiJson<T>(content);
 }
 
 function stripQuestionNumberPrefix(input: string) {

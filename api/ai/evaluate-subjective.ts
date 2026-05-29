@@ -2,6 +2,7 @@ import { VercelRequest, VercelResponse } from "@vercel/node";
 import { GoogleGenerativeAI, SchemaType, type GenerationConfig } from "@google/generative-ai";
 import { getGeminiModelNameFromEnv } from "../_lib/geminiModel.js";
 import { notifyDiscord, sendDiscordEmbed } from "../_lib/discordLogger.js";
+import { parseAiJson } from "../_lib/parseAiJson.js";
 
 interface EvaluationRequest {
   questionId: string;
@@ -126,7 +127,8 @@ function resolveReferenceImageUrls(req: EvaluationRequest): string[] {
 
 function resolveStudentImageUrls(req: EvaluationRequest): string[] {
   if (req.studentAnswerImageUrls?.length) return req.studentAnswerImageUrls.filter(Boolean);
-  if (req.questionType === "UPLOAD" && req.studentAnswer?.startsWith("https://")) return [req.studentAnswer];
+  if (req.questionType === "UPLOAD" && req.studentAnswer?.startsWith("https://"))
+    return [req.studentAnswer];
   return [];
 }
 
@@ -212,6 +214,9 @@ async function buildRequestParts(req: EvaluationRequest) {
   return parts;
 }
 
+const GEMINI_MAX_RETRIES = 3;
+const GEMINI_RETRY_BASE_MS = 1000;
+
 async function evaluateWithGemini(parts: any[], maxScore: number): Promise<EvaluationResponse> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -233,20 +238,30 @@ async function evaluateWithGemini(parts: any[], maxScore: number): Promise<Evalu
     systemInstruction: SYSTEM_INSTRUCTION,
   });
 
-  const result = await model.generateContent(parts);
-  const text = result.response.text();
-  if (!text) {
-    throw new Error("Gemini returned an empty response");
+  let lastError: unknown;
+  for (let attempt = 0; attempt < GEMINI_MAX_RETRIES; attempt++) {
+    if (attempt > 0) {
+      await new Promise((r) => setTimeout(r, GEMINI_RETRY_BASE_MS * 2 ** (attempt - 1)));
+    }
+    try {
+      const result = await model.generateContent(parts);
+      const text = result.response.text();
+      if (!text) throw new Error("Gemini returned an empty response");
+
+      const parsed = await parseAiJson<EvaluationResponse>(text);
+
+      parsed.score = Math.max(0, Math.min(maxScore, Number(parsed.score) || 0));
+      parsed.maxScore = maxScore;
+      parsed.confidence = Math.max(0, Math.min(1, Number(parsed.confidence) || 0.5));
+      parsed.evaluatedAt = Date.now();
+
+      return parsed;
+    } catch (err) {
+      lastError = err;
+    }
   }
 
-  const parsed = JSON.parse(text) as EvaluationResponse;
-
-  parsed.score = Math.max(0, Math.min(maxScore, Number(parsed.score) || 0));
-  parsed.maxScore = maxScore;
-  parsed.confidence = Math.max(0, Math.min(1, Number(parsed.confidence) || 0.5));
-  parsed.evaluatedAt = Date.now();
-
-  return parsed;
+  throw lastError;
 }
 
 interface BatchEvaluationRequest {
