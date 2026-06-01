@@ -7,22 +7,10 @@ import {
   UploadCloud,
   ExternalLink,
   ArrowLeft,
-  FileText,
-  Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  doc,
-  getDoc,
-  collection,
-  getDocs,
-  query,
-  where,
-  writeBatch,
-  serverTimestamp,
-} from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { db } from "@shared/lib/firebase";
-import { cn } from "@shared/lib/utils";
 import { useAuth } from "@app/providers/AuthProvider";
 import { Button } from "@shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
@@ -82,48 +70,6 @@ function fmtDate(iso: string) {
   });
 }
 
-function parseRequestDetails(title: string, description: string) {
-  const parts = title.split(" - ");
-  const subject = parts[0] || "";
-  const chapterName = parts[1] || "";
-  const topic = parts[2] || "";
-
-  let subtopic = "";
-  let noOfQuestions = "";
-  let instructions = "";
-
-  if (description) {
-    const subtopicMatch = description.match(/Subtopic:\s*([^|\n]+)/);
-    const questionsMatch = description.match(/Questions:\s*([^|\n]+)/);
-    const instructionsMatch = description.match(/Instructions:\s*([\s\S]+)$/);
-
-    if (subtopicMatch) subtopic = subtopicMatch[1].trim();
-    if (questionsMatch) noOfQuestions = questionsMatch[1].trim();
-    if (instructionsMatch) instructions = instructionsMatch[1].trim();
-  }
-
-  // Fallback to legacy formats
-  if (!subject && !chapterName && !topic) {
-    return {
-      subject: title,
-      chapterName: "",
-      topic: "",
-      subtopic: "",
-      noOfQuestions: "",
-      instructions: description,
-    };
-  }
-
-  return {
-    subject,
-    chapterName,
-    topic,
-    subtopic: subtopic === "—" || subtopic === "None" ? "" : subtopic,
-    noOfQuestions: noOfQuestions === "—" || noOfQuestions === "Not specified" ? "" : noOfQuestions,
-    instructions: instructions === "—" || instructions === "None" ? "" : instructions,
-  };
-}
-
 function MonthlyUsage({ requests, limit }: { requests: QPRequest[]; limit: number }) {
   const now = new Date();
   const used = requests.filter((r) => {
@@ -136,15 +82,13 @@ function MonthlyUsage({ requests, limit }: { requests: QPRequest[]; limit: numbe
   const full = used >= limit;
 
   return (
-    <div className="flex w-full items-center justify-between gap-2.5 rounded-lg bg-muted/60 px-3 py-1.5 text-sm sm:w-auto sm:justify-start">
-      <div className="flex items-center gap-1.5">
-        <span className="text-muted-foreground">This month:</span>
-        <span className={`font-semibold ${full ? "text-destructive" : "text-foreground"}`}>
-          {used}
-        </span>
-        <span className="text-muted-foreground">/ {limit}</span>
-      </div>
-      <div className="h-1.5 w-24 shrink-0 overflow-hidden rounded-full bg-border sm:w-20">
+    <div className="flex items-center gap-2 rounded-lg bg-muted/60 px-3 py-1.5 text-sm">
+      <span className="text-muted-foreground">This month:</span>
+      <span className={`font-semibold ${full ? "text-destructive" : "text-foreground"}`}>
+        {used}
+      </span>
+      <span className="text-muted-foreground">/ {limit}</span>
+      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-border">
         <div
           className={`h-full rounded-full transition-all ${full ? "bg-destructive" : pct >= 80 ? "bg-yellow-500" : "bg-primary"}`}
           style={{ width: `${pct}%` }}
@@ -195,24 +139,16 @@ export default function QuestionPaperRequests() {
 
   // Create dialog
   const [createOpen, setCreateOpen] = useState(false);
-  const [subject, setSubject] = useState("");
-  const [chapterName, setChapterName] = useState("");
-  const [topic, setTopic] = useState("");
-  const [subtopic, setSubtopic] = useState("");
-  const [noOfQuestions, setNoOfQuestions] = useState("");
-  const [instructions, setInstructions] = useState("");
+  const [createTitle, setCreateTitle] = useState("");
+  const [createDesc, setCreateDesc] = useState("");
   const [createFile, setCreateFile] = useState<File | null>(null);
   const [createBusy, setCreateBusy] = useState(false);
   const createFileRef = useRef<HTMLInputElement>(null);
 
   // Edit dialog
   const [editTarget, setEditTarget] = useState<QPRequest | null>(null);
-  const [editSubject, setEditSubject] = useState("");
-  const [editChapterName, setEditChapterName] = useState("");
-  const [editTopic, setEditTopic] = useState("");
-  const [editSubtopic, setEditSubtopic] = useState("");
-  const [editNoOfQuestions, setEditNoOfQuestions] = useState("");
-  const [editInstructions, setEditInstructions] = useState("");
+  const [editTitle, setEditTitle] = useState("");
+  const [editDesc, setEditDesc] = useState("");
   const [editBusy, setEditBusy] = useState(false);
 
   // Re-upload dialog
@@ -249,60 +185,19 @@ export default function QuestionPaperRequests() {
   }
 
   async function handleCreate() {
-    if (!subject.trim()) return toast.error("Subject is required");
-    if (!chapterName.trim()) return toast.error("Chapter Name is required");
-    if (!topic.trim()) return toast.error("Topic is required");
+    if (!createTitle.trim()) return toast.error("Title is required");
     if (!createFile) return toast.error("Please select a file");
     setCreateBusy(true);
     try {
-      const title = `${subject.trim()} - ${chapterName.trim()} - ${topic.trim()}`;
-      const description = `Subtopic: ${subtopic.trim() || "—"} | Questions: ${noOfQuestions.trim() || "—"}\nInstructions: ${instructions.trim() || "None"}`;
-
       const fd = new FormData();
-      fd.append("title", title);
-      fd.append("description", description);
+      fd.append("title", createTitle.trim());
+      fd.append("description", createDesc.trim());
       fd.append("file", createFile);
-      fd.append("subject", subject.trim());
-      fd.append("chapter_name", chapterName.trim());
-      fd.append("topic", topic.trim());
-      if (subtopic.trim()) fd.append("subtopic", subtopic.trim());
-      if (noOfQuestions.trim()) fd.append("no_of_questions", noOfQuestions.trim());
-      if (instructions.trim()) fd.append("instructions", instructions.trim());
-
       const newReq = await apiUpload("/api/question-upload/", fd);
       setRequests((prev) => [newReq, ...prev]);
-
-      // Notify Admin
-      try {
-        const adminsSnap = await getDocs(
-          query(collection(db, "users"), where("role", "==", "ADMIN"))
-        );
-        if (!adminsSnap.empty) {
-          const batch = writeBatch(db);
-          adminsSnap.forEach((adminDoc) => {
-            const notifRef = doc(collection(db, "users", adminDoc.id, "notifications"));
-            batch.set(notifRef, {
-              title: "📄 New Question Paper Request",
-              body: `${profile?.displayName || profile?.fullName || "An educator"} requested upload of "${title}"`,
-              read: false,
-              type: "qp_request",
-              createdAt: serverTimestamp(),
-              createdByRole: "EDUCATOR",
-            });
-          });
-          await batch.commit();
-        }
-      } catch (err) {
-        console.error("Error creating admin notifications for QP request:", err);
-      }
-
       setCreateOpen(false);
-      setSubject("");
-      setChapterName("");
-      setTopic("");
-      setSubtopic("");
-      setNoOfQuestions("");
-      setInstructions("");
+      setCreateTitle("");
+      setCreateDesc("");
       setCreateFile(null);
       toast.success("Request submitted");
     } catch (e: any) {
@@ -314,27 +209,15 @@ export default function QuestionPaperRequests() {
 
   async function handleEdit() {
     if (!editTarget) return;
-    if (!editSubject.trim()) return toast.error("Subject is required");
-    if (!editChapterName.trim()) return toast.error("Chapter Name is required");
-    if (!editTopic.trim()) return toast.error("Topic is required");
-
+    if (!editTitle.trim() && !editDesc.trim()) return toast.error("Nothing to update");
     setEditBusy(true);
     try {
-      const title = `${editSubject.trim()} - ${editChapterName.trim()} - ${editTopic.trim()}`;
-      const description = `Subtopic: ${editSubtopic.trim() || "—"} | Questions: ${editNoOfQuestions.trim() || "—"}\nInstructions: ${editInstructions.trim() || "None"}`;
-
       const updated = await apiFetch(`/api/question-upload/${editTarget.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title,
-          description,
-          subject: editSubject.trim(),
-          chapter_name: editChapterName.trim(),
-          topic: editTopic.trim(),
-          subtopic: editSubtopic.trim() || null,
-          no_of_questions: editNoOfQuestions.trim() || null,
-          instructions: editInstructions.trim() || null,
+          title: editTitle.trim() || null,
+          description: editDesc.trim() || null,
         }),
       });
       setRequests((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
@@ -345,17 +228,6 @@ export default function QuestionPaperRequests() {
     } finally {
       setEditBusy(false);
     }
-  }
-
-  function openEdit(req: QPRequest) {
-    const details = parseRequestDetails(req.title, req.description);
-    setEditSubject(details.subject);
-    setEditChapterName(details.chapterName);
-    setEditTopic(details.topic);
-    setEditSubtopic(details.subtopic);
-    setEditNoOfQuestions(details.noOfQuestions);
-    setEditInstructions(details.instructions);
-    setEditTarget(req);
   }
 
   async function handleReupload() {
@@ -397,13 +269,19 @@ export default function QuestionPaperRequests() {
     }
   }
 
+  function openEdit(req: QPRequest) {
+    setEditTitle(req.title);
+    setEditDesc(req.description);
+    setEditTarget(req);
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="flex items-center justify-between">
         <div className="flex items-center">
           {!isApp && (
             <div
-              className="flex hidden cursor-pointer items-center gap-2 rounded-full p-2 transition-colors hover:bg-primary hover:text-white md:block"
+              className="flex cursor-pointer items-center gap-2 rounded-full p-2 transition-colors hover:bg-primary hover:text-white"
               onClick={() => navigate("/educator/test-series")}
             >
               <ArrowLeft className="h-4 w-4" />
@@ -416,9 +294,9 @@ export default function QuestionPaperRequests() {
             </p>
           </div>
         </div>
-        <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:items-center">
+        <div className="flex items-center gap-3">
           <MonthlyUsage requests={requests} limit={monthlyLimit} />
-          <Button onClick={() => setCreateOpen(true)} className="w-full sm:w-auto">
+          <Button onClick={() => setCreateOpen(true)}>
             <FileUp className="mr-2 h-4 w-4" />
             New Request
           </Button>
@@ -440,197 +318,87 @@ export default function QuestionPaperRequests() {
               <p className="text-sm">No requests yet. Click "New Request" to get started.</p>
             </div>
           ) : (
-            <>
-              {/* Desktop View (Table) */}
-              <div className="hidden md:block">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>File</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Admin Note</TableHead>
-                      <TableHead>Submitted</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {requests.map((req) => (
-                      <TableRow key={req.id}>
-                        <TableCell className="max-w-[200px] font-medium">
-                          <div className="truncate">{req.title}</div>
-                          {req.description && (
-                            <div
-                              className="mt-0.5 truncate text-xs text-muted-foreground"
-                              title={req.description}
-                            >
-                              {req.description}
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <a
-                            href={req.file_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex max-w-[140px] items-center gap-1 truncate text-xs text-primary hover:underline"
-                          >
-                            {req.file_name}
-                            <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                          </a>
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[req.status]}`}
-                          >
-                            {STATUS_LABEL[req.status]}
-                          </span>
-                        </TableCell>
-                        <TableCell className="max-w-[160px] truncate text-sm text-muted-foreground">
-                          {req.admin_note || "—"}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                          {fmtDate(req.created_at)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {req.status === "PENDING" && (
-                            <div className="flex items-center justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                title="Edit"
-                                onClick={() => openEdit(req)}
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                title="Replace file"
-                                onClick={() => {
-                                  setReuploadTarget(req);
-                                  setReuploadFile(null);
-                                }}
-                              >
-                                <UploadCloud className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-destructive hover:text-destructive"
-                                title="Cancel"
-                                onClick={() => setCancelTarget(req)}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Mobile View (Cards) */}
-              <div className="space-y-4 md:hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>File</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Admin Note</TableHead>
+                  <TableHead>Submitted</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {requests.map((req) => (
-                  <div
-                    key={req.id}
-                    className="space-y-3 rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-all hover:border-primary/20"
-                  >
-                    {/* Header: Title + Status */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <h4 className="break-words text-sm font-semibold text-foreground">
-                          {req.title}
-                        </h4>
-                        {req.description && (
-                          <p className="mt-1 line-clamp-2 break-words text-xs text-muted-foreground">
-                            {req.description}
-                          </p>
-                        )}
-                      </div>
-                      <span
-                        className={cn(
-                          "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
-                          STATUS_CLASS[req.status]
-                        )}
-                      >
-                        {STATUS_LABEL[req.status]}
-                      </span>
-                    </div>
-
-                    {/* Meta info (File + Date) */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                      {/* File Link */}
+                  <TableRow key={req.id}>
+                    <TableCell className="max-w-[200px] truncate font-medium">
+                      {req.title}
+                    </TableCell>
+                    <TableCell>
                       <a
                         href={req.file_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex max-w-[180px] items-center gap-1.5 rounded-lg border border-border/80 bg-muted/20 px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-muted/40"
+                        className="flex max-w-[140px] items-center gap-1 truncate text-xs text-primary hover:underline"
                       >
-                        <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="truncate">{req.file_name}</span>
+                        {req.file_name}
                         <ExternalLink className="h-3 w-3 flex-shrink-0" />
                       </a>
-
-                      {/* Date */}
-                      <div className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {fmtDate(req.created_at)}
-                      </div>
-                    </div>
-
-                    {/* Admin Note if exists */}
-                    {req.admin_note && (
-                      <div className="rounded-lg border border-border/40 bg-muted/50 p-2.5 text-xs text-muted-foreground">
-                        <span className="font-semibold text-foreground">Admin Note: </span>
-                        {req.admin_note}
-                      </div>
-                    )}
-
-                    {/* Actions if Pending */}
-                    {req.status === "PENDING" && (
-                      <div className="flex items-center gap-2 border-t border-border/40 pt-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 flex-1 gap-1 text-xs"
-                          onClick={() => openEdit(req)}
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 flex-1 gap-1 text-xs"
-                          onClick={() => {
-                            setReuploadTarget(req);
-                            setReuploadFile(null);
-                          }}
-                        >
-                          <UploadCloud className="h-3.5 w-3.5" />
-                          Replace File
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 flex-1 gap-1 text-xs text-destructive hover:bg-destructive/5 hover:text-destructive"
-                          onClick={() => setCancelTarget(req)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          Cancel
-                        </Button>
-                      </div>
-                    )}
-                  </div>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[req.status]}`}
+                      >
+                        {STATUS_LABEL[req.status]}
+                      </span>
+                    </TableCell>
+                    <TableCell className="max-w-[160px] truncate text-sm text-muted-foreground">
+                      {req.admin_note || "—"}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                      {fmtDate(req.created_at)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {req.status === "PENDING" && (
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            title="Edit"
+                            onClick={() => openEdit(req)}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            title="Replace file"
+                            onClick={() => {
+                              setReuploadTarget(req);
+                              setReuploadFile(null);
+                            }}
+                          >
+                            <UploadCloud className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            title="Cancel"
+                            onClick={() => setCancelTarget(req)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </div>
-            </>
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
@@ -642,66 +410,25 @@ export default function QuestionPaperRequests() {
             <DialogTitle>New Question Paper Request</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label>Subject </Label>
-                <Input
-                  placeholder="e.g. Physics"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Chapter Name </Label>
-                <Input
-                  placeholder="e.g. Thermodynamics"
-                  value={chapterName}
-                  onChange={(e) => setChapterName(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label>Topic </Label>
-                <Input
-                  placeholder="e.g. Heat Engines"
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Subtopic (If Any)</Label>
-                <Input
-                  placeholder="e.g. Carnot Cycle"
-                  value={subtopic}
-                  onChange={(e) => setSubtopic(e.target.value)}
-                />
-              </div>
-            </div>
-
             <div className="space-y-1.5">
-              <Label>No. of Questions</Label>
+              <Label>Title *</Label>
               <Input
-                type="number"
-                placeholder="e.g. 30"
-                value={noOfQuestions}
-                onChange={(e) => setNoOfQuestions(e.target.value)}
+                placeholder="e.g. Class 10 Maths Term 2 2024"
+                value={createTitle}
+                onChange={(e) => setCreateTitle(e.target.value)}
               />
             </div>
-
             <div className="space-y-1.5">
-              <Label>Any Instructions</Label>
+              <Label>Description</Label>
               <Textarea
-                placeholder="Specific instructions or formatting notes..."
-                rows={2}
-                value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
+                placeholder="Any notes for admin (optional)"
+                rows={3}
+                value={createDesc}
+                onChange={(e) => setCreateDesc(e.target.value)}
               />
             </div>
-
             <div className="space-y-1.5">
-              <Label>Upload Attachment </Label>
+              <Label>Question Paper *</Label>
               <input
                 ref={createFileRef}
                 type="file"
@@ -744,62 +471,13 @@ export default function QuestionPaperRequests() {
             <DialogTitle>Edit Request</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label>Subject *</Label>
-                <Input
-                  placeholder="e.g. Physics"
-                  value={editSubject}
-                  onChange={(e) => setEditSubject(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Chapter Name *</Label>
-                <Input
-                  placeholder="e.g. Thermodynamics"
-                  value={editChapterName}
-                  onChange={(e) => setEditChapterName(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label>Topic *</Label>
-                <Input
-                  placeholder="e.g. Heat Engines"
-                  value={editTopic}
-                  onChange={(e) => setEditTopic(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Subtopic (If Any)</Label>
-                <Input
-                  placeholder="e.g. Carnot Cycle"
-                  value={editSubtopic}
-                  onChange={(e) => setEditSubtopic(e.target.value)}
-                />
-              </div>
-            </div>
-
             <div className="space-y-1.5">
-              <Label>No. of Questions</Label>
-              <Input
-                type="number"
-                placeholder="e.g. 30"
-                value={editNoOfQuestions}
-                onChange={(e) => setEditNoOfQuestions(e.target.value)}
-              />
+              <Label>Title</Label>
+              <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
             </div>
-
             <div className="space-y-1.5">
-              <Label>Any Instructions</Label>
-              <Textarea
-                placeholder="Specific instructions or formatting notes..."
-                rows={2}
-                value={editInstructions}
-                onChange={(e) => setEditInstructions(e.target.value)}
-              />
+              <Label>Description</Label>
+              <Textarea rows={3} value={editDesc} onChange={(e) => setEditDesc(e.target.value)} />
             </div>
           </div>
           <DialogFooter>

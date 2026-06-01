@@ -477,7 +477,7 @@ export default function DppGenerator() {
         (id) => batches.find((b) => b.id === id)?.name || id
       );
       const customTitle = genTopicName.trim()
-        ? `${genTopicName.trim()}-DPP`
+        ? `DPP - ${genTopicName.trim()} (${batchNames.join(", ")})`
         : `DPP (${batchNames.join(", ")})`;
 
       const res = await apiFetch(firebaseUser, "/api/dpp/generate", {
@@ -494,7 +494,7 @@ export default function DppGenerator() {
           subject_filter: genSubjects,
           chapter_filter: genChapters,
           target_batches: [...selectedBatchIds],
-          title: genTopicName.trim(),
+          title: customTitle,
           type: "dpp",
           folderId: "dpp_folder",
           uploaded_context: uploadedContext,

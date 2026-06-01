@@ -73,7 +73,6 @@ type AttemptResponse = {
   markedForReview: boolean;
   visited: boolean;
   answered: boolean;
-  needsManualReview?: boolean;
   aiEvaluation?: {
     score: number;
     maxScore: number;
@@ -1276,9 +1275,7 @@ export default function StudentCBTAttempt() {
       queryClient.invalidateQueries({ queryKey: ["studentDashboardAttempts"] });
       queryClient.invalidateQueries({ queryKey: ["studentRank"] });
 
-      navigate(`/student/results/${attemptId}?fromTest=true${isAutoSubmit ? "&auto=1" : ""}`, {
-        replace: true,
-      });
+      navigate(`/student/results/${attemptId}?fromTest=true${isAutoSubmit ? "&auto=1" : ""}`);
     } catch (e) {
       console.error(e);
       logError(e, "cbt:submit-test");

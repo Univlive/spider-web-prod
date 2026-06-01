@@ -111,7 +111,6 @@ export default function NotificationBell({
       };
 
       const triggerChime = () => {
-        console.log("[NotificationBell] Playing synthetic chime sound...");
         const now = audioCtx.currentTime;
         playTone(1046.5, now, 0.3, 0.18); // C6 (Higher)
         playTone(1318.51, now + 0.1, 0.4, 0.18); // E6 (Higher)

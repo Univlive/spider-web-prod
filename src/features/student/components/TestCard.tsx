@@ -19,13 +19,13 @@ const difficultyColors = {
   Hard: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
 
-const subjectColors: Record<string, string> = {
-  "General Test": "bg-pastel-mint",
-  English: "bg-pastel-lavender",
-  Mathematics: "bg-pastel-yellow",
-  Physics: "bg-pastel-peach",
-  Chemistry: "bg-pastel-pink",
-  Biology: "bg-pastel-cream",
+const subjectIconColors: Record<string, string> = {
+  "General Test": "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  English: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+  Mathematics: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  Physics: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  Chemistry: "bg-pink-500/10 text-pink-600 dark:text-pink-400",
+  Biology: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
 };
 
 const subjectStyles: Record<string, string> = {
@@ -60,12 +60,12 @@ function formatTimeLeft(ms: number): string {
   return `${s}s left`;
 }
 
-function toMillis(v: any): number {
-  if (!v) return Date.now();
+function toMillis(v: any): number | null {
+  if (!v) return null;
   if (typeof v === "number") return v;
   if (typeof v?.toMillis === "function") return v.toMillis();
   if (typeof v?.seconds === "number") return v.seconds * 1000;
-  return Date.now();
+  return null;
 }
 function formatCountdown(ms: number): string {
   if (ms <= 0) return "Starting now";
@@ -81,8 +81,9 @@ function formatCountdown(ms: number): string {
 }
 
 function timeAgo(createdAt: string) {
-  const now = toMillis(new Date());
+  const now = Date.now();
   const created = toMillis(createdAt);
+  if (created === null) return "";
   const diffMs = now - created;
 
   const seconds = Math.floor(diffMs / 1000);
@@ -178,7 +179,7 @@ export function TestCard({ test, attemptsUsed = 0, onStart, onUnlock }: TestCard
                 ? "bg-red-500/10 text-red-500"
                 : test.isUpcoming
                   ? "bg-amber-500/10 text-amber-500"
-                  : subjectColors[test.subject] || "bg-pastel-cream text-foreground"
+                  : subjectIconColors[test.subject] || "bg-muted text-muted-foreground"
             )}
           >
             {test.isLocked ? (
@@ -365,7 +366,16 @@ export function TestCard({ test, attemptsUsed = 0, onStart, onUnlock }: TestCard
 
             {/* Badges/Pills Row */}
             <div className="flex flex-wrap items-center gap-2">
-              {/* Subject Tag */}
+              {test.subject && (
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
+                    getSubjectBadgeStyle(test.subject)
+                  )}
+                >
+                  {test.subject}
+                </span>
+              )}
 
               {/* Created At Pill */}
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-muted/20 px-2.5 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/40">

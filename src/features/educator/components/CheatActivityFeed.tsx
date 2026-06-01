@@ -90,7 +90,6 @@ export default function CheatActivityFeed() {
         })) as CheatAlert[];
 
         setAlerts(fetchedAlerts);
-        console.log(fetchedAlerts);
         setLoading(false);
       },
       (error) => {
