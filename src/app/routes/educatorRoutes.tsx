@@ -29,6 +29,7 @@ import {
   SubjectiveReviewQueue,
   SubjectiveAttemptGrader,
   LiveClasses,
+  ProctoringReview,
 } from "@features/educator";
 import QuestionPaperRequests from "@features/educator/QuestionPaperRequests";
 
@@ -73,6 +74,7 @@ export function getEducatorRoutes() {
       <Route path="attempts/:attemptId" element={<StudentAttemptDetails />} />
       <Route path="review-submissions" element={<SubjectiveReviewQueue />} />
       <Route path="review-submissions/:attemptId" element={<SubjectiveAttemptGrader />} />
+      <Route path="proctoring/:attemptId" element={<ProctoringReview />} />
     </Route>
   );
 }
