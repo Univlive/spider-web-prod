@@ -122,7 +122,15 @@ export default function StudentTests() {
         );
         assignSnap.docs.forEach((d) => {
           const data = d.data() as any;
-          assignMap.set(String(data.testId || ""), { ...data, _docId: d.id });
+          const thisMs = data.createdAt?.toMillis?.() ?? 0;
+          const existing = assignMap.get(String(data.testId || ""));
+          if (!existing || thisMs >= (existing._createdAtMs ?? 0)) {
+            assignMap.set(String(data.testId || ""), {
+              ...data,
+              _docId: d.id,
+              _createdAtMs: thisMs,
+            });
+          }
         });
       }
 
@@ -217,9 +225,9 @@ export default function StudentTests() {
       const counts: Record<string, number> = {};
       snap.docs.forEach((d) => {
         const a = d.data();
-        const aid = String(a.batchAssignmentId || "");
-        if (aid) {
-          counts[aid] = (counts[aid] || 0) + 1;
+        const tid = String(a.testId || "");
+        if (tid) {
+          counts[tid] = (counts[tid] || 0) + 1;
         }
       });
       return counts;
@@ -541,7 +549,7 @@ export default function StudentTests() {
                       startsAtMs: t._startsAtMs,
                       windowExpiresAt: null,
                     }}
-                    attemptsUsed={attemptCounts[(t as any).batchAssignmentId] || 0}
+                    attemptsUsed={attemptCounts[t.id] || 0}
                     onStart={() =>
                       nav(`/student/tests/${t.id}`, {
                         state: { batchAssignmentId: (t as any).batchAssignmentId || null },
@@ -622,7 +630,7 @@ export default function StudentTests() {
                               windowExpiresAt: unlockEntry ?? null,
                               isLive,
                             }}
-                            attemptsUsed={attemptCounts[(t as any).batchAssignmentId] || 0}
+                            attemptsUsed={attemptCounts[t.id] || 0}
                             onStart={() =>
                               nav(`/student/tests/${t.id}`, {
                                 state: { batchAssignmentId: (t as any).batchAssignmentId || null },
@@ -679,7 +687,7 @@ export default function StudentTests() {
                     windowExpiresAt: unlockEntry ?? null,
                     isLive,
                   }}
-                  attemptsUsed={attemptCounts[(t as any).batchAssignmentId] || 0}
+                  attemptsUsed={attemptCounts[t.id] || 0}
                   onStart={() =>
                     nav(`/student/tests/${t.id}`, {
                       state: { batchAssignmentId: (t as any).batchAssignmentId || null },

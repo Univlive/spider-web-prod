@@ -277,7 +277,14 @@ export default function StudentTestDetails() {
               )
             );
             if (!assignSnap.empty) {
-              const assignDoc = assignSnap.docs[0];
+              const sortedAssignDocs = assignSnap.docs
+                .slice()
+                .sort(
+                  (a, b) =>
+                    (b.data().createdAt?.toMillis?.() ?? 0) -
+                    (a.data().createdAt?.toMillis?.() ?? 0)
+                );
+              const assignDoc = sortedAssignDocs[0];
               const assignment = assignDoc.data() as any;
               setBatchAssignmentId(assignDoc.id);
               if (assignment.attemptsAllowed != null) {
@@ -393,24 +400,15 @@ export default function StudentTestDetails() {
   useEffect(() => {
     if (!canLoad) return;
 
-    const qAttempts = batchAssignmentId
-      ? query(
-          collection(db, "attempts"),
-          where("studentId", "==", firebaseUser!.uid),
-          where("batchAssignmentId", "==", batchAssignmentId),
-          where("status", "==", "submitted"),
-          orderBy("submittedAt", "desc"),
-          limit(20)
-        )
-      : query(
-          collection(db, "attempts"),
-          where("studentId", "==", firebaseUser!.uid),
-          where("educatorId", "==", educatorId!),
-          where("testId", "==", testId!),
-          where("status", "==", "submitted"),
-          orderBy("submittedAt", "desc"),
-          limit(20)
-        );
+    const qAttempts = query(
+      collection(db, "attempts"),
+      where("studentId", "==", firebaseUser!.uid),
+      where("educatorId", "==", educatorId!),
+      where("testId", "==", testId!),
+      where("status", "==", "submitted"),
+      orderBy("submittedAt", "desc"),
+      limit(20)
+    );
 
     const unsub = onSnapshot(
       qAttempts,

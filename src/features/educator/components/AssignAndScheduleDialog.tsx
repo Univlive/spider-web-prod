@@ -12,10 +12,13 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
+  query,
   serverTimestamp,
   setDoc,
   Timestamp,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { db } from "@shared/lib/firebase";
 import { Key, Clock, Copy, Check, RotateCcw, Monitor, Globe, Layers } from "lucide-react";
@@ -459,10 +462,20 @@ export default function AssignAndScheduleDialog({
         const cfg = perBatch ? getCfg(batch.id) : globalConfig;
         const ts = serverTimestamp();
 
+        // Upsert: find existing assignment for same testId+batchId to avoid duplicates
+        const existingAssignSnap = await getDocs(
+          query(
+            collection(db, "educators", educatorId, "batchAssignments"),
+            where("testId", "==", test.id),
+            where("batchId", "==", batch.id)
+          )
+        );
+        const existingAssignDoc = existingAssignSnap.empty ? null : existingAssignSnap.docs[0];
+
         if (cfg.accessType === "scheduled") {
           const start = Timestamp.fromDate(new Date(`${cfg.startDate}T${cfg.startTime}`));
           const end = Timestamp.fromDate(new Date(`${cfg.endDate}T${cfg.endTime}`));
-          await addDoc(collection(db, "educators", educatorId, "batchAssignments"), {
+          const scheduledData = {
             testId: test.id,
             testTitle: test.title || "",
             batchId: batch.id,
@@ -478,9 +491,19 @@ export default function AssignAndScheduleDialog({
             attemptsAllowed: Number(cfg.attemptsAllowed) || 3,
             examMode: cfg.examMode,
             proctoringConfig: cfg.examMode !== "web" ? cfg.proctoringConfig : null,
-            createdAt: ts,
             updatedAt: ts,
-          });
+          };
+          if (existingAssignDoc) {
+            await setDoc(existingAssignDoc.ref, {
+              ...scheduledData,
+              createdAt: existingAssignDoc.data().createdAt,
+            });
+          } else {
+            await addDoc(collection(db, "educators", educatorId, "batchAssignments"), {
+              ...scheduledData,
+              createdAt: ts,
+            });
+          }
         } else {
           const codeUpper = cfg.code.trim().toUpperCase();
           const max = Number(cfg.maxUses) || 100;
@@ -488,14 +511,47 @@ export default function AssignAndScheduleDialog({
           const windowMinutes = Number(cfg.windowMinutes) || 0;
 
           const codeRef = doc(db, "educators", educatorId, "accessCodes", codeUpper);
-          const existing = await getDoc(codeRef);
-          if (existing.exists()) {
-            toast.error(`Code ${codeUpper} already exists — generate a new one`);
-            setSaving(false);
-            return;
+
+          if (existingAssignDoc) {
+            const existingCode = String(existingAssignDoc.data().accessCode || "");
+            if (existingCode !== codeUpper) {
+              const newCodeDoc = await getDoc(codeRef);
+              if (newCodeDoc.exists()) {
+                toast.error(`Code ${codeUpper} already exists — generate a new one`);
+                setSaving(false);
+                return;
+              }
+              await setDoc(codeRef, {
+                code: codeUpper,
+                testSeriesId: test.id,
+                testSeriesTitle: test.title || "",
+                maxUses: max,
+                usesUsed: 0,
+                expiresAt,
+                windowMinutes,
+                createdAt: ts,
+              });
+            }
+          } else {
+            const existing = await getDoc(codeRef);
+            if (existing.exists()) {
+              toast.error(`Code ${codeUpper} already exists — generate a new one`);
+              setSaving(false);
+              return;
+            }
+            await setDoc(codeRef, {
+              code: codeUpper,
+              testSeriesId: test.id,
+              testSeriesTitle: test.title || "",
+              maxUses: max,
+              usesUsed: 0,
+              expiresAt,
+              windowMinutes,
+              createdAt: ts,
+            });
           }
 
-          await addDoc(collection(db, "educators", educatorId, "batchAssignments"), {
+          const accessCodeData = {
             testId: test.id,
             testTitle: test.title || "",
             batchId: batch.id,
@@ -511,20 +567,19 @@ export default function AssignAndScheduleDialog({
             attemptsAllowed: Number(cfg.attemptsAllowed) || 3,
             examMode: cfg.examMode,
             proctoringConfig: cfg.examMode !== "web" ? cfg.proctoringConfig : null,
-            createdAt: ts,
             updatedAt: ts,
-          });
-
-          await setDoc(codeRef, {
-            code: codeUpper,
-            testSeriesId: test.id,
-            testSeriesTitle: test.title || "",
-            maxUses: max,
-            usesUsed: 0,
-            expiresAt,
-            windowMinutes,
-            createdAt: ts,
-          });
+          };
+          if (existingAssignDoc) {
+            await setDoc(existingAssignDoc.ref, {
+              ...accessCodeData,
+              createdAt: existingAssignDoc.data().createdAt,
+            });
+          } else {
+            await addDoc(collection(db, "educators", educatorId, "batchAssignments"), {
+              ...accessCodeData,
+              createdAt: ts,
+            });
+          }
         }
       }
 
@@ -667,7 +722,9 @@ export default function AssignAndScheduleDialog({
             )}
 
             {!perBatch ? (
-              renderForm(globalConfig, updateGlobal, "__global")
+              <div className="max-h-[55vh] overflow-y-auto pr-1">
+                {renderForm(globalConfig, updateGlobal, "__global")}
+              </div>
             ) : (
               <div className="max-h-[360px] space-y-4 overflow-y-auto">
                 {selectedBatches.map((b) => (

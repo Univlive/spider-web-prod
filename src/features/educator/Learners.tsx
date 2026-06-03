@@ -917,7 +917,7 @@ export default function Learners() {
                 <Button variant="secondary" onClick={() => nav(`/educator/students/${l.id}`)}>
                   View Details <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
-                <Button variant="outline" onClick={() => openAssignBatch(l)}>
+                <Button variant="outline" disabled={!seatOn} onClick={() => openAssignBatch(l)}>
                   <Pencil className="mr-2 h-4 w-4" />
                   {l.batchId ? "Change Batch" : "Assign Batch"}
                 </Button>
