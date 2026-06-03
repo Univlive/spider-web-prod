@@ -242,7 +242,7 @@ async function evaluateWithGemini(parts: any[], maxScore: number): Promise<Evalu
 
   const generationConfig: GenerationConfig = {
     temperature: 0.3,
-    maxOutputTokens: 2048,
+    maxOutputTokens: 8192,
     responseMimeType: "application/json",
     responseSchema: evaluationSchema as any,
   };
@@ -260,6 +260,13 @@ async function evaluateWithGemini(parts: any[], maxScore: number): Promise<Evalu
     }
     try {
       const result = await model.generateContent(parts);
+      const candidate = result.response.candidates?.[0];
+      if (candidate?.finishReason === "MAX_TOKENS") {
+        void sendDiscordEmbed("warning", "⚠️ Gemini hit MAX_TOKENS — feedback may be truncated", [
+          { name: "Attempt", value: String(attempt + 1), inline: true },
+        ]);
+        throw new Error("Gemini response truncated by MAX_TOKENS");
+      }
       const text = result.response.text();
       if (!text) throw new Error("Gemini returned an empty response");
 

@@ -155,7 +155,7 @@ export default function StudentTests() {
           ...t,
           batchAssignmentId: assignment._docId,
           attemptsAllowed: assignment.attemptsAllowed ?? t.attemptsAllowed,
-          attemptsResetAt: assignment.attemptsResetAt ?? null,
+          attemptsResetAt: assignment.updatedAt ?? null,
         };
         if (assignment.accessType === "scheduled") {
           return {

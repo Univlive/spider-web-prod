@@ -288,7 +288,7 @@ export default function StudentTestDetails() {
               const assignDoc = sortedAssignDocs[0];
               const assignment = assignDoc.data() as any;
               setBatchAssignmentId(assignDoc.id);
-              setAttemptsResetAtMs(assignment.attemptsResetAt?.toMillis?.() ?? 0);
+              setAttemptsResetAtMs(assignment.updatedAt?.toMillis?.() ?? 0);
               if (assignment.attemptsAllowed != null) {
                 assignmentAttemptsAllowed = Number(assignment.attemptsAllowed);
               }
