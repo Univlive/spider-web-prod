@@ -1,4 +1,4 @@
-const GEMINI_REPAIR_MODEL = "gemini-2.0-flash";
+const GEMINI_REPAIR_MODEL = "gemini-2.5-flash";
 
 function escapeControlCharsInJsonStrings(raw: string): string {
   let inString = false;

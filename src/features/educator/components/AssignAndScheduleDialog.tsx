@@ -10,6 +10,7 @@ import {
   addDoc,
   arrayUnion,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -462,7 +463,7 @@ export default function AssignAndScheduleDialog({
         const cfg = perBatch ? getCfg(batch.id) : globalConfig;
         const ts = serverTimestamp();
 
-        // Upsert: find existing assignment for same testId+batchId to avoid duplicates
+        // Upsert: find existing assignment(s) for same testId+batchId to avoid duplicates
         const existingAssignSnap = await getDocs(
           query(
             collection(db, "educators", educatorId, "batchAssignments"),
@@ -470,7 +471,14 @@ export default function AssignAndScheduleDialog({
             where("batchId", "==", batch.id)
           )
         );
-        const existingAssignDoc = existingAssignSnap.empty ? null : existingAssignSnap.docs[0];
+        // Sort by createdAt desc — update the newest, delete any stale duplicates
+        const sortedExisting = existingAssignSnap.docs.slice().sort(
+          (a, b) => (b.data().createdAt?.toMillis?.() ?? 0) - (a.data().createdAt?.toMillis?.() ?? 0)
+        );
+        const existingAssignDoc = sortedExisting[0] ?? null;
+        for (const stale of sortedExisting.slice(1)) {
+          await deleteDoc(stale.ref);
+        }
 
         if (cfg.accessType === "scheduled") {
           const start = Timestamp.fromDate(new Date(`${cfg.startDate}T${cfg.startTime}`));
