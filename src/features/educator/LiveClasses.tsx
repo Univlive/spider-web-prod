@@ -9,6 +9,7 @@ import {
   orderBy,
   query,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { db } from "@shared/lib/firebase";
 import { useAuth } from "@app/providers/AuthProvider";
@@ -162,8 +163,9 @@ export default function LiveClasses() {
     // Live Classes snapshot
     const unsubClasses = onSnapshot(
       query(
-        collection(db, "educators", educatorId, "liveClasses"),
-        orderBy("scheduledTimestamp", "asc")
+        collection(db, "live_classes"),
+        where("educatorId", "==", educatorId),
+        orderBy("scheduledTimestamp", "desc")
       ),
       (snap) => {
         setLiveClasses(
@@ -296,7 +298,6 @@ export default function LiveClasses() {
       );
 
       const data = await response.json();
-      console.log("data is", data);
 
       if (data.authUrl) {
         window.location.href = data.authUrl;
@@ -364,7 +365,7 @@ export default function LiveClasses() {
       const scheduledDate = new Date(`${date}T${time}:00`);
       const scheduledTimestamp = Timestamp.fromDate(scheduledDate);
 
-      await fetch("http://localhost:8000/youtube/create-live-class", {
+      const response = await fetch("http://localhost:8000/youtube/create-live-class", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -381,9 +382,12 @@ export default function LiveClasses() {
           batchName,
           scheduledDate: scheduledDate.toISOString(),
           enrolledCount,
-          startTime: scheduledTimestamp.toMillis() / 1000,
+          startTime: scheduledDate.toISOString(),
         }),
       });
+
+      const data = await response.json();
+      console.log("response is", data);
 
       toast.success("Live Class scheduled successfully!");
 
