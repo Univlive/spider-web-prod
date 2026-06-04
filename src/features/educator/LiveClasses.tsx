@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   collection,
-  addDoc,
   deleteDoc,
   doc,
   onSnapshot,
@@ -311,6 +310,15 @@ export default function LiveClasses() {
   };
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get("connected") === "true") {
+      toast.success("YouTube Connected");
+      window.history.replaceState({}, "", "/educator/live-classes");
+    }
+  }, []);
+
+  useEffect(() => {
     if (!educatorId) return;
 
     const unsub = onSnapshot(doc(db, "educators", educatorId), (snap) => {
@@ -345,26 +353,6 @@ export default function LiveClasses() {
       return;
     }
 
-    let finalYtUrl = manualYoutubeUrl.trim();
-    let finalYtId = "";
-
-    if (ytConnected && autoCreateStream) {
-      // Mock automatic live stream creation using standard YouTube video ID
-      finalYtId = "5qap5aO4i9A"; // Mock static video ID
-      finalYtUrl = `https://www.youtube.com/watch?v=${finalYtId}`;
-    } else {
-      if (!finalYtUrl) {
-        toast.error("Please provide a YouTube Live stream link");
-        return;
-      }
-      const extracted = extractYouTubeId(finalYtUrl);
-      if (!extracted) {
-        toast.error("Invalid YouTube URL. Please verify the URL.");
-        return;
-      }
-      finalYtId = extracted;
-    }
-
     setSubmitting(true);
     try {
       const branchName = branches.find((b) => b.id === selectedBranchId)?.name || "";
@@ -376,31 +364,27 @@ export default function LiveClasses() {
       const scheduledDate = new Date(`${date}T${time}:00`);
       const scheduledTimestamp = Timestamp.fromDate(scheduledDate);
 
-      const classPayload = {
-        title: title.trim(),
-        branchId: selectedBranchId,
-        branchName,
-        courseId: selectedCourseId,
-        courseName,
-        batchId: selectedBatchId,
-        batchName,
-        date,
-        time,
-        description: description.trim(),
-        youtubeUrl: finalYtUrl,
-        youtubeVideoId: finalYtId,
-        scheduledTimestamp,
-        educatorId,
-        status: "scheduled",
-        enableAttendance,
-        enableChat,
-        recordStream,
-        notifyStudents,
-        enrolledCount,
-        createdAt: Timestamp.now(),
-      };
+      await fetch("http://localhost:8000/youtube/create-live-class", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          educatorId: educatorId,
+          title,
+          description,
+          branchId: selectedBranchId,
+          courseId: selectedCourseId,
+          batchId: selectedBatchId,
+          branchName,
+          courseName,
+          batchName,
+          scheduledDate: scheduledDate.toISOString(),
+          enrolledCount,
+          startTime: scheduledTimestamp.toMillis() / 1000,
+        }),
+      });
 
-      await addDoc(collection(db, "educators", educatorId, "liveClasses"), classPayload);
       toast.success("Live Class scheduled successfully!");
 
       // Reset form states
@@ -982,7 +966,7 @@ export default function LiveClasses() {
                               </div>
                             </div>
                           </div>
-                          <Badge className="shrink-0 text-xs text-destructive hover:bg-destructive/10">
+                          <Badge className="shrink-0 bg-green-500 text-xs hover:bg-green-600">
                             Connected
                           </Badge>
                         </Card>
