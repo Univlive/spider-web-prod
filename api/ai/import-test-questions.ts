@@ -662,11 +662,11 @@ async function processWithGemini(
 
     const result = await model.generateContent(requestParts);
 
-    const text = result.response.text();
+    const text = result.response.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     if (!text) {
       throw new Error("Gemini returned an empty response");
     }
-    const tokensUsed: number = (result.response as any).usageMetadata?.totalTokenCount ?? 0;
+    const tokensUsed: number = result.response.usageMetadata?.totalTokenCount ?? 0;
 
     let parsed: GeminiResponse;
     try {

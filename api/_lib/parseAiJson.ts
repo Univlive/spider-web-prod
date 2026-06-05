@@ -61,7 +61,7 @@ async function repairWithGemini(rawText: string, schemaHint?: string): Promise<s
     : `Extract valid JSON from this text:\n\n${rawText}`;
 
   const result = await model.generateContent(prompt);
-  const content = result.response.text().trim();
+  const content = (result.response.candidates?.[0]?.content?.parts?.[0]?.text ?? "").trim();
   if (!content) throw new Error("Gemini repair returned empty response");
   return content;
 }

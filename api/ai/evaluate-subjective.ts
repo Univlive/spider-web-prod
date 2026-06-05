@@ -241,7 +241,7 @@ function parseServiceAccount() {
   }
 }
 
-async function evaluateWithGemini(parts: any[], maxScore: number): Promise<{ result: EvaluationResponse; tokens: number }> {
+async function evaluateWithGemini(parts: any[], maxScore: number): Promise<{ result: EvaluationResponse; tokens: number; inputTokens: number; outputTokens: number }> {
   if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
     throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON is not configured");
   }
@@ -283,9 +283,11 @@ async function evaluateWithGemini(parts: any[], maxScore: number): Promise<{ res
         ]);
         throw new Error("Gemini response truncated by MAX_TOKENS");
       }
-      const text = result.response.text();
+      const text = result.response.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
       if (!text) throw new Error("Gemini returned an empty response");
-      const tokensUsed: number = (result.response as any).usageMetadata?.totalTokenCount ?? 0;
+      const inputTokens = result.response.usageMetadata?.promptTokenCount ?? 0;
+      const outputTokens = result.response.usageMetadata?.candidatesTokenCount ?? 0;
+      const tokensUsed: number = inputTokens + outputTokens;
 
       let parsed: EvaluationResponse;
       try {
@@ -308,7 +310,7 @@ async function evaluateWithGemini(parts: any[], maxScore: number): Promise<{ res
       parsed.confidence = Math.max(0, Math.min(1, Number(parsed.confidence) || 0.5));
       parsed.evaluatedAt = Date.now();
 
-      return { result: parsed, tokens: tokensUsed };
+      return { result: parsed, tokens: tokensUsed, inputTokens, outputTokens };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (attempt < GEMINI_MAX_RETRIES - 1) {
@@ -379,12 +381,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const results: Record<string, EvaluationResponse> = {};
       const failed: string[] = [];
       let batchTokens = 0;
+      let batchInputTokens = 0;
+      let batchOutputTokens = 0;
 
       for (const evalReq of evaluations) {
         try {
           const parts = await buildRequestParts(evalReq);
-          const { result, tokens } = await evaluateWithGemini(parts, evalReq.maxScore);
+          const { result, tokens, inputTokens: inTok, outputTokens: outTok } = await evaluateWithGemini(parts, evalReq.maxScore);
           batchTokens += tokens;
+          batchInputTokens += inTok;
+          batchOutputTokens += outTok;
           results[evalReq.questionId] = result;
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
@@ -425,6 +431,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           { name: "Evaluated", value: `${succeeded}/${evaluations.length}`, inline: true },
           { name: "Score", value: `${totalAwarded}/${totalMax}`, inline: true },
           { name: "Avg Confidence", value: `${Math.round(avgConfidence * 100)}%`, inline: true },
+          { name: "Tokens", value: `${batchInputTokens.toLocaleString()} in / ${batchOutputTokens.toLocaleString()} out`, inline: true },
+          { name: "Est. Cost", value: `₹${((batchInputTokens * 0.000007151) + (batchOutputTokens * 0.00002860)).toFixed(4)}`, inline: true },
           ...(failed.length > 0 ? [{ name: "Failed IDs", value: failed.join(", ") }] : []),
         ]
       );
@@ -454,7 +462,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const parts = await buildRequestParts(evalReq);
-    const { result, tokens } = await evaluateWithGemini(parts, evalReq.maxScore || 5);
+    const { result, tokens, inputTokens, outputTokens } = await evaluateWithGemini(parts, evalReq.maxScore || 5);
 
     void reportAiUsage(tokens, req.headers["authorization"]?.replace("Bearer ", ""));
 
@@ -462,6 +470,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       { name: "Question ID", value: evalReq.questionId, inline: true },
       { name: "Score", value: `${result.score}/${result.maxScore}`, inline: true },
       { name: "Confidence", value: `${Math.round(result.confidence * 100)}%`, inline: true },
+      { name: "Tokens", value: `${inputTokens} in / ${outputTokens} out`, inline: true },
+      { name: "Est. Cost", value: `₹${((inputTokens * 0.000007151) + (outputTokens * 0.00002860)).toFixed(4)}`, inline: true },
     ]);
 
     return res.status(200).json(result);
