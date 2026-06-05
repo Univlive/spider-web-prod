@@ -28,8 +28,10 @@ import {
   ReportedQuestions,
   SubjectiveReviewQueue,
   SubjectiveAttemptGrader,
+  ProctoringReview,
   LiveClasses,
   NeedsAttention,
+  EducatorJitsiLiveClass
 } from "@features/educator";
 import QuestionPaperRequests from "@features/educator/QuestionPaperRequests";
 
@@ -46,6 +48,7 @@ export function getEducatorRoutes() {
       <Route index element={<EducatorDashboard />} />
       <Route path="dashboard" element={<EducatorDashboard />} />
       <Route path="live-classes" element={<LiveClasses />} />
+      <Route path="live-class/:id" element={<EducatorJitsiLiveClass />} />
 
       <Route path="students" element={<StudentsListing />} />
       <Route path="students/:studentId" element={<StudentDetails />} />
@@ -75,6 +78,7 @@ export function getEducatorRoutes() {
       <Route path="attempts/:attemptId" element={<StudentAttemptDetails />} />
       <Route path="review-submissions" element={<SubjectiveReviewQueue />} />
       <Route path="review-submissions/:attemptId" element={<SubjectiveAttemptGrader />} />
+      <Route path="proctoring/:attemptId" element={<ProctoringReview />} />
     </Route>
   );
 }

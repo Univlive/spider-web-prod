@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@shared/ui/dialog";
 import { Button } from "@shared/ui/button";
 import { Input } from "@shared/ui/input";
@@ -10,15 +10,19 @@ import {
   addDoc,
   arrayUnion,
   collection,
+  deleteDoc,
   doc,
   getDoc,
+  getDocs,
+  query,
   serverTimestamp,
   setDoc,
   Timestamp,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { db } from "@shared/lib/firebase";
-import { Key, Clock, Copy, Check, RotateCcw } from "lucide-react";
+import { Key, Clock, Copy, Check, RotateCcw, Monitor, Globe, Layers } from "lucide-react";
 import { cn } from "@shared/lib/utils";
 
 export type Batch = {
@@ -27,6 +31,24 @@ export type Batch = {
   label: string;
   branchId: string;
   courseId: string;
+};
+
+type ExamMode = "web" | "desktop" | "both";
+
+type ProctoringConfig = {
+  faceDetection: boolean;
+  phoneDetection: boolean;
+  eyeGaze: boolean;
+  photoCapture: boolean;
+  violationThreshold: number;
+};
+
+const DEFAULT_PROCTORING: ProctoringConfig = {
+  faceDetection: true,
+  phoneDetection: true,
+  eyeGaze: true,
+  photoCapture: true,
+  violationThreshold: 10,
 };
 
 type BatchConfig = {
@@ -41,6 +63,8 @@ type BatchConfig = {
   expiresAt: string;
   windowMinutes: string;
   attemptsAllowed: string;
+  examMode: ExamMode;
+  proctoringConfig: ProctoringConfig;
 };
 
 function genCode() {
@@ -67,6 +91,8 @@ function defaultConfig(attemptsAllowed = "3"): BatchConfig {
     expiresAt: "",
     windowMinutes: "0",
     attemptsAllowed,
+    examMode: "web",
+    proctoringConfig: { ...DEFAULT_PROCTORING },
   };
 }
 
@@ -309,6 +335,93 @@ export default function AssignAndScheduleDialog({
             onChange={(e) => update("attemptsAllowed", e.target.value)}
           />
         </div>
+
+        {/* Exam delivery mode */}
+        <div className="space-y-1.5">
+          <Label className="text-xs">Exam Delivery</Label>
+          <div className="grid grid-cols-3 gap-1.5">
+            {(
+              [
+                { value: "web", label: "Web", Icon: Globe },
+                { value: "desktop", label: "App only", Icon: Monitor },
+                { value: "both", label: "Both", Icon: Layers },
+              ] as { value: ExamMode; label: string; Icon: React.ElementType }[]
+            ).map(({ value, label, Icon }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => update("examMode", value)}
+                className={cn(
+                  "flex flex-col items-center gap-1 rounded-xl border px-2 py-2 text-xs font-medium transition",
+                  cfg.examMode === value
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted-foreground hover:border-primary/40"
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Proctoring config — only for desktop/both */}
+        {cfg.examMode !== "web" && (
+          <div className="space-y-2 rounded-xl border border-border p-3">
+            <Label className="text-xs font-medium">Proctoring</Label>
+            {(
+              [
+                { key: "faceDetection", label: "Face detection" },
+                { key: "phoneDetection", label: "Phone detection" },
+                { key: "eyeGaze", label: "Eye gaze" },
+                { key: "photoCapture", label: "Photo capture" },
+              ] as { key: keyof ProctoringConfig; label: string }[]
+            ).map(({ key, label }) => (
+              <div key={key} className="flex items-center justify-between">
+                <span className="text-xs text-foreground">{label}</span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    update("proctoringConfig", {
+                      ...cfg.proctoringConfig,
+                      [key]: !cfg.proctoringConfig[key],
+                    })
+                  }
+                  className={cn(
+                    "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
+                    cfg.proctoringConfig[key] ? "bg-primary" : "bg-muted"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition",
+                      cfg.proctoringConfig[key] ? "translate-x-[18px]" : "translate-x-[2px]"
+                    )}
+                  />
+                </button>
+              </div>
+            ))}
+            <div className="flex items-center justify-between pt-0.5">
+              <span className="text-xs text-muted-foreground">Warn after</span>
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={cfg.proctoringConfig.violationThreshold}
+                  onChange={(e) =>
+                    update("proctoringConfig", {
+                      ...cfg.proctoringConfig,
+                      violationThreshold: Math.min(50, Math.max(1, Number(e.target.value))),
+                    })
+                  }
+                  className="w-12 rounded-lg border border-input bg-background px-2 py-0.5 text-center text-xs"
+                />
+                <span className="text-xs text-muted-foreground">violations</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -350,10 +463,27 @@ export default function AssignAndScheduleDialog({
         const cfg = perBatch ? getCfg(batch.id) : globalConfig;
         const ts = serverTimestamp();
 
+        // Upsert: find existing assignment(s) for same testId+batchId to avoid duplicates
+        const existingAssignSnap = await getDocs(
+          query(
+            collection(db, "educators", educatorId, "batchAssignments"),
+            where("testId", "==", test.id),
+            where("batchId", "==", batch.id)
+          )
+        );
+        // Sort by createdAt desc — update the newest, delete any stale duplicates
+        const sortedExisting = existingAssignSnap.docs.slice().sort(
+          (a, b) => (b.data().createdAt?.toMillis?.() ?? 0) - (a.data().createdAt?.toMillis?.() ?? 0)
+        );
+        const existingAssignDoc = sortedExisting[0] ?? null;
+        for (const stale of sortedExisting.slice(1)) {
+          await deleteDoc(stale.ref);
+        }
+
         if (cfg.accessType === "scheduled") {
           const start = Timestamp.fromDate(new Date(`${cfg.startDate}T${cfg.startTime}`));
           const end = Timestamp.fromDate(new Date(`${cfg.endDate}T${cfg.endTime}`));
-          await addDoc(collection(db, "educators", educatorId, "batchAssignments"), {
+          const scheduledData = {
             testId: test.id,
             testTitle: test.title || "",
             batchId: batch.id,
@@ -367,9 +497,21 @@ export default function AssignAndScheduleDialog({
             expiresAt: null,
             windowMinutes: null,
             attemptsAllowed: Number(cfg.attemptsAllowed) || 3,
-            createdAt: ts,
+            examMode: cfg.examMode,
+            proctoringConfig: cfg.examMode !== "web" ? cfg.proctoringConfig : null,
             updatedAt: ts,
-          });
+          };
+          if (existingAssignDoc) {
+            await setDoc(existingAssignDoc.ref, {
+              ...scheduledData,
+              createdAt: existingAssignDoc.data().createdAt,
+            });
+          } else {
+            await addDoc(collection(db, "educators", educatorId, "batchAssignments"), {
+              ...scheduledData,
+              createdAt: ts,
+            });
+          }
         } else {
           const codeUpper = cfg.code.trim().toUpperCase();
           const max = Number(cfg.maxUses) || 100;
@@ -377,14 +519,47 @@ export default function AssignAndScheduleDialog({
           const windowMinutes = Number(cfg.windowMinutes) || 0;
 
           const codeRef = doc(db, "educators", educatorId, "accessCodes", codeUpper);
-          const existing = await getDoc(codeRef);
-          if (existing.exists()) {
-            toast.error(`Code ${codeUpper} already exists — generate a new one`);
-            setSaving(false);
-            return;
+
+          if (existingAssignDoc) {
+            const existingCode = String(existingAssignDoc.data().accessCode || "");
+            if (existingCode !== codeUpper) {
+              const newCodeDoc = await getDoc(codeRef);
+              if (newCodeDoc.exists()) {
+                toast.error(`Code ${codeUpper} already exists — generate a new one`);
+                setSaving(false);
+                return;
+              }
+              await setDoc(codeRef, {
+                code: codeUpper,
+                testSeriesId: test.id,
+                testSeriesTitle: test.title || "",
+                maxUses: max,
+                usesUsed: 0,
+                expiresAt,
+                windowMinutes,
+                createdAt: ts,
+              });
+            }
+          } else {
+            const existing = await getDoc(codeRef);
+            if (existing.exists()) {
+              toast.error(`Code ${codeUpper} already exists — generate a new one`);
+              setSaving(false);
+              return;
+            }
+            await setDoc(codeRef, {
+              code: codeUpper,
+              testSeriesId: test.id,
+              testSeriesTitle: test.title || "",
+              maxUses: max,
+              usesUsed: 0,
+              expiresAt,
+              windowMinutes,
+              createdAt: ts,
+            });
           }
 
-          await addDoc(collection(db, "educators", educatorId, "batchAssignments"), {
+          const accessCodeData = {
             testId: test.id,
             testTitle: test.title || "",
             batchId: batch.id,
@@ -398,20 +573,21 @@ export default function AssignAndScheduleDialog({
             expiresAt,
             windowMinutes,
             attemptsAllowed: Number(cfg.attemptsAllowed) || 3,
-            createdAt: ts,
+            examMode: cfg.examMode,
+            proctoringConfig: cfg.examMode !== "web" ? cfg.proctoringConfig : null,
             updatedAt: ts,
-          });
-
-          await setDoc(codeRef, {
-            code: codeUpper,
-            testSeriesId: test.id,
-            testSeriesTitle: test.title || "",
-            maxUses: max,
-            usesUsed: 0,
-            expiresAt,
-            windowMinutes,
-            createdAt: ts,
-          });
+          };
+          if (existingAssignDoc) {
+            await setDoc(existingAssignDoc.ref, {
+              ...accessCodeData,
+              createdAt: existingAssignDoc.data().createdAt,
+            });
+          } else {
+            await addDoc(collection(db, "educators", educatorId, "batchAssignments"), {
+              ...accessCodeData,
+              createdAt: ts,
+            });
+          }
         }
       }
 
@@ -554,7 +730,9 @@ export default function AssignAndScheduleDialog({
             )}
 
             {!perBatch ? (
-              renderForm(globalConfig, updateGlobal, "__global")
+              <div className="max-h-[55vh] overflow-y-auto pr-1">
+                {renderForm(globalConfig, updateGlobal, "__global")}
+              </div>
             ) : (
               <div className="max-h-[360px] space-y-4 overflow-y-auto">
                 {selectedBatches.map((b) => (

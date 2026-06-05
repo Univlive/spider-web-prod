@@ -16,10 +16,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const admin = getAdmin();
     const db = admin.firestore();
 
-    const seatDoc = await db.doc(`educators/${educatorId}/billingSeats/${studentId}`).get();
-    const batchId = seatDoc.data()?.batchId as string | undefined;
+    const educatorSnap = await db.doc(`educators/${educatorId}`).get();
+    const tenantSlug = educatorSnap.data()?.tenantSlug as string | undefined;
 
     const batch = db.batch();
+
+    batch.delete(db.doc(`educators/${educatorId}/students/${studentId}`));
 
     batch.set(
       db.doc(`educators/${educatorId}/billingSeats/${studentId}`),
@@ -27,31 +29,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         status: "inactive",
         revokedAt: admin.firestore.FieldValue.serverTimestamp(),
         revokedBy: educatorId,
-        batchId: admin.firestore.FieldValue.delete(),
       },
       { merge: true }
     );
 
-    batch.update(db.doc(`educators/${educatorId}/students/${studentId}`), {
+    const userUpdate: Record<string, any> = {
+      educatorId: admin.firestore.FieldValue.delete(),
       batchId: admin.firestore.FieldValue.delete(),
-    });
-
-    batch.update(db.doc(`users/${studentId}`), {
-      batchId: admin.firestore.FieldValue.delete(),
-    });
-
-    if (batchId) {
-      batch.update(db.doc(`educators/${educatorId}/batches/${batchId}`), {
-        usedSeats: admin.firestore.FieldValue.increment(-1),
-      });
+      courseId: admin.firestore.FieldValue.delete(),
+      tenantSlug: admin.firestore.FieldValue.delete(),
+    };
+    if (tenantSlug) {
+      userUpdate.enrolledTenants = admin.firestore.FieldValue.arrayRemove(tenantSlug);
     }
+    batch.update(db.doc(`users/${studentId}`), userUpdate);
 
     await batch.commit();
 
     return res.json({ ok: true });
   } catch (e: any) {
     console.error(e);
-    await notifyDiscord(e, req, "revoke-seat");
+    await notifyDiscord(e, req, "delete-student");
     return res.status(500).json({ error: e?.message || "Server error" });
   }
 }

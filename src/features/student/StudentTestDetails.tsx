@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
-import { Clock, FileText, Award, ArrowLeft, Play, Lock, Timer } from "lucide-react";
+import {
+  Clock,
+  FileText,
+  Award,
+  ArrowLeft,
+  Play,
+  Lock,
+  Timer,
+  Monitor,
+  Download,
+} from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
 import { Button } from "@shared/ui/button";
@@ -54,6 +64,7 @@ type Test = {
   markingScheme: { correct: number; incorrect: number; unanswered: number };
   startTime?: number | null;
   endTime?: number | null;
+  examMode?: "web" | "desktop" | "both";
 };
 
 type AttemptRow = {
@@ -146,7 +157,13 @@ export default function StudentTestDetails() {
   const [unlockWindowExpiresAt, setUnlockWindowExpiresAt] = useState<number | null>(null);
   const [windowTimeLeft, setWindowTimeLeft] = useState<number | null>(null);
   const [attempts, setAttempts] = useState<AttemptRow[]>([]);
+  const [attemptsResetAtMs, setAttemptsResetAtMs] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState(Date.now());
+
+  // desktop app detection
+  const [launchingDesktop, setLaunchingDesktop] = useState(false);
+  const [downloadModalOpen, setDownloadModalOpen] = useState(false);
+  const [examModeChoice, setExamModeChoice] = useState<"web" | "desktop" | null>(null);
 
   // unlock dialog
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
@@ -261,9 +278,17 @@ export default function StudentTestDetails() {
               )
             );
             if (!assignSnap.empty) {
-              const assignDoc = assignSnap.docs[0];
+              const sortedAssignDocs = assignSnap.docs
+                .slice()
+                .sort(
+                  (a, b) =>
+                    (b.data().createdAt?.toMillis?.() ?? 0) -
+                    (a.data().createdAt?.toMillis?.() ?? 0)
+                );
+              const assignDoc = sortedAssignDocs[0];
               const assignment = assignDoc.data() as any;
               setBatchAssignmentId(assignDoc.id);
+              setAttemptsResetAtMs(assignment.updatedAt?.toMillis?.() ?? 0);
               if (assignment.attemptsAllowed != null) {
                 assignmentAttemptsAllowed = Number(assignment.attemptsAllowed);
               }
@@ -273,6 +298,10 @@ export default function StudentTestDetails() {
               } else if (assignment.accessType === "access_code") {
                 startTime = null;
                 endTime = null;
+              }
+              // examMode and proctoringConfig live on the batchAssignment
+              if (assignment.examMode) {
+                setTest((prev) => (prev ? { ...prev, examMode: assignment.examMode } : prev));
               }
             }
           } catch {
@@ -304,6 +333,8 @@ export default function StudentTestDetails() {
           markingScheme,
           startTime,
           endTime,
+          // examMode is resolved from batchAssignment below; default to "web" until then
+          examMode: "web",
         });
 
         setLoading(false);
@@ -371,24 +402,15 @@ export default function StudentTestDetails() {
   useEffect(() => {
     if (!canLoad) return;
 
-    const qAttempts = batchAssignmentId
-      ? query(
-          collection(db, "attempts"),
-          where("studentId", "==", firebaseUser!.uid),
-          where("batchAssignmentId", "==", batchAssignmentId),
-          where("status", "==", "submitted"),
-          orderBy("submittedAt", "desc"),
-          limit(20)
-        )
-      : query(
-          collection(db, "attempts"),
-          where("studentId", "==", firebaseUser!.uid),
-          where("educatorId", "==", educatorId!),
-          where("testId", "==", testId!),
-          where("status", "==", "submitted"),
-          orderBy("submittedAt", "desc"),
-          limit(20)
-        );
+    const qAttempts = query(
+      collection(db, "attempts"),
+      where("studentId", "==", firebaseUser!.uid),
+      where("educatorId", "==", educatorId!),
+      where("testId", "==", testId!),
+      where("status", "==", "submitted"),
+      orderBy("submittedAt", "desc"),
+      limit(20)
+    );
 
     const unsub = onSnapshot(
       qAttempts,
@@ -440,7 +462,9 @@ export default function StudentTestDetails() {
     return false;
   }, [test, unlocked, unlockWindowExpiresAt, isLive, currentTime]);
 
-  const attemptsUsed = attempts.length;
+  const attemptsUsed = attemptsResetAtMs
+    ? attempts.filter((a) => a.createdAtMs >= attemptsResetAtMs).length
+    : attempts.length;
   const attemptsLeft = test ? Math.max(0, test.attemptsAllowed - attemptsUsed) : 0;
 
   const openUnlock = () => {
@@ -521,6 +545,34 @@ export default function StudentTestDetails() {
     } finally {
       setRedeeming(false);
     }
+  };
+
+  const openOnDesktop = async () => {
+    const idToken = await firebaseUser?.getIdToken();
+    if (!idToken || !tenantSlug || !testId) return;
+    const params = new URLSearchParams({
+      testId,
+      tenantSlug,
+      idToken,
+      ...(batchAssignmentId ? { assignmentId: batchAssignmentId } : {}),
+    });
+
+    setLaunchingDesktop(true);
+
+    // Fire the deep link — if app is installed, OS will open it and window will blur
+    window.location.href = `preparekaro://launch?${params.toString()}`;
+
+    // If window doesn't blur within 2.5s, app probably isn't installed
+    const timeout = setTimeout(() => {
+      setLaunchingDesktop(false);
+      setDownloadModalOpen(true);
+    }, 2500);
+
+    const onBlur = () => {
+      clearTimeout(timeout);
+      setLaunchingDesktop(false);
+    };
+    window.addEventListener("blur", onBlur, { once: true });
   };
 
   const startTest = () => {
@@ -658,21 +710,60 @@ export default function StudentTestDetails() {
                 </Button>
               ) : (
                 <div className="flex flex-col items-end gap-2">
-                  <Button
-                    className={cn(
-                      "gradient-bg rounded-xl",
-                      (attemptsLeft <= 0 || isUpcoming) && "opacity-60"
-                    )}
-                    onClick={startTest}
-                    disabled={attemptsLeft <= 0 || isUpcoming}
-                  >
-                    {isUpcoming ? (
-                      <Clock className="mr-2 h-4 w-4" />
-                    ) : (
-                      <Play className="mr-2 h-4 w-4" />
-                    )}
-                    {isUpcoming ? "Starts Soon" : "Start Test"}
-                  </Button>
+                  {/* ── Desktop-only mode ── */}
+                  {test.examMode === "desktop" && (
+                    <Button
+                      className="gradient-bg rounded-xl"
+                      onClick={openOnDesktop}
+                      disabled={attemptsLeft <= 0 || isUpcoming || launchingDesktop}
+                    >
+                      <Monitor className="mr-2 h-4 w-4" />
+                      {isUpcoming ? "Starts Soon" : launchingDesktop ? "Launching…" : "Open in Desktop App"}
+                    </Button>
+                  )}
+
+                  {/* ── Both: show two buttons ── */}
+                  {test.examMode === "both" && (
+                    <div className="flex flex-col items-end gap-1.5">
+                      <Button
+                        className="gradient-bg rounded-xl"
+                        onClick={openOnDesktop}
+                        disabled={attemptsLeft <= 0 || isUpcoming || launchingDesktop}
+                      >
+                        <Monitor className="mr-2 h-4 w-4" />
+                        {launchingDesktop ? "Launching…" : "Open in Desktop App"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="rounded-xl"
+                        onClick={startTest}
+                        disabled={attemptsLeft <= 0 || isUpcoming}
+                      >
+                        <Play className="mr-2 h-4 w-4" />
+                        Take on Web
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* ── Web-only (default) ── */}
+                  {(!test.examMode || test.examMode === "web") && (
+                    <Button
+                      className={cn(
+                        "gradient-bg rounded-xl",
+                        (attemptsLeft <= 0 || isUpcoming) && "opacity-60"
+                      )}
+                      onClick={startTest}
+                      disabled={attemptsLeft <= 0 || isUpcoming}
+                    >
+                      {isUpcoming ? (
+                        <Clock className="mr-2 h-4 w-4" />
+                      ) : (
+                        <Play className="mr-2 h-4 w-4" />
+                      )}
+                      {isUpcoming ? "Starts Soon" : "Start Test"}
+                    </Button>
+                  )}
+
                   {windowTimeLeft !== null && (
                     <span
                       className={cn(
@@ -693,6 +784,52 @@ export default function StudentTestDetails() {
                 </div>
               )}
             </div>
+
+            {/* Desktop App Download Modal */}
+            <Dialog open={downloadModalOpen} onOpenChange={setDownloadModalOpen}>
+              <DialogContent className="rounded-2xl sm:max-w-sm">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Monitor className="h-5 w-5 text-primary" />
+                    Download Desktop App
+                  </DialogTitle>
+                  <DialogDescription>
+                    This exam requires the PrepareKaro desktop app. Download and install it, then
+                    click the button again.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-2 py-2">
+                  {[
+                    { label: "Windows (.exe)", href: "https://github.com/univ-virtual-professor/spider-desktop/releases/latest/download/PrepareKaro-Exam-Setup-1.0.2.exe" },
+                    { label: "macOS (.dmg)", href: "https://github.com/univ-virtual-professor/spider-desktop/releases/latest" },
+                    { label: "Linux (.AppImage)", href: "https://github.com/univ-virtual-professor/spider-desktop/releases/latest" },
+                  ].map(({ label, href }) => (
+                    <a
+                      key={label}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between rounded-xl border border-border px-4 py-3 text-sm font-medium transition-colors hover:bg-muted"
+                    >
+                      <span>{label}</span>
+                      <Download className="h-4 w-4 text-muted-foreground" />
+                    </a>
+                  ))}
+                </div>
+                <p className="text-center text-xs text-muted-foreground">
+                  Already installed?{" "}
+                  <button
+                    onClick={() => {
+                      setDownloadModalOpen(false);
+                      openOnDesktop();
+                    }}
+                    className="underline underline-offset-2"
+                  >
+                    Try opening again
+                  </button>
+                </p>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>

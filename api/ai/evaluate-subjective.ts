@@ -163,6 +163,12 @@ async function buildRequestParts(req: EvaluationRequest) {
   lines.push("");
 
   if (req.questionType === "UPLOAD") {
+    if (!hasStudentImages) {
+      void sendDiscordEmbed("warning", "⚠️ UPLOAD question has no student images", [
+        { name: "Question ID", value: req.questionId, inline: true },
+        { name: "studentAnswer", value: (req.studentAnswer || "(empty)").slice(0, 200) },
+      ]);
+    }
     lines.push(
       hasStudentImages
         ? `Student Answer: ${studentImageUrls.length} image(s) attached.`
@@ -189,6 +195,15 @@ async function buildRequestParts(req: EvaluationRequest) {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.warn(`[evaluate-subjective] Reference image ${i + 1} skipped: ${msg}`);
+      void sendDiscordEmbed("warning", "⚠️ Reference image could not be loaded", [
+        { name: "Question ID", value: req.questionId, inline: true },
+        { name: "Image #", value: String(i + 1), inline: true },
+        { name: "Reason", value: msg, inline: true },
+        { name: "URL", value: referenceImageUrls[i].slice(0, 200) },
+      ]);
+      parts.push(
+        `Note: Reference image ${i + 1} could not be loaded (${msg}). Evaluate based on available text.`
+      );
     }
   }
 
@@ -227,7 +242,7 @@ async function evaluateWithGemini(parts: any[], maxScore: number): Promise<Evalu
 
   const generationConfig: GenerationConfig = {
     temperature: 0.3,
-    maxOutputTokens: 2048,
+    maxOutputTokens: 8192,
     responseMimeType: "application/json",
     responseSchema: evaluationSchema as any,
   };
@@ -245,10 +260,31 @@ async function evaluateWithGemini(parts: any[], maxScore: number): Promise<Evalu
     }
     try {
       const result = await model.generateContent(parts);
+      const candidate = result.response.candidates?.[0];
+      if (candidate?.finishReason === "MAX_TOKENS") {
+        void sendDiscordEmbed("warning", "⚠️ Gemini hit MAX_TOKENS — feedback may be truncated", [
+          { name: "Attempt", value: String(attempt + 1), inline: true },
+        ]);
+        throw new Error("Gemini response truncated by MAX_TOKENS");
+      }
       const text = result.response.text();
       if (!text) throw new Error("Gemini returned an empty response");
 
-      const parsed = await parseAiJson<EvaluationResponse>(text);
+      let parsed: EvaluationResponse;
+      try {
+        parsed = await parseAiJson<EvaluationResponse>(text);
+      } catch (parseErr) {
+        const parseMsg = parseErr instanceof Error ? parseErr.message : String(parseErr);
+        void sendDiscordEmbed(
+          "warning",
+          `⚠️ Gemini JSON parse failed (attempt ${attempt + 1}/${GEMINI_MAX_RETRIES})`,
+          [
+            { name: "Parse Error", value: parseMsg },
+            { name: "Raw Response", value: text.slice(0, 800) },
+          ]
+        );
+        throw parseErr;
+      }
 
       parsed.score = Math.max(0, Math.min(maxScore, Number(parsed.score) || 0));
       parsed.maxScore = maxScore;
@@ -257,6 +293,13 @@ async function evaluateWithGemini(parts: any[], maxScore: number): Promise<Evalu
 
       return parsed;
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (attempt < GEMINI_MAX_RETRIES - 1) {
+        void sendDiscordEmbed("warning", `🔁 Gemini retry ${attempt + 2}/${GEMINI_MAX_RETRIES}`, [
+          { name: "Failed Attempt", value: String(attempt + 1), inline: true },
+          { name: "Error", value: msg },
+        ]);
+      }
       lastError = err;
     }
   }

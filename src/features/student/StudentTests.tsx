@@ -122,7 +122,15 @@ export default function StudentTests() {
         );
         assignSnap.docs.forEach((d) => {
           const data = d.data() as any;
-          assignMap.set(String(data.testId || ""), { ...data, _docId: d.id });
+          const thisMs = data.createdAt?.toMillis?.() ?? 0;
+          const existing = assignMap.get(String(data.testId || ""));
+          if (!existing || thisMs >= (existing._createdAtMs ?? 0)) {
+            assignMap.set(String(data.testId || ""), {
+              ...data,
+              _docId: d.id,
+              _createdAtMs: thisMs,
+            });
+          }
         });
       }
 
@@ -147,6 +155,7 @@ export default function StudentTests() {
           ...t,
           batchAssignmentId: assignment._docId,
           attemptsAllowed: assignment.attemptsAllowed ?? t.attemptsAllowed,
+          attemptsResetAt: assignment.updatedAt ?? null,
         };
         if (assignment.accessType === "scheduled") {
           return {
@@ -161,7 +170,7 @@ export default function StudentTests() {
       });
     },
     enabled: allowed && !!educatorId,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
   });
 
   // Load unlocked tests — kept as onSnapshot because window expiry needs real-time checks
@@ -203,8 +212,8 @@ export default function StudentTests() {
     return () => unsub();
   }, [firebaseUser?.uid, educatorId]);
 
-  // Fetch student attempt counts via useQuery (cached, no real-time listener needed)
-  const { data: attemptCounts = {} } = useQuery({
+  // Fetch student attempt rows — raw so we can filter by attemptsResetAt per test
+  const { data: attemptRows = [] } = useQuery({
     queryKey: ["studentAttemptCounts", firebaseUser?.uid, educatorId],
     queryFn: async () => {
       const qAttempts = query(
@@ -214,18 +223,18 @@ export default function StudentTests() {
         where("status", "==", "submitted")
       );
       const snap = await getDocs(qAttempts);
-      const counts: Record<string, number> = {};
-      snap.docs.forEach((d) => {
-        const a = d.data();
-        const aid = String(a.batchAssignmentId || "");
-        if (aid) {
-          counts[aid] = (counts[aid] || 0) + 1;
-        }
-      });
-      return counts;
+      return snap.docs
+        .map((d) => {
+          const a = d.data();
+          return {
+            testId: String(a.testId || ""),
+            submittedAtMs: a.submittedAt?.toMillis?.() ?? 0,
+          };
+        })
+        .filter((r) => r.testId);
     },
     enabled: !!firebaseUser?.uid && !!educatorId,
-    staleTime: 60 * 1000,
+    staleTime: 0,
   });
 
   const [now, setNow] = useState(() => Date.now());
@@ -541,7 +550,13 @@ export default function StudentTests() {
                       startsAtMs: t._startsAtMs,
                       windowExpiresAt: null,
                     }}
-                    attemptsUsed={attemptCounts[(t as any).batchAssignmentId] || 0}
+                    attemptsUsed={
+                      attemptRows.filter(
+                        (r) =>
+                          r.testId === t.id &&
+                          r.submittedAtMs >= ((t as any).attemptsResetAt?.toMillis?.() ?? 0)
+                      ).length
+                    }
                     onStart={() =>
                       nav(`/student/tests/${t.id}`, {
                         state: { batchAssignmentId: (t as any).batchAssignmentId || null },
@@ -622,7 +637,13 @@ export default function StudentTests() {
                               windowExpiresAt: unlockEntry ?? null,
                               isLive,
                             }}
-                            attemptsUsed={attemptCounts[(t as any).batchAssignmentId] || 0}
+                            attemptsUsed={
+                              attemptRows.filter(
+                                (r) =>
+                                  r.testId === t.id &&
+                                  r.submittedAtMs >= ((t as any).attemptsResetAt?.toMillis?.() ?? 0)
+                              ).length
+                            }
                             onStart={() =>
                               nav(`/student/tests/${t.id}`, {
                                 state: { batchAssignmentId: (t as any).batchAssignmentId || null },
@@ -679,7 +700,13 @@ export default function StudentTests() {
                     windowExpiresAt: unlockEntry ?? null,
                     isLive,
                   }}
-                  attemptsUsed={attemptCounts[(t as any).batchAssignmentId] || 0}
+                  attemptsUsed={
+                    attemptRows.filter(
+                      (r) =>
+                        r.testId === t.id &&
+                        r.submittedAtMs >= ((t as any).attemptsResetAt?.toMillis?.() ?? 0)
+                    ).length
+                  }
                   onStart={() =>
                     nav(`/student/tests/${t.id}`, {
                       state: { batchAssignmentId: (t as any).batchAssignmentId || null },

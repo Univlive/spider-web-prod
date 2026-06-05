@@ -26,9 +26,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@shared/ui/dialog";
-import { Checkbox } from "@shared/ui/checkbox";
 import {
   ArrowLeft,
   Calendar,
@@ -36,12 +34,10 @@ import {
   Trash2,
   VideoOff,
   Loader2,
-  Users,
   Tv,
   Edit2,
-  PlayCircle,
-  Youtube,
   UserCheck,
+  Clock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -58,11 +54,11 @@ type LiveClass = {
   courseName: string;
   batchId: string;
   batchName: string;
-  date: string;
-  time: string;
+  scheduledDate: string;
+  startTime: string;
   description?: string;
-  youtubeUrl: string;
-  youtubeVideoId: string;
+  youtubeUrl?: string;
+  youtubeVideoId?: string;
   scheduledTimestamp: Timestamp;
   educatorId: string;
   status: "scheduled" | "live" | "completed";
@@ -74,20 +70,7 @@ type LiveClass = {
   enrolledCount?: number;
 };
 
-// YouTube Link Parser Helper
-function extractYouTubeId(url: string): string | null {
-  if (!url) return null;
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/)([^#\&\?]*).*/;
-  const match = url.match(regExp);
-  if (match && match[2].length === 11) {
-    return match[2];
-  }
-  const trimmed = url.trim();
-  if (trimmed.length === 11) {
-    return trimmed;
-  }
-  return null;
-}
+
 
 export default function LiveClasses() {
   const { profile, firebaseUser } = useAuth();
@@ -103,14 +86,6 @@ export default function LiveClasses() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [activeTab, setActiveTab] = useState<"scheduled" | "live" | "completed">("scheduled");
 
-  // YouTube Connection Mock State
-  const [ytConnected, setYtConnected] = useState<{ connected: boolean; channelName: string }>({
-    connected: false,
-    channelName: "",
-  });
-
-  const [connectingYt, setConnectingYt] = useState(false);
-
   // Form State
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -123,10 +98,6 @@ export default function LiveClasses() {
   // Schedule Form State
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-
-  // Stream setup Form State
-  const [manualYoutubeUrl, setManualYoutubeUrl] = useState("");
-  const [autoCreateStream, setAutoCreateStream] = useState(true);
 
   // Advanced options Form State
   const [enableAttendance, setEnableAttendance] = useState(true);
@@ -141,12 +112,6 @@ export default function LiveClasses() {
   const [selectedWatchClass, setSelectedWatchClass] = useState<LiveClass | null>(null);
   const [selectedAttendanceClass, setSelectedAttendanceClass] = useState<LiveClass | null>(null);
   const [editingClass, setEditingClass] = useState<LiveClass | null>(null);
-
-  // Edit Form Fields State
-  const [editTitle, setEditTitle] = useState("");
-  const [editDescription, setEditDescription] = useState("");
-  const [editYtUrl, setEditYtUrl] = useState("");
-  const [updating, setUpdating] = useState(false);
 
   // Student Counts by Batch
   const [studentCounts, setStudentCounts] = useState<Record<string, number>>({});
@@ -165,7 +130,7 @@ export default function LiveClasses() {
       query(
         collection(db, "live_classes"),
         where("educatorId", "==", educatorId),
-        orderBy("scheduledTimestamp", "desc")
+        orderBy("createdAt", "desc")
       ),
       (snap) => {
         setLiveClasses(
@@ -182,6 +147,8 @@ export default function LiveClasses() {
         setLoading(false);
       }
     );
+
+    console.log(liveClasses)
 
     // Fetch students list to compute enrolled count per batch
     const unsubStudents = onSnapshot(
@@ -271,68 +238,108 @@ export default function LiveClasses() {
 
   // Status-based lists
   const filteredClasses = useMemo(() => {
-    return liveClasses.filter((item) => item.status === activeTab);
+    const now = new Date();
+    return liveClasses.filter((item) => {
+      let scheduledDate: Date | null = null;
+      if (item.scheduledTimestamp) {
+        if (typeof item.scheduledTimestamp.toDate === "function") {
+          scheduledDate = item.scheduledTimestamp.toDate();
+        } else if ((item.scheduledTimestamp as any).seconds) {
+          scheduledDate = new Date((item.scheduledTimestamp as any).seconds * 1000);
+        }
+      } else if (item.scheduledDate) {
+        scheduledDate = new Date(item.scheduledDate);
+      }
+
+      const isPast = scheduledDate && !isNaN(scheduledDate.getTime()) && now >= scheduledDate;
+
+      if (activeTab === "live") {
+        return item.status === "live" || (item.status === "scheduled" && isPast);
+      }
+      if (activeTab === "scheduled") {
+        return item.status === "scheduled" && !isPast;
+      }
+      return item.status === activeTab;
+    });
   }, [liveClasses, activeTab]);
 
   // Statistics Computations
   const stats = useMemo(() => {
+    const now = new Date();
     const total = liveClasses.length;
-    const upcoming = liveClasses.filter((c) => c.status === "scheduled").length;
-    const live = liveClasses.filter((c) => c.status === "live").length;
-    const completed = liveClasses.filter((c) => c.status === "completed").length;
+    let upcoming = 0;
+    let live = 0;
+    let completed = 0;
+
+    liveClasses.forEach((item) => {
+      let scheduledDate: Date | null = null;
+      if (item.scheduledTimestamp) {
+        if (typeof item.scheduledTimestamp.toDate === "function") {
+          scheduledDate = item.scheduledTimestamp.toDate();
+        } else if ((item.scheduledTimestamp as any).seconds) {
+          scheduledDate = new Date((item.scheduledTimestamp as any).seconds * 1000);
+        }
+      } else if (item.scheduledDate) {
+        scheduledDate = new Date(item.scheduledDate);
+      }
+
+      const isPast = scheduledDate && !isNaN(scheduledDate.getTime()) && now >= scheduledDate;
+
+      if (item.status === "completed") {
+        completed++;
+      } else if (item.status === "live" || (item.status === "scheduled" && isPast)) {
+        live++;
+      } else {
+        upcoming++;
+      }
+    });
+
     return { total, upcoming, live, completed };
   }, [liveClasses]);
 
   const handleCopyLink = (link: string, id: string) => {
     navigator.clipboard.writeText(link);
     setCopiedId(id);
-    toast.success("YouTube link copied!");
+    toast.success("Link copied!");
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const connectYoutube = async () => {
-    setConnectingYt(true);
-    try {
-      const response = await fetch(
-        `http://localhost:8000/youtube/auth-url?educatorId=${educatorId}`
-      );
+  useEffect(() => {
+    if (!liveClasses.length || !educatorId) return;
 
-      const data = await response.json();
+    const checkAndAutoStartClasses = async () => {
+      const now = new Date();
+      for (const item of liveClasses) {
+        if (item.status === "scheduled") {
+          let scheduledDate: Date | null = null;
+          if (item.scheduledTimestamp) {
+            if (typeof item.scheduledTimestamp.toDate === "function") {
+              scheduledDate = item.scheduledTimestamp.toDate();
+            } else if ((item.scheduledTimestamp as any).seconds) {
+              scheduledDate = new Date((item.scheduledTimestamp as any).seconds * 1000);
+            }
+          } else if (item.scheduledDate) {
+            scheduledDate = new Date(item.scheduledDate);
+          }
 
-      if (data.authUrl) {
-        window.location.href = data.authUrl;
+          if (scheduledDate && !isNaN(scheduledDate.getTime()) && now >= scheduledDate) {
+            try {
+              await updateDoc(doc(db, "live_classes", item.id), {
+                status: "live",
+              });
+            } catch (err) {
+              console.error(`Failed to auto-update class ${item.id} status to live:`, err);
+            }
+          }
+        }
       }
-    } catch (error) {
-      console.error("Failed to connect YouTube", error);
-      toast.error("Failed to connect YouTube.");
-    } finally {
-      setConnectingYt(false);
-    }
-  };
+    };
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    checkAndAutoStartClasses();
 
-    if (params.get("connected") === "true") {
-      toast.success("YouTube Connected");
-      window.history.replaceState({}, "", "/educator/live-classes");
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!educatorId) return;
-
-    const unsub = onSnapshot(doc(db, "educators", educatorId), (snap) => {
-      const data = snap.data();
-
-      setYtConnected({
-        connected: !!data?.youtubeConnected,
-        channelName: data?.youtubeChannelName,
-      });
-    });
-
-    return unsub;
-  }, [educatorId]);
+    const interval = setInterval(checkAndAutoStartClasses, 10000);
+    return () => clearInterval(interval);
+  }, [liveClasses, educatorId]);
 
   const handleCreateLiveClass = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -365,15 +372,15 @@ export default function LiveClasses() {
       const scheduledDate = new Date(`${date}T${time}:00`);
       const scheduledTimestamp = Timestamp.fromDate(scheduledDate);
 
-      const response = await fetch("http://localhost:8000/youtube/create-live-class", {
+      const res = await fetch(`${import.meta.env.VITE_MONKEY_KING_API_URL}/youtube/create-live-class`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           educatorId: educatorId,
-          title,
-          description,
+          title: title.trim(),
+          description: description.trim(),
           branchId: selectedBranchId,
           courseId: selectedCourseId,
           batchId: selectedBatchId,
@@ -381,13 +388,14 @@ export default function LiveClasses() {
           courseName,
           batchName,
           scheduledDate: scheduledDate.toISOString(),
-          enrolledCount,
           startTime: scheduledDate.toISOString(),
+          scheduledTimestamp,
+          enrolledCount,
+          status: "scheduled",
         }),
       });
-
-      const data = await response.json();
-      console.log("response is", data);
+      const data = await res.json();
+      console.log(data);
 
       toast.success("Live Class scheduled successfully!");
 
@@ -399,7 +407,6 @@ export default function LiveClasses() {
       setSelectedBatchId("");
       setDate("");
       setTime("");
-      setManualYoutubeUrl("");
       setShowCreateForm(false);
     } catch (err) {
       console.error(err);
@@ -411,7 +418,7 @@ export default function LiveClasses() {
 
   const handleUpdateStatus = async (classId: string, newStatus: "live" | "completed") => {
     try {
-      await updateDoc(doc(db, "educators", educatorId, "liveClasses", classId), {
+      await updateDoc(doc(db, "live_classes", classId), {
         status: newStatus,
       });
       toast.success(newStatus === "live" ? "Class is now LIVE!" : "Live Class ended.");
@@ -430,7 +437,7 @@ export default function LiveClasses() {
     if (!confirm(`Are you sure you want to cancel the Live Class "${title}"?`)) return;
 
     try {
-      await deleteDoc(doc(db, "educators", educatorId, "liveClasses", classId));
+      await deleteDoc(doc(db, "live_classes", classId));
       toast.success("Live Class deleted");
     } catch (err) {
       console.error(err);
@@ -440,45 +447,103 @@ export default function LiveClasses() {
 
   const handleEditClick = (c: LiveClass) => {
     setEditingClass(c);
-    setEditTitle(c.title);
-    setEditDescription(c.description || "");
-    setEditYtUrl(c.youtubeUrl);
+    setTitle(c.title);
+    setDescription(c.description || "");
+    setSelectedBranchId(c.branchId);
+    setSelectedCourseId(c.courseId);
+    setSelectedBatchId(c.batchId);
+
+    let localDate = "";
+    let localTime = "";
+
+    let dateSource: Date | null = null;
+    if (c.scheduledTimestamp) {
+      if (typeof c.scheduledTimestamp.toDate === "function") {
+        dateSource = c.scheduledTimestamp.toDate();
+      } else if ((c.scheduledTimestamp as any).seconds) {
+        dateSource = new Date((c.scheduledTimestamp as any).seconds * 1000);
+      }
+    } else if (c.scheduledDate) {
+      dateSource = new Date(c.scheduledDate);
+    }
+
+    if (dateSource && !isNaN(dateSource.getTime())) {
+      const yyyy = dateSource.getFullYear();
+      const mm = String(dateSource.getMonth() + 1).padStart(2, "0");
+      const dd = String(dateSource.getDate()).padStart(2, "0");
+      localDate = `${yyyy}-${mm}-${dd}`;
+
+      const hh = String(dateSource.getHours()).padStart(2, "0");
+      const min = String(dateSource.getMinutes()).padStart(2, "0");
+      localTime = `${hh}:${min}`;
+    }
+
+    setDate(localDate);
+    setTime(localTime);
   };
 
   const handleUpdateClass = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingClass) return;
 
-    if (!editTitle.trim()) {
+    if (!title.trim()) {
       toast.error("Please enter a title");
       return;
     }
-
-    const ytId = extractYouTubeId(editYtUrl);
-    if (!editYtUrl.trim()) {
-      toast.error("Please provide a YouTube Live link");
+    if (!selectedBranchId || !selectedCourseId || !selectedBatchId) {
+      toast.error("Please select branch, program, and batch audience");
       return;
     }
-    if (!ytId) {
-      toast.error("Invalid YouTube link format");
+    if (!date) {
+      toast.error("Please select a date");
+      return;
+    }
+    if (!time) {
+      toast.error("Please select a time");
       return;
     }
 
-    setUpdating(true);
+    setSubmitting(true);
     try {
-      await updateDoc(doc(db, "educators", educatorId, "liveClasses", editingClass.id), {
-        title: editTitle.trim(),
-        description: editDescription.trim(),
-        youtubeUrl: editYtUrl.trim(),
-        youtubeVideoId: ytId,
+      const branchName = branches.find((b) => b.id === selectedBranchId)?.name || "";
+      const courseName = courses.find((c) => c.id === selectedCourseId)?.name || "";
+      const batchName = batches.find((b) => b.id === selectedBatchId)?.name || "";
+      const enrolledCount = studentCounts[selectedBatchId] || 0;
+
+      // Parse schedule timestamp
+      const scheduledDate = new Date(`${date}T${time}:00`);
+      const scheduledTimestamp = Timestamp.fromDate(scheduledDate);
+
+      await updateDoc(doc(db, "live_classes", editingClass.id), {
+        title: title.trim(),
+        description: description.trim(),
+        branchId: selectedBranchId,
+        courseId: selectedCourseId,
+        batchId: selectedBatchId,
+        branchName,
+        courseName,
+        batchName,
+        scheduledDate: date,
+        startTime: time,
+        scheduledTimestamp,
+        enrolledCount,
       });
+
       toast.success("Live class updated");
       setEditingClass(null);
+      // Reset form states
+      setTitle("");
+      setDescription("");
+      setSelectedBranchId("");
+      setSelectedCourseId("");
+      setSelectedBatchId("");
+      setDate("");
+      setTime("");
     } catch (err) {
       console.error(err);
       toast.error("Update failed");
     } finally {
-      setUpdating(false);
+      setSubmitting(false);
     }
   };
 
@@ -521,7 +586,7 @@ export default function LiveClasses() {
   return (
     <div className="relative space-y-6">
       <AnimatePresence mode="wait">
-        {!showCreateForm ? (
+        {!showCreateForm && !editingClass ? (
           <motion.div
             key="list"
             initial={{ opacity: 0, y: 15 }}
@@ -553,24 +618,22 @@ export default function LiveClasses() {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`relative pb-3 text-sm font-semibold capitalize transition-colors ${
-                      activeTab === tab
-                        ? "border-b-2 border-primary text-primary"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
+                    className={`relative pb-3 text-sm font-semibold capitalize transition-colors ${activeTab === tab
+                      ? "border-b-2 border-primary text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                      }`}
                   >
                     {tab === "scheduled" ? "Upcoming" : tab}
-                    {liveClasses.filter((c) => c.status === tab).length > 0 && (
+                    {stats[tab === "scheduled" ? "upcoming" : tab] > 0 && (
                       <span
-                        className={`ml-2 rounded-full px-2 py-0.5 text-xs font-bold ${
-                          tab === "live"
-                            ? "animate-pulse bg-red-500/10 text-red-600"
-                            : tab === "scheduled"
-                              ? "bg-primary/10 text-primary"
-                              : "bg-muted text-muted-foreground"
-                        }`}
+                        className={`ml-2 rounded-full px-2 py-0.5 text-xs font-bold ${tab === "live"
+                          ? "animate-pulse bg-red-500/10 text-red-600"
+                          : tab === "scheduled"
+                            ? "bg-primary/10 text-primary"
+                            : "bg-muted text-muted-foreground"
+                          }`}
                       >
-                        {liveClasses.filter((c) => c.status === tab).length}
+                        {stats[tab === "scheduled" ? "upcoming" : tab]}
                       </span>
                     )}
                   </button>
@@ -639,14 +702,16 @@ export default function LiveClasses() {
                         </p>
                       )}
 
-                      <div className="space-y-1.5 border-t border-border/40 pt-3 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-2">
+                      <div className="space-y-2 border-t border-border/40 pt-3">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Calendar className="h-4 w-4 text-primary/65" />
-                          <span>{formatDateLabel(item.date)}</span>
+                          <span>{formatDateLabel(item.scheduledDate)}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-primary/65" />
-                          <span>{item.enrolledCount || 0} students enrolled</span>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Clock className="h-4 w-4 text-primary/65" />
+                          <span>
+                            {formatTimeLabel(item.startTime)}
+                          </span>
                         </div>
                       </div>
 
@@ -656,28 +721,21 @@ export default function LiveClasses() {
                           <>
                             <Button
                               size="sm"
-                              className="gradient-bg py-4.5 flex-1 rounded-lg text-xs"
-                              onClick={() => handleUpdateStatus(item.id, "live")}
-                            >
-                              <PlayCircle className="mr-1.5 h-4 w-4" />
-                              Start Live
-                            </Button>
-                            <Button
-                              size="sm"
                               variant="outline"
-                              className="h-9 rounded-lg border-border px-3"
-                              title="Edit Class"
+                              className="flex-1 rounded-lg border-border text-xs gap-1.5"
                               onClick={() => handleEditClick(item)}
                             >
-                              <Edit2 className="h-3.5 w-3.5" />
+                              <Edit2 className="h-3.5 w-3.5 text-primary" />
+                              Edit
                             </Button>
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-9 shrink-0 rounded-lg px-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                              className="flex-1 rounded-lg text-xs text-destructive hover:bg-destructive/10 hover:text-destructive gap-1.5"
                               onClick={() => handleDeleteClass(item.id, item.title)}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
+                              Delete
                             </Button>
                           </>
                         )}
@@ -686,19 +744,19 @@ export default function LiveClasses() {
                           <>
                             <Button
                               size="sm"
-                              className="py-4.5 flex-1 rounded-lg bg-red-600 text-xs hover:bg-red-700"
-                              onClick={() => setSelectedWatchClass(item)}
+                              className="py-4.5 flex-1 rounded-lg bg-red-600 text-xs hover:bg-red-700 gap-1.5"
+                              onClick={() => navigate(`/educator/live-class/${item.id}`)}
                             >
-                              <Tv className="mr-1.5 h-4 w-4" />
-                              Join Studio
+                              <Tv className="h-4 w-4" />
+                              Start Live Class
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="py-4.5 flex-1 rounded-lg border-red-200 text-xs text-red-600 hover:bg-red-50 hover:text-red-700"
+                              className="py-4.5 flex-1 rounded-lg border-red-200 text-xs text-red-600 hover:bg-red-50 hover:text-red-700 gap-1.5"
                               onClick={() => handleUpdateStatus(item.id, "completed")}
                             >
-                              End Class
+                              End Live
                             </Button>
                           </>
                         )}
@@ -708,16 +766,16 @@ export default function LiveClasses() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="flex-1 rounded-lg border-border text-xs"
+                              className="flex-1 rounded-lg border-border text-xs gap-1.5"
                               onClick={() => setSelectedWatchClass(item)}
                             >
                               <Tv className="h-3.5 w-3.5 text-primary" />
-                              View Recording
+                              Recording
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="flex-1 rounded-lg border-border text-xs"
+                              className="flex-1 rounded-lg border-border text-xs gap-1.5"
                               onClick={() => setSelectedAttendanceClass(item)}
                             >
                               <UserCheck className="h-3.5 w-3.5 text-primary" />
@@ -746,22 +804,36 @@ export default function LiveClasses() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowCreateForm(false)}
+                onClick={() => {
+                  setShowCreateForm(false);
+                  setEditingClass(null);
+                  setTitle("");
+                  setDescription("");
+                  setSelectedBranchId("");
+                  setSelectedCourseId("");
+                  setSelectedBatchId("");
+                  setDate("");
+                  setTime("");
+                }}
                 className="rounded-full hover:bg-muted"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                <h2 className="text-xl font-bold tracking-tight">Create Live Class</h2>
+                <h2 className="text-xl font-bold tracking-tight">
+                  {editingClass ? "Edit Live Class" : "Create Live Class"}
+                </h2>
                 <p className="text-sm text-muted-foreground">
-                  Setup and schedule a virtual live classroom
+                  {editingClass
+                    ? "Modify fields and save updates to the scheduled live class"
+                    : "Setup and schedule a virtual live classroom"}
                 </p>
               </div>
             </div>
 
             <Card className="border-border/60 shadow-card">
               <CardContent className="space-y-8 p-6">
-                <form onSubmit={handleCreateLiveClass} className="space-y-8">
+                <form onSubmit={editingClass ? handleUpdateClass : handleCreateLiveClass} className="space-y-8">
                   {/* Section 1: Basic Details */}
                   <div className="space-y-4">
                     <h3 className="flex items-center gap-2 border-b pb-2 text-sm font-bold text-primary">
@@ -917,105 +989,24 @@ export default function LiveClasses() {
                     </div>
                   </div>
 
-                  {/* Section 4: Streaming Setup */}
-                  <div className="space-y-4">
-                    <h3 className="flex items-center gap-2 border-b pb-2 text-sm font-bold text-primary">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px]">
-                        4
-                      </span>
-                      Streaming Setup
-                    </h3>
 
-                    {!ytConnected.connected ? (
-                      <Card className="flex flex-col gap-4 rounded-xl border-amber-200 bg-amber-50/50 p-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="min-w-0 space-y-1">
-                          <h4 className="flex items-center gap-1.5 text-sm font-bold text-amber-900">
-                            <Youtube className="h-5 w-5 shrink-0 text-red-600" />
-                            YouTube Account Not Connected
-                          </h4>
-                          <p className="max-w-md text-xs leading-normal text-amber-700/90">
-                            Connect your YouTube channel to automatically create and manage live
-                            streams for your classes.
-                          </p>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          disabled={connectingYt}
-                          onClick={connectYoutube}
-                          className="shrink-0 self-start border-amber-300 bg-amber-100/50 text-amber-900 hover:bg-amber-100 sm:self-center"
-                        >
-                          {connectingYt ? (
-                            <>
-                              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                              Connecting...
-                            </>
-                          ) : (
-                            "Connect YouTube"
-                          )}
-                        </Button>
-                      </Card>
-                    ) : (
-                      <div className="space-y-4">
-                        <Card className="flex flex-col gap-4 rounded-xl border-green-200 bg-green-50/30 p-4 sm:flex-row sm:items-center sm:justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-600 text-sm font-bold text-white shadow-sm">
-                              {ytConnected.channelName[0]}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1.5">
-                                <h4 className="truncate text-sm font-bold text-green-950">
-                                  {ytConnected.channelName}
-                                </h4>
-                              </div>
-                            </div>
-                          </div>
-                          <Badge className="shrink-0 bg-green-500 text-xs hover:bg-green-600">
-                            Connected
-                          </Badge>
-                        </Card>
-
-                        <div className="flex items-center space-x-2 rounded-lg border border-border/40 bg-muted/30 p-3">
-                          <Checkbox
-                            id="autoCreateStream"
-                            checked={autoCreateStream}
-                            onCheckedChange={(checked) => setAutoCreateStream(!!checked)}
-                          />
-                          <label
-                            htmlFor="autoCreateStream"
-                            className="cursor-pointer select-none text-xs font-semibold text-foreground"
-                          >
-                            Automatically create YouTube Live stream
-                          </label>
-                        </div>
-                      </div>
-                    )}
-
-                    {(!ytConnected || !autoCreateStream) && (
-                      <div className="space-y-1.5">
-                        <Label
-                          htmlFor="manualYoutubeUrl"
-                          className="text-xs font-bold text-foreground"
-                        >
-                          Manual YouTube Live Stream URL <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id="manualYoutubeUrl"
-                          placeholder="e.g. https://www.youtube.com/watch?v=..."
-                          value={manualYoutubeUrl}
-                          onChange={(e) => setManualYoutubeUrl(e.target.value)}
-                          className="rounded-lg border-input bg-card py-5 focus:ring-primary"
-                        />
-                      </div>
-                    )}
-                  </div>
 
                   <div className="flex justify-end gap-3 border-t border-border/40 pt-6">
                     <Button
                       type="button"
                       variant="outline"
                       className="w-28 rounded-lg"
-                      onClick={() => setShowCreateForm(false)}
+                      onClick={() => {
+                        setShowCreateForm(false);
+                        setEditingClass(null);
+                        setTitle("");
+                        setDescription("");
+                        setSelectedBranchId("");
+                        setSelectedCourseId("");
+                        setSelectedBatchId("");
+                        setDate("");
+                        setTime("");
+                      }}
                       disabled={submitting}
                     >
                       Cancel
@@ -1027,10 +1018,10 @@ export default function LiveClasses() {
                     >
                       {submitting ? (
                         <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Scheduling...
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> {editingClass ? "Saving..." : "Scheduling..."}
                         </>
                       ) : (
-                        "Create Live Class"
+                        editingClass ? "Save Changes" : "Create Live Class"
                       )}
                     </Button>
                   </div>
@@ -1041,60 +1032,6 @@ export default function LiveClasses() {
         )}
       </AnimatePresence>
 
-      {/* Edit Live Class Dialog */}
-      <Dialog open={!!editingClass} onOpenChange={(open) => !open && setEditingClass(null)}>
-        <DialogContent className="max-w-md rounded-xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Edit Live Class Details</DialogTitle>
-            <DialogDescription>
-              Modify fields and save updates to the scheduled live class.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleUpdateClass} className="space-y-4 pt-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="editTitle" className="text-xs font-bold">
-                Class Title
-              </Label>
-              <Input
-                id="editTitle"
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                className="rounded-lg"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="editYtUrl" className="text-xs font-bold">
-                YouTube URL
-              </Label>
-              <Input
-                id="editYtUrl"
-                value={editYtUrl}
-                onChange={(e) => setEditYtUrl(e.target.value)}
-                className="rounded-lg"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="editDesc" className="text-xs font-bold">
-                Description
-              </Label>
-              <Textarea
-                id="editDesc"
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                className="min-h-[80px]"
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-3">
-              <Button type="button" variant="outline" onClick={() => setEditingClass(null)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={updating} className="gradient-bg text-white">
-                {updating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       {/* Watch Stream Dialog */}
       <Dialog
