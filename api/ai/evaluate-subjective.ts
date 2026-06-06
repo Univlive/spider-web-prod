@@ -47,14 +47,19 @@ const SYSTEM_INSTRUCTION = [
   "You evaluate student answers against reference answers and provide fair, detailed scoring.",
   "",
   "Evaluation guidelines:",
-  "- Compare the student's answer to the reference answer for semantic similarity.",
-  "- Award partial marks for partially correct answers.",
+  "- ONLY evaluate content that is explicitly and visibly present in the student's answer.",
+  "  Never infer, assume, or credit content that is absent. A missing section earns 0 for that section.",
+  "- If the reference answer has multiple distinct sections or parts, every required section must be",
+  "  present in the student's answer. Missing sections receive 0 regardless of how well other sections are done.",
+  "- Partial marks are awarded only for content that is actually shown, proportional to what is correct.",
+  "- For numerical values: exact figures are required for full marks on that value.",
+  "  A wrong number loses marks even if the surrounding method or structure is correct.",
+  "- For multi-step answers: award marks for correct steps shown, deduct for wrong or missing steps.",
   "- Check for keyword presence if keywords are provided.",
-  "- Consider the meaning and understanding, not just exact word matching.",
-  "- Be fair but rigorous — do not award marks for vague or incorrect answers.",
+  "- Consider meaning and understanding, not just exact word matching — except for numbers and formulas.",
+  "- Do not award marks for vague, incomplete, or incorrect answers.",
   "- For uploaded image answers, carefully read and interpret the handwritten content.",
   "- If a reference answer image is provided, use it alongside the text reference.",
-  "- If ans for mathematical questions are not same award marks for steps cut marks for incorrect answer",
   "",
   "Response fields:",
   "- score: The marks awarded (0 to maxScore). Must be a reasonable number.",
@@ -241,7 +246,15 @@ function parseServiceAccount() {
   }
 }
 
-async function evaluateWithGemini(parts: any[], maxScore: number): Promise<{ result: EvaluationResponse; tokens: number; inputTokens: number; outputTokens: number }> {
+async function evaluateWithGemini(
+  parts: any[],
+  maxScore: number
+): Promise<{
+  result: EvaluationResponse;
+  tokens: number;
+  inputTokens: number;
+  outputTokens: number;
+}> {
   if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
     throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON is not configured");
   }
@@ -272,7 +285,7 @@ async function evaluateWithGemini(parts: any[], maxScore: number): Promise<{ res
       await new Promise((r) => setTimeout(r, GEMINI_RETRY_BASE_MS * 2 ** (attempt - 1)));
     }
     try {
-      const normalizedParts = parts.map((p: any) => typeof p === "string" ? { text: p } : p);
+      const normalizedParts = parts.map((p: any) => (typeof p === "string" ? { text: p } : p));
       const result = await model.generateContent({
         contents: [{ role: "user", parts: normalizedParts }],
       });
@@ -367,7 +380,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             name: "Impact",
             value: `Batch of ${evaluations.length} subjective answers cannot be evaluated`,
           },
-          { name: "Fix", value: "Add FIREBASE_SERVICE_ACCOUNT_JSON to Vercel environment variables and redeploy" },
+          {
+            name: "Fix",
+            value: "Add FIREBASE_SERVICE_ACCOUNT_JSON to Vercel environment variables and redeploy",
+          },
         ]);
         return res.status(500).json({ error: "FIREBASE_SERVICE_ACCOUNT_JSON is not configured" });
       }
@@ -387,7 +403,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       for (const evalReq of evaluations) {
         try {
           const parts = await buildRequestParts(evalReq);
-          const { result, tokens, inputTokens: inTok, outputTokens: outTok } = await evaluateWithGemini(parts, evalReq.maxScore);
+          const {
+            result,
+            tokens,
+            inputTokens: inTok,
+            outputTokens: outTok,
+          } = await evaluateWithGemini(parts, evalReq.maxScore);
           batchTokens += tokens;
           batchInputTokens += inTok;
           batchOutputTokens += outTok;
@@ -431,8 +452,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           { name: "Evaluated", value: `${succeeded}/${evaluations.length}`, inline: true },
           { name: "Score", value: `${totalAwarded}/${totalMax}`, inline: true },
           { name: "Avg Confidence", value: `${Math.round(avgConfidence * 100)}%`, inline: true },
-          { name: "Tokens", value: `${batchInputTokens.toLocaleString()} in / ${batchOutputTokens.toLocaleString()} out`, inline: true },
-          { name: "Est. Cost", value: `₹${((batchInputTokens * 0.000007151) + (batchOutputTokens * 0.00002860)).toFixed(4)}`, inline: true },
+          {
+            name: "Tokens",
+            value: `${batchInputTokens.toLocaleString()} in / ${batchOutputTokens.toLocaleString()} out`,
+            inline: true,
+          },
+          {
+            name: "Est. Cost",
+            value: `₹${(batchInputTokens * 0.000007151 + batchOutputTokens * 0.0000286).toFixed(4)}`,
+            inline: true,
+          },
           ...(failed.length > 0 ? [{ name: "Failed IDs", value: failed.join(", ") }] : []),
         ]
       );
@@ -456,13 +485,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
       void sendDiscordEmbed("error", "🔴 FIREBASE_SERVICE_ACCOUNT_JSON not configured", [
         { name: "Impact", value: "Single subjective answer cannot be evaluated" },
-        { name: "Fix", value: "Add FIREBASE_SERVICE_ACCOUNT_JSON to Vercel environment variables and redeploy" },
+        {
+          name: "Fix",
+          value: "Add FIREBASE_SERVICE_ACCOUNT_JSON to Vercel environment variables and redeploy",
+        },
       ]);
       return res.status(500).json({ error: "FIREBASE_SERVICE_ACCOUNT_JSON is not configured" });
     }
 
     const parts = await buildRequestParts(evalReq);
-    const { result, tokens, inputTokens, outputTokens } = await evaluateWithGemini(parts, evalReq.maxScore || 5);
+    const { result, tokens, inputTokens, outputTokens } = await evaluateWithGemini(
+      parts,
+      evalReq.maxScore || 5
+    );
 
     void reportAiUsage(tokens, req.headers["authorization"]?.replace("Bearer ", ""));
 
@@ -471,7 +506,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       { name: "Score", value: `${result.score}/${result.maxScore}`, inline: true },
       { name: "Confidence", value: `${Math.round(result.confidence * 100)}%`, inline: true },
       { name: "Tokens", value: `${inputTokens} in / ${outputTokens} out`, inline: true },
-      { name: "Est. Cost", value: `₹${((inputTokens * 0.000007151) + (outputTokens * 0.00002860)).toFixed(4)}`, inline: true },
+      {
+        name: "Est. Cost",
+        value: `₹${(inputTokens * 0.000007151 + outputTokens * 0.0000286).toFixed(4)}`,
+        inline: true,
+      },
     ]);
 
     return res.status(200).json(result);
