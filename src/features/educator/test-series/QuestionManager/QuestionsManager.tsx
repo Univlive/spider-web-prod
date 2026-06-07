@@ -2869,7 +2869,7 @@ const QuestionsManager = ({
                 : "Add questions manually or import them from a PDF with AI. Saved questions stay in the same Firestore path."}
             </p>
           </div>
-          <div className="mt-2 flex flex-wrap justify-end gap-2 md:mt-0 lg:justify-start">
+          <div className="mt-2 flex flex-wrap justify-start gap-2 md:mt-0">
             {(!isPageMode || !isApp) && (
               <Button
                 variant="outline"
