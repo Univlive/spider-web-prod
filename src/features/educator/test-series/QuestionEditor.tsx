@@ -75,6 +75,10 @@ type QuestionEditorProps = {
   setFormReferenceAnswerFileUrls: (value: string[]) => void;
   formEvaluationInstructions: string;
   setFormEvaluationInstructions: (value: string) => void;
+  formMarks: string;
+  setFormMarks: (value: string) => void;
+  formNegMarks: string;
+  setFormNegMarks: (value: string) => void;
 };
 
 function hasPreviewContent(raw: string) {
@@ -285,6 +289,10 @@ const QuestionEditor = (props: QuestionEditorProps) => {
     setFormReferenceAnswerFileUrls,
     formEvaluationInstructions,
     setFormEvaluationInstructions,
+    formMarks,
+    setFormMarks,
+    formNegMarks,
+    setFormNegMarks,
   } = props;
 
   const typeConfig = getQuestionTypeConfig(formQuestionType);
@@ -600,6 +608,26 @@ const QuestionEditor = (props: QuestionEditorProps) => {
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label>Marks</Label>
+            <Input
+              type="number"
+              step="0.5"
+              value={formMarks}
+              onChange={(e) => setFormMarks(e.target.value)}
+              className="rounded-xl"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Neg. Marks</Label>
+            <Input
+              type="number"
+              step="0.25"
+              value={formNegMarks}
+              onChange={(e) => setFormNegMarks(e.target.value)}
+              className="rounded-xl"
+            />
+          </div>
           <div className="flex items-center justify-between rounded-xl border border-border bg-background p-3">
             <div className="min-w-0">
               <p className="text-sm font-medium">{getPublishStatusLabel(formActive)}</p>

@@ -24,6 +24,8 @@ export function buildSnapshotFromQuestion(question?: TestQuestion): EditorDraftS
       referenceKeywords: "",
       referenceAnswerFileUrls: [],
       evaluationInstructions: "",
+      marks: "1",
+      negativeMarks: "0",
     };
   }
 
@@ -51,6 +53,8 @@ export function buildSnapshotFromQuestion(question?: TestQuestion): EditorDraftS
         ? [question.referenceAnswerFileUrl]
         : [],
     evaluationInstructions: question.evaluationInstructions || "",
+    marks: question.marks != null ? String(question.marks) : "1",
+    negativeMarks: question.negativeMarks != null ? String(question.negativeMarks) : "0",
   };
 }
 
@@ -69,6 +73,8 @@ export function areSnapshotsEqual(a: EditorDraftSnapshot, b: EditorDraftSnapshot
   if (JSON.stringify(a.referenceAnswerFileUrls) !== JSON.stringify(b.referenceAnswerFileUrls))
     return false;
   if (a.evaluationInstructions !== b.evaluationInstructions) return false;
+  if (a.marks !== b.marks) return false;
+  if (a.negativeMarks !== b.negativeMarks) return false;
   if (a.options.length !== b.options.length) return false;
   for (let i = 0; i < a.options.length; i += 1) {
     if (a.options[i] !== b.options[i]) return false;

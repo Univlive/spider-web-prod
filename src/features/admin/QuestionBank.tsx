@@ -704,7 +704,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
       return;
     }
 
-    const qRef = query(questionBankCollection, orderBy("updatedAt", "desc"), limit(500));
+    const qRef = query(questionBankCollection, orderBy("updatedAt", "desc"));
     const unsub = onSnapshot(
       qRef,
       (snap) => {
@@ -752,7 +752,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
       return;
     }
     const adminCol = collection(db, "question_bank");
-    const qRef = query(adminCol, orderBy("updatedAt", "desc"), limit(500));
+    const qRef = query(adminCol, orderBy("updatedAt", "desc"));
     const unsub = onSnapshot(qRef, (snap) => {
       setAdminItems(
         snap.docs.map((d) => ({

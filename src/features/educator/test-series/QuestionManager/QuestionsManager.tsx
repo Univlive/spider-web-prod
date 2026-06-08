@@ -172,6 +172,8 @@ const QuestionsManager = ({
   const [formReferenceKeywords, setFormReferenceKeywords] = useState("");
   const [formReferenceAnswerFileUrls, setFormReferenceAnswerFileUrls] = useState<string[]>([]);
   const [formEvaluationInstructions, setFormEvaluationInstructions] = useState("");
+  const [formMarks, setFormMarks] = useState("1");
+  const [formNegMarks, setFormNegMarks] = useState("0");
   const [editorSnapshot, setEditorSnapshot] = useState<EditorDraftSnapshot | null>(null);
   const [unsavedConfirmOpen, setUnsavedConfirmOpen] = useState(false);
   const [pendingEditorAction, setPendingEditorAction] = useState<PendingEditorAction | null>(null);
@@ -668,6 +670,8 @@ const QuestionsManager = ({
       referenceKeywords: formReferenceKeywords,
       referenceAnswerFileUrls: formReferenceAnswerFileUrls,
       evaluationInstructions: formEvaluationInstructions,
+      marks: formMarks,
+      negativeMarks: formNegMarks,
     }),
     [
       formQuestion,
@@ -684,6 +688,8 @@ const QuestionsManager = ({
       formReferenceKeywords,
       formReferenceAnswerFileUrls,
       formEvaluationInstructions,
+      formMarks,
+      formNegMarks,
     ]
   );
 
@@ -1101,6 +1107,8 @@ const QuestionsManager = ({
     setFormReferenceKeywords("");
     setFormReferenceAnswerFileUrls([]);
     setFormEvaluationInstructions("");
+    setFormMarks("1");
+    setFormNegMarks("0");
     setInsertAfterQuestionId(null);
     setEditorSnapshot(null);
   }
@@ -1160,6 +1168,8 @@ const QuestionsManager = ({
           : []
     );
     setFormEvaluationInstructions(q.evaluationInstructions || "");
+    setFormMarks(q.marks != null ? String(q.marks) : "1");
+    setFormNegMarks(q.negativeMarks != null ? String(q.negativeMarks) : "0");
     setEditorSnapshot(buildSnapshotFromQuestion(q));
     setEditorOpen(true);
   }
@@ -2273,6 +2283,8 @@ const QuestionsManager = ({
       chapter: formChapter || "",
       topic: formTopic || "",
       isActive: !!formActive,
+      marks: Number(formMarks) || 1,
+      negativeMarks: Number(formNegMarks) || 0,
       updatedAt: serverTimestamp(),
       questionType: formQuestionType || "MCQ",
     };
@@ -2719,7 +2731,11 @@ const QuestionsManager = ({
       sectionId: data?.sectionId ? String(data.sectionId) : "",
       marks,
       negativeMarks,
-      questionType: data?.questionType ? String(data.questionType) : undefined,
+      questionType: data?.questionType
+        ? String(data.questionType)
+        : data?.format
+          ? String(data.format)
+          : undefined,
       referenceAnswer: data?.referenceAnswer ? String(data.referenceAnswer) : undefined,
       referenceKeywords: Array.isArray(data?.referenceKeywords)
         ? data.referenceKeywords.map(String).filter(Boolean)
@@ -3045,6 +3061,10 @@ const QuestionsManager = ({
                             setFormReferenceAnswerFileUrls={setFormReferenceAnswerFileUrls}
                             formEvaluationInstructions={formEvaluationInstructions}
                             setFormEvaluationInstructions={setFormEvaluationInstructions}
+                            formMarks={formMarks}
+                            setFormMarks={setFormMarks}
+                            formNegMarks={formNegMarks}
+                            setFormNegMarks={setFormNegMarks}
                           />
                         ) : null;
 

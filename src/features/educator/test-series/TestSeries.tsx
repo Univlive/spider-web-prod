@@ -46,6 +46,7 @@ import EmptyState from "@features/educator/components/EmptyState";
 
 import { uploadToImageKit } from "@shared/lib/imagekitUpload";
 import { buildAutoFillSelection } from "@shared/lib/autoFillEngine";
+import { normalizeQuestionType } from "@shared/lib/questionTypes";
 
 // Component
 import CreateCustomTest from "./CreateCustomTest";
@@ -674,6 +675,7 @@ export default function TestSeries() {
             bankQuestionId: id,
             questionOrder: order++,
             addedAt: serverTimestamp(),
+            questionType: normalizeQuestionType(rest.questionType || rest.format || "MCQ_SINGLE"),
           };
           batch.set(qRef, qData);
           usedIds.add(id);

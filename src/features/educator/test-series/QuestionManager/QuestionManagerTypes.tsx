@@ -104,6 +104,8 @@ export type EditorDraftSnapshot = {
   referenceKeywords: string;
   referenceAnswerFileUrls: string[];
   evaluationInstructions: string;
+  marks: string;
+  negativeMarks: string;
 };
 
 export type PendingEditorAction =
