@@ -311,7 +311,7 @@ async function evaluateWithGemini(
 
   const generationConfig: GenerationConfig = {
     temperature: 0.3,
-    maxOutputTokens: 1024,
+    maxOutputTokens: hasImages ? 2048 : 1024,
     responseMimeType: "application/json",
     responseSchema: evaluationSchema as any,
     // Enable thinking for image-based evaluation — visual comparison requires explicit reasoning.
