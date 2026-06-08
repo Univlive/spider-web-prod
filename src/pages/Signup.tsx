@@ -79,9 +79,12 @@ export default function Signup() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
     setLoading(true);
 
-    if (password.length < 6) {
+    if (trimmedPassword.length < 6) {
       toast.error("Password must be at least 6 characters.");
       setLoading(false);
       return;
@@ -96,16 +99,16 @@ export default function Signup() {
         }
 
         try {
-          const cred = await createUserWithEmailAndPassword(auth, email, password);
-          await updateProfile(cred.user, { displayName: name });
+          const cred = await createUserWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
+          await updateProfile(cred.user, { displayName: trimmedName });
 
           await setDoc(
             doc(db, "users", cred.user.uid),
             {
               uid: cred.user.uid,
               role: "STUDENT",
-              displayName: name,
-              email,
+              displayName: trimmedName,
+              email: trimmedEmail,
               educatorId: tenant.educatorId,
               tenantSlug,
               enrolledTenants: arrayUnion(tenantSlug),
@@ -120,8 +123,8 @@ export default function Signup() {
             doc(db, "educators", tenant.educatorId, "students", cred.user.uid),
             {
               uid: cred.user.uid,
-              name,
-              email,
+              name: trimmedName,
+              email: trimmedEmail,
               status: "ACTIVE",
               tenantSlug,
               joinedAt: serverTimestamp(),
@@ -146,7 +149,7 @@ export default function Signup() {
         } catch (err: any) {
           if (err?.code === "auth/email-already-in-use") {
             // Stop and ask the user to confirm before signing in with existing credentials.
-            setPendingEnroll({ email, password });
+            setPendingEnroll({ email: trimmedEmail, password: trimmedPassword });
             setLoading(false);
             return;
           }
@@ -166,7 +169,7 @@ export default function Signup() {
 
       let cred;
       try {
-        cred = await createUserWithEmailAndPassword(auth, email, password);
+        cred = await createUserWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
       } catch (err: any) {
         if (err?.code === "auth/email-already-in-use") {
           toast.error("This email already has an account. Please login instead.");
@@ -174,7 +177,7 @@ export default function Signup() {
         }
         throw err;
       }
-      await updateProfile(cred.user, { displayName: name });
+      await updateProfile(cred.user, { displayName: trimmedName });
 
       const uid = cred.user.uid;
 
@@ -183,8 +186,8 @@ export default function Signup() {
         {
           uid,
           role: "EDUCATOR",
-          displayName: name,
-          email,
+          displayName: trimmedName,
+          email: trimmedEmail,
           tenantSlug: slug,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
@@ -196,11 +199,11 @@ export default function Signup() {
         doc(db, "educators", uid),
         {
           tenantSlug: slug,
-          coachingName: coachingName || name,
-          displayName: name,
-          fullName: name,
-          phone: phone || "",
-          email,
+          coachingName: coachingName.trim() || trimmedName,
+          displayName: trimmedName,
+          fullName: trimmedName,
+          phone: phone.trim() || "",
+          email: trimmedEmail,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         },

@@ -106,10 +106,12 @@ export default function Login() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
     setLoading(true);
 
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const cred = await signInWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
 
       // load profile doc
       const snap = await getDoc(doc(db, "users", cred.user.uid));

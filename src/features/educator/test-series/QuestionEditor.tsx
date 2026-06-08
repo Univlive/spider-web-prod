@@ -49,10 +49,6 @@ type QuestionEditorProps = {
   formSectionId: string;
   setFormSectionId: (value: string) => void;
   managedSections: QuestionEditorSection[];
-  formMarks: string;
-  setFormMarks: (value: string) => void;
-  formNegMarks: string;
-  setFormNegMarks: (value: string) => void;
   formActive: boolean;
   handleEditorPublishChange: (value: boolean) => void;
   removeOptionField: (index: number) => void;
@@ -69,6 +65,8 @@ type QuestionEditorProps = {
   // Subjective question type support
   formQuestionType: QuestionType;
   setFormQuestionType: (value: QuestionType) => void;
+  formExplanation: string;
+  setFormExplanation: (value: string) => void;
   formReferenceAnswer: string;
   setFormReferenceAnswer: (value: string) => void;
   formReferenceKeywords: string;
@@ -266,10 +264,6 @@ const QuestionEditor = (props: QuestionEditorProps) => {
     formSectionId,
     setFormSectionId,
     managedSections,
-    formMarks,
-    setFormMarks,
-    formNegMarks,
-    setFormNegMarks,
     formActive,
     handleEditorPublishChange,
     removeOptionField,
@@ -281,6 +275,8 @@ const QuestionEditor = (props: QuestionEditorProps) => {
     saveQuestion,
     formQuestionType,
     setFormQuestionType,
+    formExplanation,
+    setFormExplanation,
     formReferenceAnswer,
     setFormReferenceAnswer,
     formReferenceKeywords,
@@ -389,18 +385,6 @@ const QuestionEditor = (props: QuestionEditorProps) => {
           </div>
           <div className="rounded-lg border border-border bg-background p-3 text-center">
             <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              Marks
-            </p>
-            <p className="mt-1 text-sm font-semibold">{formMarks || "—"}</p>
-          </div>
-          <div className="rounded-lg border border-border bg-background p-3 text-center">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              Negative
-            </p>
-            <p className="mt-1 text-sm font-semibold">{formNegMarks || "—"}</p>
-          </div>
-          <div className="rounded-lg border border-border bg-background p-3 text-center">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
               Status
             </p>
             <p
@@ -488,8 +472,41 @@ const QuestionEditor = (props: QuestionEditorProps) => {
           </div>
         )}
 
-        {/* Subjective: reference answer (text + optional image) */}
-        {(formQuestionType === "SUBJECTIVE_SHORT" || formQuestionType === "SUBJECTIVE_LONG") && (
+        {/* Fill-up: single expected answer, direct match */}
+        {formQuestionType === "FILL_UP" && (
+          <div className="space-y-2">
+            <Label>Expected Answer</Label>
+            <Input
+              value={formReferenceAnswer}
+              onChange={(e) => setFormReferenceAnswer(e.target.value)}
+              placeholder="e.g. photosynthesis"
+              className="rounded-xl"
+            />
+            <p className="text-xs text-muted-foreground">
+              Matched case-insensitively. Keep it one word or a short exact phrase.
+            </p>
+          </div>
+        )}
+
+        {/* Explanation — shown for MCQ and FILL_UP */}
+        {(formQuestionType === "MCQ_SINGLE" ||
+          formQuestionType === "MCQ_MULTI" ||
+          formQuestionType === "FILL_UP") && (
+          <div className="space-y-2">
+            <Label>
+              Explanation <span className="font-normal text-muted-foreground">(optional)</span>
+            </Label>
+            <Textarea
+              value={formExplanation}
+              onChange={(e) => setFormExplanation(e.target.value)}
+              placeholder="Explain why the correct answer is correct..."
+              className="min-h-[80px] rounded-xl"
+            />
+          </div>
+        )}
+
+        {/* Subjective long: reference answer + keywords + images + eval instructions */}
+        {formQuestionType === "SUBJECTIVE_LONG" && (
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Expected / Reference Answer</Label>
@@ -592,27 +609,6 @@ const QuestionEditor = (props: QuestionEditorProps) => {
             </div>
             <Switch checked={formActive} onCheckedChange={handleEditorPublishChange} />
           </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Marks</Label>
-              <Input
-                value={formMarks}
-                onChange={(e) => setFormMarks(e.target.value)}
-                className="rounded-xl"
-                placeholder="e.g. 5"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Negative Marks</Label>
-              <Input
-                value={formNegMarks}
-                onChange={(e) => setFormNegMarks(e.target.value)}
-                className="rounded-xl"
-                placeholder="e.g. -1"
-              />
-            </div>
-          </div>
         </div>
       </div>
 
@@ -669,21 +665,35 @@ const QuestionEditor = (props: QuestionEditorProps) => {
         </div>
       )}
 
-      {/* Preview — Subjective */}
-      {(formQuestionType === "SUBJECTIVE_SHORT" || formQuestionType === "SUBJECTIVE_LONG") &&
-        hasPreviewContent(formQuestion) && (
-          <div className="mt-5 rounded-xl border border-border bg-muted/20 p-3">
-            <p className="mb-2 text-xs font-medium text-muted-foreground">Question Preview</p>
-            <div className="rounded-lg border border-border/60 bg-background p-3">
-              <HtmlView html={formQuestion} className="break-words text-sm" />
-            </div>
-            <div className="mt-3 rounded-lg border border-dashed border-border/60 bg-background p-3">
-              <p className="text-xs italic text-muted-foreground">
-                Student can type their answer or upload an image
-              </p>
-            </div>
+      {/* Preview — Fill-up */}
+      {formQuestionType === "FILL_UP" && hasPreviewContent(formQuestion) && (
+        <div className="mt-5 rounded-xl border border-border bg-muted/20 p-3">
+          <p className="mb-2 text-xs font-medium text-muted-foreground">Question Preview</p>
+          <div className="rounded-lg border border-border/60 bg-background p-3">
+            <HtmlView html={formQuestion} className="break-words text-sm" />
           </div>
-        )}
+          <div className="mt-3 rounded-lg border border-dashed border-border/60 bg-background p-3">
+            <p className="text-xs italic text-muted-foreground">
+              Student types a single word or short phrase
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Preview — Subjective Long */}
+      {formQuestionType === "SUBJECTIVE_LONG" && hasPreviewContent(formQuestion) && (
+        <div className="mt-5 rounded-xl border border-border bg-muted/20 p-3">
+          <p className="mb-2 text-xs font-medium text-muted-foreground">Question Preview</p>
+          <div className="rounded-lg border border-border/60 bg-background p-3">
+            <HtmlView html={formQuestion} className="break-words text-sm" />
+          </div>
+          <div className="mt-3 rounded-lg border border-dashed border-border/60 bg-background p-3">
+            <p className="text-xs italic text-muted-foreground">
+              Student can type their answer or upload an image
+            </p>
+          </div>
+        </div>
+      )}
 
       {!readOnly ? (
         <div className="mt-5 flex items-center justify-end">

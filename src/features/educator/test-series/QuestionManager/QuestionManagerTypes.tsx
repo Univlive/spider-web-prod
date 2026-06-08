@@ -97,10 +97,9 @@ export type EditorDraftSnapshot = {
   subject: string;
   chapter: string;
   topic: string;
-  marks: string;
-  negativeMarks: string;
   active: boolean;
   questionType: string;
+  explanation: string;
   referenceAnswer: string;
   referenceKeywords: string;
   referenceAnswerFileUrls: string[];

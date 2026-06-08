@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card } from "@shared/ui/card";
 import { Edit, Trash2, X, ChevronDown, ChevronRight } from "lucide-react";
 import { Badge } from "@shared/ui/badge";
@@ -17,7 +17,7 @@ import { Switch } from "@shared/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
 import { TopicMultiSelect } from "@shared/ui/topic-multi-select";
 import { MultiSelect } from "@shared/ui/MultiSelect";
-import { SearchableSingleSelect } from "@shared/ui/searchable-single-select";
+import type { RawQBQ } from "@shared/hooks/useQBOptions";
 
 type MarkingScheme = {
   correct: number;
@@ -29,7 +29,7 @@ const QUESTION_FORMATS = [
   { value: "MCQ_SINGLE", label: "MCQ (Single Correct)" },
   { value: "MCQ_MULTI", label: "MCQ (Multiple Correct)" },
   { value: "MCQ_CASE_STUDY", label: "MCQ (Case Study)" },
-  { value: "SUBJECTIVE_SHORT", label: "Subjective (Short)" },
+  { value: "FILL_UP", label: "Fill-ups / One-word" },
   { value: "SUBJECTIVE_LONG", label: "Subjective (Long)" },
 ];
 
@@ -40,7 +40,7 @@ type SectionCardProps = {
   attemptLimit?: number;
   durationMinutes?: number;
   sectionDifficulty?: number;
-  sectionChapter?: string;
+  sectionChapter?: string[];
   sectionTopics?: string[];
   sectionSubject?: string;
   sectionTags?: string[];
@@ -48,6 +48,7 @@ type SectionCardProps = {
   availableChapters?: string[];
   availableTopics?: string[];
   availableTagOptions?: string[];
+  rawQuestions?: RawQBQ[];
   showSubjectPicker?: boolean;
   courseSubjects?: { id: string; name: string }[];
   defaultMarkingScheme?: {
@@ -62,7 +63,7 @@ type SectionCardProps = {
     attemptLimit?: number | null;
     durationMinutes?: number | null;
     difficultyLevel: number;
-    chapter: string;
+    chapters: string[];
     topics: string[];
     markingScheme: MarkingScheme;
     subject: string;
@@ -104,6 +105,7 @@ const SectionCard = ({
   availableChapters,
   availableTopics,
   availableTagOptions,
+  rawQuestions,
   showSubjectPicker,
   courseSubjects,
   defaultMarkingScheme,
@@ -123,14 +125,43 @@ const SectionCard = ({
   const [draftDifficultyLevel, setDraftDifficultyLevel] = useState(
     clampDifficulty(sectionDifficulty)
   );
-  const [draftChapter, setDraftChapter] = useState(sectionChapter || "");
+  const [draftChapters, setDraftChapters] = useState<string[]>(sectionChapter || []);
   const [draftTopics, setDraftTopics] = useState<string[]>(sectionTopics || []);
   const [draftSubject, setDraftSubject] = useState(sectionSubject || "");
   const [draftTags, setDraftTags] = useState<string[]>(sectionTags || []);
+
+  const filteredTopics = useMemo(() => {
+    if (!rawQuestions?.length || !draftChapters.length) return availableTopics || [];
+    const chapterSet = new Set(draftChapters.map((c) => c.toLowerCase()));
+    const topicSet = new Set<string>();
+    rawQuestions.forEach((q) => {
+      if (q.chapter && chapterSet.has(q.chapter.toLowerCase())) {
+        q.topics.forEach((t) => topicSet.add(t));
+      }
+    });
+    return Array.from(topicSet).sort();
+  }, [rawQuestions, draftChapters, availableTopics]);
+
+  const filteredTags = useMemo(() => {
+    if (!rawQuestions?.length || (!draftChapters.length && !draftTopics.length))
+      return availableTagOptions || [];
+    const chapterSet = new Set(draftChapters.map((c) => c.toLowerCase()));
+    const topicSet = new Set(draftTopics);
+    const tagSet = new Set<string>();
+    rawQuestions.forEach((q) => {
+      const chapterMatch =
+        !draftChapters.length || (q.chapter && chapterSet.has(q.chapter.toLowerCase()));
+      const topicMatch = !draftTopics.length || q.topics.some((t) => topicSet.has(t));
+      if (chapterMatch && topicMatch) {
+        q.tags.forEach((t) => tagSet.add(t));
+      }
+    });
+    return Array.from(tagSet).sort();
+  }, [rawQuestions, draftChapters, draftTopics, availableTagOptions]);
   const [draftFormat, setDraftFormat] = useState(sectionFormat || "");
   const [draftMarkingEnabled, setDraftMarkingEnabled] = useState(!!markingScheme);
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const fallbackScheme = defaultMarkingScheme || { correct: 4, incorrect: -1, unanswered: 0 };
+  const fallbackScheme = defaultMarkingScheme || { correct: 1, incorrect: 0, unanswered: 0 };
   const [draftMarkingScheme, setDraftMarkingScheme] = useState({
     correct: markingScheme?.correct ?? fallbackScheme.correct,
     incorrect: markingScheme?.incorrect ?? fallbackScheme.incorrect,
@@ -143,14 +174,18 @@ const SectionCard = ({
     setDraftAttemptLimit(attemptLimit == null ? "" : String(attemptLimit));
     setDraftDurationMinutes(durationMinutes == null ? "" : String(durationMinutes));
     setDraftDifficultyLevel(clampDifficulty(sectionDifficulty));
-    setDraftChapter(sectionChapter || "");
+    setDraftChapters(sectionChapter || []);
     setDraftTopics(sectionTopics || []);
     setDraftSubject(sectionSubject || "");
     setDraftTags(sectionTags || []);
     setDraftFormat(sectionFormat || "");
     setDraftMarkingEnabled(!!markingScheme);
     setAdvancedOpen(
-      !!(sectionChapter || (sectionTopics?.length ?? 0) > 0 || (sectionTags?.length ?? 0) > 0)
+      !!(
+        (sectionChapter?.length ?? 0) > 0 ||
+        (sectionTopics?.length ?? 0) > 0 ||
+        (sectionTags?.length ?? 0) > 0
+      )
     );
     setDraftMarkingScheme({
       correct: markingScheme?.correct ?? fallbackScheme.correct,
@@ -189,7 +224,9 @@ const SectionCard = ({
                   Difficulty: {getDifficultyLabel(clampDifficulty(sectionDifficulty))}
                 </Badge>
               )}
-              {sectionChapter && <Badge variant="outline">Ch: {sectionChapter}</Badge>}
+              {(sectionChapter?.length ?? 0) > 0 && (
+                <Badge variant="outline">Ch: {sectionChapter!.join(", ")}</Badge>
+              )}
               {sectionSubject && <Badge variant="secondary">{sectionSubject}</Badge>}
               {sectionFormat && (
                 <Badge variant="secondary" className="capitalize">
@@ -372,22 +409,13 @@ const SectionCard = ({
                     Used by auto-fill and AI fill to narrow the question pool.
                   </p>
                   <div className="space-y-2">
-                    <Label>Chapter</Label>
-                    {availableChapters && availableChapters.length > 0 ? (
-                      <SearchableSingleSelect
-                        options={availableChapters}
-                        value={draftChapter}
-                        onChange={setDraftChapter}
-                        placeholder="Any chapter"
-                        searchPlaceholder="Search chapters..."
-                      />
-                    ) : (
-                      <Input
-                        value={draftChapter}
-                        onChange={(e) => setDraftChapter(e.target.value)}
-                        placeholder="e.g. Kinematics"
-                      />
-                    )}
+                    <Label>Chapters</Label>
+                    <MultiSelect
+                      options={availableChapters || []}
+                      selected={draftChapters}
+                      onChange={setDraftChapters}
+                      placeholder="Any chapter"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>Topics</Label>
@@ -395,14 +423,14 @@ const SectionCard = ({
                       selectedTopics={draftTopics}
                       setSelectedTopics={setDraftTopics}
                       placeholder="Search and select topics..."
-                      availableTopics={availableTopics}
+                      availableTopics={filteredTopics}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Tags</Label>
-                    {availableTagOptions && availableTagOptions.length > 0 ? (
+                    {filteredTags.length > 0 ? (
                       <MultiSelect
-                        options={availableTagOptions}
+                        options={filteredTags}
                         selected={draftTags}
                         onChange={setDraftTags}
                         placeholder="Select tags..."
@@ -512,7 +540,7 @@ const SectionCard = ({
                     attemptLimit: attemptLimitValue,
                     durationMinutes: durationValue,
                     difficultyLevel: clampDifficulty(draftDifficultyLevel),
-                    chapter: draftChapter,
+                    chapters: draftChapters,
                     topics: draftTopics,
                     markingScheme: nextMarking,
                     subject: draftSubject,

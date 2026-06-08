@@ -35,7 +35,7 @@ export type SectionConstraints = {
   name: string;
   questionsCount: number;
   subject?: string;
-  chapter?: string;
+  chapters?: string[];
   topics?: string[];
   tags?: string[];
   format?: string;
@@ -139,12 +139,12 @@ function matchesSectionConstraints(q: PoolQuestion, s: SectionConstraints): bool
     if (rawQFmt && normalizeQuestionType(rawQFmt) !== normalizeQuestionType(s.format)) return false;
   }
 
-  // Chapter hard filter
-  if (s.chapter) {
+  // Chapters hard filter (question must match at least one selected chapter)
+  if (s.chapters?.length) {
     const qChapter = String(q.chapter || "")
       .trim()
       .toLowerCase();
-    if (!qChapter || qChapter !== s.chapter.trim().toLowerCase()) return false;
+    if (!qChapter || !s.chapters.some((c) => c.trim().toLowerCase() === qChapter)) return false;
   }
 
   // Topics hard filter (question must match at least one)
@@ -316,31 +316,82 @@ export function buildAutoFillSelection(
       }
     }
 
-    // --- PASS 2: fill remaining slots with individual questions using scoring ---
+    // --- PASS 2: fill remaining slots with individual questions ---
+    // When multiple tags are selected, distribute slots equally across tags first,
+    // then fall back to any remaining candidates for leftover slots.
     const available = shuffledIndividuals.filter((q) => !globalUsed.has(q.id));
 
-    while (slotsLeft > 0 && available.length > 0) {
-      let bestIndex = 0;
-      let bestScore = -Infinity;
-
-      for (let i = 0; i < available.length; i++) {
-        const candidate = available[i];
-        const d = difficultyBucket(candidate);
-        let score = Math.random();
-        if ((remainingDiff[d] || 0) > 0) score += 3;
-        if (score > bestScore) {
-          bestScore = score;
-          bestIndex = i;
-        }
+    const activeTags = section.tags ?? [];
+    if (activeTags.length > 1 && available.length > 0) {
+      // Group candidates by first matching tag
+      const tagBuckets = new Map<string, PoolQuestion[]>(activeTags.map((t) => [t, []]));
+      const untagged: PoolQuestion[] = [];
+      for (const q of available) {
+        const qTags = new Set<string>(Array.isArray(q.tags) ? (q.tags as string[]) : []);
+        const firstMatch = activeTags.find((t) => qTags.has(t));
+        if (firstMatch) tagBuckets.get(firstMatch)!.push(q);
+        else untagged.push(q);
       }
 
-      const [picked] = available.splice(bestIndex, 1);
-      sectionChosen.push(picked);
-      globalUsed.add(picked.id);
+      const perTag = Math.ceil(slotsLeft / activeTags.length);
+      const tagOrder = [...activeTags];
 
-      const d = difficultyBucket(picked);
-      if (remainingDiff[d] > 0) remainingDiff[d]--;
-      slotsLeft--;
+      // Round-robin pick from each tag bucket up to perTag each
+      let tagIdx = 0;
+      while (slotsLeft > 0) {
+        let picked = false;
+        for (let attempt = 0; attempt < tagOrder.length; attempt++) {
+          const tag = tagOrder[(tagIdx + attempt) % tagOrder.length];
+          const bucket = tagBuckets.get(tag)!;
+          if (bucket.length > 0) {
+            const q = bucket.shift()!;
+            sectionChosen.push(q);
+            globalUsed.add(q.id);
+            const d = difficultyBucket(q);
+            if (remainingDiff[d] > 0) remainingDiff[d]--;
+            slotsLeft--;
+            tagIdx = (tagIdx + attempt + 1) % tagOrder.length;
+            picked = true;
+            break;
+          }
+        }
+        if (!picked) break; // all tag buckets empty
+      }
+
+      // Fill any remaining slots from untagged pool
+      for (const q of untagged) {
+        if (slotsLeft <= 0) break;
+        sectionChosen.push(q);
+        globalUsed.add(q.id);
+        const d = difficultyBucket(q);
+        if (remainingDiff[d] > 0) remainingDiff[d]--;
+        slotsLeft--;
+      }
+    } else {
+      // No multi-tag distribution — original scoring logic
+      while (slotsLeft > 0 && available.length > 0) {
+        let bestIndex = 0;
+        let bestScore = -Infinity;
+
+        for (let i = 0; i < available.length; i++) {
+          const candidate = available[i];
+          const d = difficultyBucket(candidate);
+          let score = Math.random();
+          if ((remainingDiff[d] || 0) > 0) score += 3;
+          if (score > bestScore) {
+            bestScore = score;
+            bestIndex = i;
+          }
+        }
+
+        const [picked] = available.splice(bestIndex, 1);
+        sectionChosen.push(picked);
+        globalUsed.add(picked.id);
+
+        const d = difficultyBucket(picked);
+        if (remainingDiff[d] > 0) remainingDiff[d]--;
+        slotsLeft--;
+      }
     }
 
     const shortfall = needed - sectionChosen.length;

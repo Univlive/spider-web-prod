@@ -8,7 +8,7 @@ import { Progress } from "@shared/ui/progress";
 import { useAuth } from "@app/providers/AuthProvider";
 import { db } from "@shared/lib/firebase";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
-import { isSubjectiveType } from "@shared/lib/questionTypes";
+import { isSubjectiveType, normalizeQuestionType } from "@shared/lib/questionTypes";
 
 type AttemptResponse = {
   answer: string | null;
@@ -147,7 +147,8 @@ function computeFromQuestionsAndResponses(
 
     if (!isAnswered(userAnswer)) continue;
 
-    const isSubjective = isSubjectiveType(d.questionType);
+    const normalizedType = normalizeQuestionType(d.questionType ?? d.format);
+    const isSubjective = isSubjectiveType(d.questionType ?? d.format);
 
     if (isSubjective) {
       const aiScore = responses[q.id]?.aiEvaluation?.score;
@@ -155,6 +156,26 @@ function computeFromQuestionsAndResponses(
         const safeScore = safeNumber(aiScore, 0);
         score += safeScore;
         perSection[sectionId].score += safeScore;
+      }
+      continue;
+    }
+
+    // Fill-up: direct case-insensitive comparison
+    if (normalizedType === "FILL_UP") {
+      const userAns = String(userAnswer).toLowerCase().trim();
+      const expected = String((d as any).referenceAnswer ?? "")
+        .toLowerCase()
+        .trim();
+      if (userAns && expected) {
+        if (userAns === expected) {
+          score += pos;
+          perSection[sectionId].score += pos;
+          correctCount += 1;
+        } else {
+          score -= neg;
+          perSection[sectionId].score -= neg;
+          incorrectCount += 1;
+        }
       }
       continue;
     }

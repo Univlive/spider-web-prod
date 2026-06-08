@@ -17,10 +17,9 @@ export function buildSnapshotFromQuestion(question?: TestQuestion): EditorDraftS
       subject: "",
       chapter: "",
       topic: "",
-      marks: "",
-      negativeMarks: "",
       active: true,
       questionType: "MCQ_SINGLE",
+      explanation: "",
       referenceAnswer: "",
       referenceKeywords: "",
       referenceAnswerFileUrls: [],
@@ -39,10 +38,9 @@ export function buildSnapshotFromQuestion(question?: TestQuestion): EditorDraftS
     subject: question.subject || "",
     chapter: question.chapter || "",
     topic: question.topic || "",
-    marks: question.marks != null ? String(question.marks) : "",
-    negativeMarks: question.negativeMarks != null ? String(question.negativeMarks) : "",
     active: isQuestionPublished(question.isActive),
     questionType: normalizeQuestionType(question.questionType),
+    explanation: question.explanation || "",
     referenceAnswer: question.referenceAnswer || "",
     referenceKeywords: Array.isArray(question.referenceKeywords)
       ? question.referenceKeywords.join(", ")
@@ -63,13 +61,13 @@ export function areSnapshotsEqual(a: EditorDraftSnapshot, b: EditorDraftSnapshot
   if (a.subject !== b.subject) return false;
   if (a.chapter !== b.chapter) return false;
   if (a.topic !== b.topic) return false;
-  if (a.marks !== b.marks) return false;
-  if (a.negativeMarks !== b.negativeMarks) return false;
   if (a.active !== b.active) return false;
   if (a.questionType !== b.questionType) return false;
+  if (a.explanation !== b.explanation) return false;
   if (a.referenceAnswer !== b.referenceAnswer) return false;
   if (a.referenceKeywords !== b.referenceKeywords) return false;
-  if (JSON.stringify(a.referenceAnswerFileUrls) !== JSON.stringify(b.referenceAnswerFileUrls)) return false;
+  if (JSON.stringify(a.referenceAnswerFileUrls) !== JSON.stringify(b.referenceAnswerFileUrls))
+    return false;
   if (a.evaluationInstructions !== b.evaluationInstructions) return false;
   if (a.options.length !== b.options.length) return false;
   for (let i = 0; i < a.options.length; i += 1) {

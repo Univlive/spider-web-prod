@@ -165,10 +165,9 @@ const QuestionsManager = ({
   const [formSubject, setFormSubject] = useState("");
   const [formChapter, setFormChapter] = useState("");
   const [formTopic, setFormTopic] = useState("");
-  const [formMarks, setFormMarks] = useState("");
-  const [formNegMarks, setFormNegMarks] = useState("");
   const [formActive, setFormActive] = useState(true);
   const [formQuestionType, setFormQuestionType] = useState<QuestionType>("MCQ_SINGLE");
+  const [formExplanation, setFormExplanation] = useState("");
   const [formReferenceAnswer, setFormReferenceAnswer] = useState("");
   const [formReferenceKeywords, setFormReferenceKeywords] = useState("");
   const [formReferenceAnswerFileUrls, setFormReferenceAnswerFileUrls] = useState<string[]>([]);
@@ -208,8 +207,8 @@ const QuestionsManager = ({
   const [pendingSectionTimeLimit, setPendingSectionTimeLimit] = useState("");
   const [ischecked, setIsChecked] = useState(false);
   const [markingScheme, setMarkingScheme] = useState({
-    correct: 4,
-    incorrect: -1,
+    correct: 1,
+    incorrect: 0,
     unattempted: 0,
   });
 
@@ -662,10 +661,9 @@ const QuestionsManager = ({
       subject: formSubject || "",
       chapter: formChapter || "",
       topic: formTopic || "",
-      marks: formMarks,
-      negativeMarks: formNegMarks,
       active: !!formActive,
       questionType: formQuestionType,
+      explanation: formExplanation || "",
       referenceAnswer: formReferenceAnswer,
       referenceKeywords: formReferenceKeywords,
       referenceAnswerFileUrls: formReferenceAnswerFileUrls,
@@ -679,10 +677,9 @@ const QuestionsManager = ({
       formSubject,
       formChapter,
       formTopic,
-      formMarks,
-      formNegMarks,
       formActive,
       formQuestionType,
+      formExplanation,
       formReferenceAnswer,
       formReferenceKeywords,
       formReferenceAnswerFileUrls,
@@ -1097,10 +1094,9 @@ const QuestionsManager = ({
     setFormSubject("");
     setFormChapter("");
     setFormTopic("");
-    setFormMarks("");
-    setFormNegMarks("");
     setFormActive(true);
     setFormQuestionType("MCQ_SINGLE");
+    setFormExplanation("");
     setFormReferenceAnswer("");
     setFormReferenceKeywords("");
     setFormReferenceAnswerFileUrls([]);
@@ -1149,10 +1145,9 @@ const QuestionsManager = ({
     setFormSubject(q.subject || "");
     setFormChapter(q.chapter || "");
     setFormTopic(q.topic || "");
-    setFormMarks(q.marks != null ? String(q.marks) : "");
-    setFormNegMarks(q.negativeMarks != null ? String(q.negativeMarks) : "");
     setFormActive(isQuestionPublished(q.isActive));
     setFormQuestionType(normalizeQuestionType(q.questionType || "MCQ_SINGLE"));
+    setFormExplanation(q.explanation || "");
     setFormReferenceAnswer(q.referenceAnswer || "");
     setFormReferenceKeywords(
       Array.isArray(q.referenceKeywords) ? q.referenceKeywords.join(", ") : ""
@@ -1281,8 +1276,8 @@ const QuestionsManager = ({
     setPendingSectionTimeLimit("");
     setIsChecked(false);
     setMarkingScheme({
-      correct: 4,
-      incorrect: -1,
+      correct: 1,
+      incorrect: 0,
       unattempted: 0,
     });
     setAddSectionDialogOpen(true);
@@ -1331,8 +1326,8 @@ const QuestionsManager = ({
     setPendingSectionTimeLimit("");
     setIsChecked(false);
     setMarkingScheme({
-      correct: 4,
-      incorrect: -1,
+      correct: 1,
+      incorrect: 0,
       unattempted: 0,
     });
 
@@ -1652,11 +1647,11 @@ const QuestionsManager = ({
           marks:
             targetSection?.markingScheme?.correct != null
               ? Number(targetSection.markingScheme.correct)
-              : (question.marks ?? null),
+              : (question.marks ?? 1),
           negativeMarks:
             targetSection?.markingScheme?.incorrect != null
               ? Number(targetSection.markingScheme.incorrect)
-              : (question.negativeMarks ?? null),
+              : (question.negativeMarks ?? 0),
           isActive: false,
           source: "question_bank_auto",
           bankQuestionId: question.id,
@@ -1874,11 +1869,11 @@ const QuestionsManager = ({
             marks:
               section.markingScheme?.correct != null
                 ? Number(section.markingScheme.correct)
-                : (question.marks ?? null),
+                : (question.marks ?? 1),
             negativeMarks:
               section.markingScheme?.incorrect != null
                 ? Number(section.markingScheme.incorrect)
-                : (question.negativeMarks ?? null),
+                : (question.negativeMarks ?? 0),
             isActive: true,
             source: "auto_import",
             bankQuestionId: question.id,
@@ -2015,9 +2010,9 @@ const QuestionsManager = ({
           subject: bankQuestion.subject || "",
           chapter: bankQuestion.chapter || "",
           topic: bankQuestion.topic || "",
-          marks: bankQuestion.marks != null ? Number(bankQuestion.marks) : null,
+          marks: bankQuestion.marks != null ? Number(bankQuestion.marks) : 1,
           negativeMarks:
-            bankQuestion.negativeMarks != null ? Number(bankQuestion.negativeMarks) : null,
+            bankQuestion.negativeMarks != null ? Number(bankQuestion.negativeMarks) : 0,
           isActive: true,
           source: "question_bank",
           bankQuestionId: bankQuestion.id,
@@ -2229,17 +2224,19 @@ const QuestionsManager = ({
     const normalizedOptions = formOptions.slice(0, 6).map((value) => value ?? "");
     const nonEmptyOptions = normalizedOptions.filter((value) => value.trim() !== "");
     const isSubjective = isSubjectiveType(formQuestionType);
+    const isFillUp = normalizeQuestionType(formQuestionType) === "FILL_UP";
+    const requiresOptions = !isSubjective && !isFillUp;
 
     if (!trimmedQuestion) {
       toast.error("Question is required");
       return false;
     }
-    if (!isSubjective && nonEmptyOptions.length < 2) {
+    if (requiresOptions && nonEmptyOptions.length < 2) {
       toast.error("At least two options are required");
       return false;
     }
     if (
-      !isSubjective &&
+      requiresOptions &&
       (!normalizedOptions[formCorrect] || normalizedOptions[formCorrect].trim() === "")
     ) {
       toast.error("Correct option cannot be empty");
@@ -2269,7 +2266,7 @@ const QuestionsManager = ({
       question: formQuestion,
       options: normalizedOptions,
       correctOption: Number(formCorrect) || 0,
-      explanation: "",
+      explanation: formExplanation || "",
       difficulty: formDifficulty || "medium",
       sectionId: targetSectionId,
       subject: formSubject || "",
@@ -2280,13 +2277,9 @@ const QuestionsManager = ({
       questionType: formQuestionType || "MCQ",
     };
 
-    if (formMarks.trim() !== "") payload.marks = Number(formMarks);
-    else payload.marks = null;
-
-    if (formNegMarks.trim() !== "") payload.negativeMarks = Number(formNegMarks);
-    else payload.negativeMarks = null;
-
-    if (isSubjective) {
+    if (formQuestionType === "FILL_UP") {
+      payload.referenceAnswer = formReferenceAnswer || "";
+    } else if (isSubjective) {
       payload.referenceAnswer = formReferenceAnswer || "";
       payload.referenceKeywords = formReferenceKeywords
         .split(",")
@@ -2324,14 +2317,12 @@ const QuestionsManager = ({
             question: formQuestion,
             options: normalizedOptions,
             correctOption: Number(formCorrect) || 0,
-            explanation: "",
+            explanation: formExplanation || "",
             difficulty: formDifficulty || "medium",
             sectionId: targetSectionId,
             subject: formSubject || "",
             chapter: formChapter || "",
             topic: formTopic || "",
-            marks: formMarks.trim() !== "" ? Number(formMarks) : undefined,
-            negativeMarks: formNegMarks.trim() !== "" ? Number(formNegMarks) : undefined,
             isActive: !!formActive,
             questionOrder: insertedAfterAnchorOrder,
             questionType: formQuestionType || "MCQ",
@@ -2447,8 +2438,8 @@ const QuestionsManager = ({
         sectionId: targetSectionId,
         subject: q.subject || "",
         topic: q.topic || "",
-        marks: q.marks ?? null,
-        negativeMarks: q.negativeMarks ?? null,
+        marks: q.marks ?? 1,
+        negativeMarks: q.negativeMarks ?? 0,
         isActive: isQuestionPublished(q.isActive),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -2919,10 +2910,20 @@ const QuestionsManager = ({
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain p-3">
               <div className="space-y-3 p-4">
                 {useSections && (
-                  <div>
+                  <div className="flex items-center justify-between">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                       Sections
                     </p>
+                    {!readOnly && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 rounded-xl text-xs"
+                        onClick={() => handleAddSectionClick("")}
+                      >
+                        <Plus className="mr-1 h-3.5 w-3.5" /> Add Section
+                      </Button>
+                    )}
                   </div>
                 )}
                 <input
@@ -3021,10 +3022,6 @@ const QuestionsManager = ({
                             formSectionId={formSectionId}
                             setFormSectionId={setFormSectionId}
                             managedSections={managedSections}
-                            formMarks={formMarks}
-                            setFormMarks={setFormMarks}
-                            formNegMarks={formNegMarks}
-                            setFormNegMarks={setFormNegMarks}
                             formActive={formActive}
                             handleEditorPublishChange={handleEditorPublishChange}
                             removeOptionField={removeOptionField}
@@ -3038,6 +3035,8 @@ const QuestionsManager = ({
                             }}
                             formQuestionType={formQuestionType}
                             setFormQuestionType={setFormQuestionType}
+                            formExplanation={formExplanation}
+                            setFormExplanation={setFormExplanation}
                             formReferenceAnswer={formReferenceAnswer}
                             setFormReferenceAnswer={setFormReferenceAnswer}
                             formReferenceKeywords={formReferenceKeywords}
@@ -3895,8 +3894,8 @@ const QuestionsManager = ({
                   setPendingSectionTimeLimit("");
                   setIsChecked(false);
                   setMarkingScheme({
-                    correct: 4,
-                    incorrect: -1,
+                    correct: 1,
+                    incorrect: 0,
                     unattempted: 0,
                   });
                 }}

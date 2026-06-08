@@ -20,11 +20,11 @@ type Section = {
 const DEFAULT_TEMPLATE = {
   title: "Standard DPP",
   sections: [{ name: "Section A", questionCount: 10, format: "single_correct_mcq" as const }],
-  positiveMarks: 4,
-  negativeMarks: -1,
+  positiveMarks: 1,
+  negativeMarks: 0,
   durationMinutes: 30,
   instructions:
-    "Attempt all questions. Each correct MCQ answer carries +4 marks; incorrect answer carries -1 mark.",
+    "Attempt all questions. Each correct MCQ answer carries +1 marks; incorrect answer carries -0 marks.",
 };
 
 export default function DppTemplate() {

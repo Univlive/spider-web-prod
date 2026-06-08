@@ -58,7 +58,7 @@ type AttemptDoc = {
 type AttemptQuestion = {
   id: string;
   sectionId: string;
-  type: "mcq" | "integer" | "subjective";
+  type: "mcq" | "integer" | "subjective" | "fill_up";
   stem: string;
   options?: { id: string; text: string }[];
   correctAnswer?: string; // for mcq => option index as string, for integer => exact string
@@ -100,18 +100,27 @@ function parseMcqCorrectIndex(value: any, optionCount: number): number | null {
 }
 
 function mapQuestion(id: string, data: any): AttemptQuestion {
-  const rawType = normalizeQuestionType(data.questionType);
-  const isSubjective = rawType === "SUBJECTIVE_SHORT" || rawType === "SUBJECTIVE_LONG";
-  const isInteger = !isSubjective && data.type === "integer";
-  const type: AttemptQuestion["type"] = isSubjective ? "subjective" : isInteger ? "integer" : "mcq";
+  const rawType = normalizeQuestionType(data.questionType ?? data.format);
+  const isSubjective = rawType === "SUBJECTIVE_LONG";
+  const isFillUp = rawType === "FILL_UP";
+  const isInteger = !isSubjective && !isFillUp && data.type === "integer";
+  const type: AttemptQuestion["type"] = isSubjective
+    ? "subjective"
+    : isFillUp
+      ? "fill_up"
+      : isInteger
+        ? "integer"
+        : "mcq";
 
-  const opts: string[] = !isSubjective && Array.isArray(data.options) ? data.options : [];
-  const parsedCorrectIndex = isSubjective
-    ? null
-    : parseMcqCorrectIndex(
-        data.correctOption ?? data.correctOptionIndex ?? data.correctAnswer,
-        opts.length || 4
-      );
+  const opts: string[] =
+    !isSubjective && !isFillUp && Array.isArray(data.options) ? data.options : [];
+  const parsedCorrectIndex =
+    isSubjective || isFillUp
+      ? null
+      : parseMcqCorrectIndex(
+          data.correctOption ?? data.correctOptionIndex ?? data.correctAnswer,
+          opts.length || 4
+        );
   const correctIndex = parsedCorrectIndex ?? 0;
 
   const positive = data.marks ?? data.positiveMarks ?? 5;
@@ -123,7 +132,11 @@ function mapQuestion(id: string, data: any): AttemptQuestion {
     type,
     stem: data.question || data.text || "",
     options: type === "mcq" ? opts.map((t, i) => ({ id: String(i), text: String(t) })) : undefined,
-    correctAnswer: isSubjective ? undefined : String(correctIndex),
+    correctAnswer: isSubjective
+      ? undefined
+      : isFillUp
+        ? (data.referenceAnswer ?? "")
+        : String(correctIndex),
     explanation: data.explanation || "",
     marks: { correct: positive, incorrect: negative },
     passage: data.passage || null,
@@ -138,6 +151,13 @@ function isAnswered(val: any) {
 function isCorrectAnswer(q: AttemptQuestion, userAnswer: string | null) {
   if (q.type === "subjective") return false; // subjective graded by AI, not boolean correct/incorrect
   if (!isAnswered(userAnswer)) return false;
+  if (q.type === "fill_up")
+    return (
+      String(userAnswer).toLowerCase().trim() ===
+      String(q.correctAnswer ?? "")
+        .toLowerCase()
+        .trim()
+    );
   if (q.type === "integer")
     return String(userAnswer).trim() === String(q.correctAnswer ?? "").trim();
   return String(userAnswer) === String(q.correctAnswer ?? "");
@@ -793,6 +813,35 @@ export default function StudentAttemptDetails() {
                                 <span className="text-muted-foreground">Correct:</span>{" "}
                                 <span className="font-bold text-green-600">{q.correctAnswer}</span>
                               </div>
+                            </div>
+                          )}
+
+                          {q.type === "fill_up" && (
+                            <div className="space-y-2">
+                              <div className="flex flex-wrap gap-4">
+                                <div
+                                  className={cn(
+                                    "rounded-xl p-3",
+                                    !answered
+                                      ? "bg-background/50"
+                                      : correct
+                                        ? "bg-green-100/50 dark:bg-green-900/20"
+                                        : "bg-red-100/50 dark:bg-red-900/20"
+                                  )}
+                                >
+                                  <span className="text-muted-foreground">Your answer:</span>{" "}
+                                  <span className="font-bold">{answered ? userAnswer : "—"}</span>
+                                </div>
+                                <div className="rounded-xl bg-green-100/50 p-3 dark:bg-green-900/20">
+                                  <span className="text-muted-foreground">Expected:</span>{" "}
+                                  <span className="font-bold text-green-600">
+                                    {q.correctAnswer || "—"}
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="text-[11px] text-muted-foreground">
+                                Matching is case-insensitive
+                              </p>
                             </div>
                           )}
 

@@ -166,8 +166,8 @@ const CreateCustomTest = ({
   const [formDuration, setFormDuration] = useState("60");
   const [formSections, setFormSections] = useState<any[]>([]);
   const [formMarkingScheme, setFormMarkingScheme] = useState<any>({
-    correct: 4,
-    incorrect: -1,
+    correct: 1,
+    incorrect: 0,
     unanswered: 0,
   });
 
@@ -183,6 +183,10 @@ const CreateCustomTest = ({
   const [newSectionAttemptLimit, setNewSectionAttemptLimit] = useState("");
   const [newSectionFormat, setNewSectionFormat] = useState("MCQ_SINGLE");
   const [addSectionAdvancedOpen, setAddSectionAdvancedOpen] = useState(false);
+  const [newSectionUseMarkingScheme, setNewSectionUseMarkingScheme] = useState(false);
+  const [newSectionMarkingCorrect, setNewSectionMarkingCorrect] = useState("1");
+  const [newSectionMarkingIncorrect, setNewSectionMarkingIncorrect] = useState("0");
+  const [newSectionMarkingUnanswered, setNewSectionMarkingUnanswered] = useState("0");
   const [useSections, setUseSections] = useState(false);
   const [formQuestionFormat, setFormQuestionFormat] = useState("MCQ_SINGLE");
   const [formQuestionsCount, setFormQuestionsCount] = useState("");
@@ -206,7 +210,7 @@ const CreateCustomTest = ({
       setSubjectMode("single");
       setFormDuration("60");
       setFormSections([]);
-      setFormMarkingScheme({ correct: 4, incorrect: -1, unanswered: 0 });
+      setFormMarkingScheme({ correct: 1, incorrect: 0, unanswered: 0 });
       setSelectedTemplateId("none");
       setUseSections(false);
       setFormQuestionFormat("MCQ_SINGLE");
@@ -215,6 +219,10 @@ const CreateCustomTest = ({
       setFormGlobalTopics([]);
       setFormGlobalTags([]);
       setGlobalAdvancedOpen(false);
+      setNewSectionUseMarkingScheme(false);
+      setNewSectionMarkingCorrect("1");
+      setNewSectionMarkingIncorrect("0");
+      setNewSectionMarkingUnanswered("0");
     }
   }, [createOpen]);
 
@@ -235,7 +243,7 @@ const CreateCustomTest = ({
         setSubjectMode("single");
         setFormDuration("60");
         setFormSections([]);
-        setFormMarkingScheme({ correct: 4, incorrect: -1, unanswered: 0 });
+        setFormMarkingScheme({ correct: 1, incorrect: 0, unanswered: 0 });
       }
       return;
     }
@@ -269,7 +277,7 @@ const CreateCustomTest = ({
     setFormMarkingScheme(
       resolvedTemplate.markingScheme
         ? JSON.parse(JSON.stringify(resolvedTemplate.markingScheme))
-        : { correct: 4, incorrect: -1, unanswered: 0 }
+        : { correct: 1, incorrect: 0, unanswered: 0 }
     );
   }, [resolvedTemplate]);
 
@@ -390,6 +398,10 @@ const CreateCustomTest = ({
     setNewSectionTags([]);
     setNewSectionFormat("MCQ_SINGLE");
     setAddSectionAdvancedOpen(false);
+    setNewSectionUseMarkingScheme(false);
+    setNewSectionMarkingCorrect("4");
+    setNewSectionMarkingIncorrect("-1");
+    setNewSectionMarkingUnanswered("0");
     setAddSectionOpen(true);
   };
 
@@ -418,6 +430,13 @@ const CreateCustomTest = ({
         subject: newSectionSubject || "",
         tags: newSectionTags,
         format: newSectionFormat || "",
+        markingScheme: newSectionUseMarkingScheme
+          ? {
+              correct: Number(newSectionMarkingCorrect),
+              incorrect: Number(newSectionMarkingIncorrect),
+              unanswered: Number(newSectionMarkingUnanswered),
+            }
+          : null,
       },
     ]);
     setAddSectionOpen(false);
@@ -676,10 +695,12 @@ const CreateCustomTest = ({
                 type="number"
                 className="h-8"
                 value={formMarkingScheme.correct}
+                placeholder="e.g. 1"
                 onChange={(e) =>
                   setFormMarkingScheme({ ...formMarkingScheme, correct: e.target.value })
                 }
               />
+              <p className="text-[10px] text-muted-foreground">positive number</p>
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Incorrect (-)</Label>
@@ -687,10 +708,12 @@ const CreateCustomTest = ({
                 type="number"
                 className="h-8"
                 value={formMarkingScheme.incorrect}
+                placeholder="e.g. -1"
                 onChange={(e) =>
                   setFormMarkingScheme({ ...formMarkingScheme, incorrect: e.target.value })
                 }
               />
+              <p className="text-[10px] text-muted-foreground">-number or 0</p>
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Unanswered</Label>
@@ -762,7 +785,7 @@ const CreateCustomTest = ({
                     <SelectItem value="MCQ_SINGLE">MCQ (Single Correct)</SelectItem>
                     <SelectItem value="MCQ_MULTI">MCQ (Multiple Correct)</SelectItem>
                     <SelectItem value="MCQ_CASE_STUDY">MCQ (Case Study)</SelectItem>
-                    <SelectItem value="SUBJECTIVE_SHORT">Subjective (Short)</SelectItem>
+                    <SelectItem value="FILL_UP">Fill-ups / One-word</SelectItem>
                     <SelectItem value="SUBJECTIVE_LONG">Subjective (Long)</SelectItem>
                   </SelectContent>
                 </Select>
@@ -925,6 +948,53 @@ const CreateCustomTest = ({
                   <p className="text-[10px] text-muted-foreground">Leave blank to allow all</p>
                 </div>
               </div>
+
+              {/* Per-section marking scheme */}
+              <div className="space-y-2 rounded-xl border border-border p-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Custom Marking Scheme</Label>
+                  <Switch
+                    checked={newSectionUseMarkingScheme}
+                    onCheckedChange={setNewSectionUseMarkingScheme}
+                  />
+                </div>
+                {newSectionUseMarkingScheme && (
+                  <div className="grid grid-cols-3 gap-2 pt-1">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Correct (+)</Label>
+                      <Input
+                        type="number"
+                        value={newSectionMarkingCorrect}
+                        onChange={(e) => setNewSectionMarkingCorrect(e.target.value)}
+                        className="rounded-xl"
+                        placeholder="e.g. 1"
+                      />
+                      <p className="text-[10px] text-muted-foreground">positive number</p>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Incorrect (−)</Label>
+                      <Input
+                        type="number"
+                        value={newSectionMarkingIncorrect}
+                        onChange={(e) => setNewSectionMarkingIncorrect(e.target.value)}
+                        className="rounded-xl"
+                        placeholder="e.g. -1"
+                      />
+                      <p className="text-[10px] text-muted-foreground">-number or 0</p>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Unanswered</Label>
+                      <Input
+                        type="number"
+                        value={newSectionMarkingUnanswered}
+                        onChange={(e) => setNewSectionMarkingUnanswered(e.target.value)}
+                        className="rounded-xl"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <Label>
                   Difficulty:{" "}
@@ -956,7 +1026,7 @@ const CreateCustomTest = ({
                       <SelectItem value="MCQ_SINGLE">MCQ (Single Correct)</SelectItem>
                       <SelectItem value="MCQ_MULTI">MCQ (Multiple Correct)</SelectItem>
                       <SelectItem value="MCQ_CASE_STUDY">MCQ (Case Study)</SelectItem>
-                      <SelectItem value="SUBJECTIVE_SHORT">Subjective (Short)</SelectItem>
+                      <SelectItem value="FILL_UP">Fill-ups / One-word</SelectItem>
                       <SelectItem value="SUBJECTIVE_LONG">Subjective (Long)</SelectItem>
                     </SelectContent>
                   </Select>

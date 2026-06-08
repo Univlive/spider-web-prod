@@ -105,8 +105,8 @@ export default function AdminCreateFromTemplate({
         questionsCount,
         durationMinutes: selectedTemplate.durationMinutes || 60,
         markingScheme: selectedTemplate.markingScheme ?? {
-          correct: 4,
-          incorrect: -1,
+          correct: 1,
+          incorrect: 0,
           unanswered: 0,
         },
         isPublished: false,
