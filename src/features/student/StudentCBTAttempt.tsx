@@ -106,6 +106,7 @@ type AttemptQuestion = {
   sectionId: string;
   type: "mcq" | "integer" | "short_answer" | "fill_up";
   stem: string;
+  questionImageUrl?: string; // image that is part of the question itself
   options?: { id: string; text: string }[];
   correctAnswer?: string;
   referenceAnswer?: string;
@@ -211,6 +212,7 @@ const mapQuestion = (id: string, data: any): AttemptQuestion => {
     sectionId: data.sectionId || "main",
     type: mappedType,
     stem: data.question || "",
+    questionImageUrl: data.questionImage ? String(data.questionImage) : undefined,
     options:
       mappedType === "mcq" ? opts.map((t, i) => ({ id: String(i), text: String(t) })) : undefined,
     correctAnswer:
@@ -1197,6 +1199,7 @@ export default function StudentCBTAttempt() {
               questionId: q.id,
               questionText: q.stem,
               questionType: isUpload ? ("UPLOAD" as const) : ("SHORT_ANSWER" as const),
+              questionImageUrls: q.questionImageUrl ? [q.questionImageUrl] : [],
               referenceAnswer: q.referenceAnswer || "",
               referenceKeywords: q.referenceKeywords || [],
               referenceAnswerImageUrls: q.referenceAnswerFileUrls || [],
