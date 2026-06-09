@@ -1112,8 +1112,8 @@ export default function TestForm() {
   const [isPublished, setIsPublished] = useState(false);
 
   const [markingScheme, setMarkingScheme] = useState<MarkingScheme>({
-    correct: 5,
-    incorrect: -1,
+    correct: 1,
+    incorrect: 0,
     unanswered: 0,
   });
 
@@ -1985,7 +1985,7 @@ export default function TestForm() {
                     <SelectItem value="MCQ_SINGLE">MCQ (Single Correct)</SelectItem>
                     <SelectItem value="MCQ_MULTI">MCQ (Multiple Correct)</SelectItem>
                     <SelectItem value="MCQ_CASE_STUDY">MCQ (Case Study)</SelectItem>
-                    <SelectItem value="SUBJECTIVE_SHORT">Subjective (Short)</SelectItem>
+                    <SelectItem value="FILL_UP">Fill-ups / One-word</SelectItem>
                     <SelectItem value="SUBJECTIVE_LONG">Subjective (Long)</SelectItem>
                   </SelectContent>
                 </Select>

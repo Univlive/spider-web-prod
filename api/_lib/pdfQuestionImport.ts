@@ -565,8 +565,8 @@ export function normalizeImportedItem(item: any, fallbackIndex: number): Importe
     options,
     correctOption: status === "ready" ? Number(correctOption) : correctOption,
     reasons: Array.from(new Set(reasons)),
-    marks: 5,
-    negativeMarks: -1,
+    marks: 1,
+    negativeMarks: 0,
     rawBlock:
       typeof item?.rawBlock === "string" ? normalizeSpecialMathSymbolsToLatex(item.rawBlock) : "",
   };

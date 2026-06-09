@@ -2,11 +2,18 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, query, where, QueryDocumentSnapshot } from "firebase/firestore";
 import { db } from "@shared/lib/firebase";
 
+export type RawQBQ = {
+  chapter: string;
+  topics: string[];
+  tags: string[];
+};
+
 type QBOptions = {
   chapters: string[];
   topics: string[];
   tags: string[];
   loading: boolean;
+  rawQuestions: RawQBQ[];
 };
 
 /**
@@ -19,6 +26,7 @@ export function useQBOptions(subjectIds?: string[]): QBOptions {
   const [chapters, setChapters] = useState<string[]>([]);
   const [topics, setTopics] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
+  const [rawQuestions, setRawQuestions] = useState<RawQBQ[]>([]);
   const [loading, setLoading] = useState(false);
 
   const key = subjectIds === undefined ? "__all__" : JSON.stringify([...subjectIds].sort());
@@ -28,6 +36,7 @@ export function useQBOptions(subjectIds?: string[]): QBOptions {
       setChapters([]);
       setTopics([]);
       setTags([]);
+      setRawQuestions([]);
       setLoading(false);
       return;
     }
@@ -60,33 +69,49 @@ export function useQBOptions(subjectIds?: string[]): QBOptions {
         const chapterSet = new Set<string>();
         const topicSet = new Set<string>();
         const tagSet = new Set<string>();
+        const raws: RawQBQ[] = [];
 
         docs.forEach((d) => {
           const data = d.data() as Record<string, unknown>;
 
           const ch = data.chapter;
-          if (ch && typeof ch === "string" && ch.trim()) chapterSet.add(ch.trim());
+          const chapter = ch && typeof ch === "string" && ch.trim() ? ch.trim() : "";
+          if (chapter) chapterSet.add(chapter);
 
+          const docTopics: string[] = [];
           const t = data.topic;
-          if (t && typeof t === "string" && t.trim()) topicSet.add(t.trim());
+          if (t && typeof t === "string" && t.trim()) {
+            topicSet.add(t.trim());
+            docTopics.push(t.trim());
+          }
           const ts = data.topics;
           if (Array.isArray(ts)) {
             ts.forEach((tp) => {
-              if (tp && typeof tp === "string" && tp.trim()) topicSet.add(tp.trim());
+              if (tp && typeof tp === "string" && tp.trim()) {
+                topicSet.add(tp.trim());
+                if (!docTopics.includes(tp.trim())) docTopics.push(tp.trim());
+              }
             });
           }
 
+          const docTags: string[] = [];
           const tgs = data.tags;
           if (Array.isArray(tgs)) {
             tgs.forEach((tag) => {
-              if (tag && typeof tag === "string" && tag.trim()) tagSet.add(tag.trim());
+              if (tag && typeof tag === "string" && tag.trim()) {
+                tagSet.add(tag.trim());
+                docTags.push(tag.trim());
+              }
             });
           }
+
+          raws.push({ chapter, topics: docTopics, tags: docTags });
         });
 
         setChapters(Array.from(chapterSet).sort());
         setTopics(Array.from(topicSet).sort());
         setTags(Array.from(tagSet).sort());
+        setRawQuestions(raws);
       } catch (e) {
         console.error("useQBOptions:", e);
       } finally {
@@ -100,5 +125,5 @@ export function useQBOptions(subjectIds?: string[]): QBOptions {
     };
   }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { chapters, topics, tags, loading };
+  return { chapters, topics, tags, loading, rawQuestions };
 }

@@ -8,6 +8,7 @@ interface EvaluationRequest {
   questionId: string;
   questionText: string;
   questionType: "SHORT_ANSWER" | "UPLOAD";
+  questionImageUrls?: string[]; // images that are part of the question itself
   referenceAnswer?: string;
   referenceAnswerImageUrl?: string; // legacy single image
   referenceAnswerImageUrls?: string[]; // multiple images (preferred)
@@ -67,8 +68,11 @@ const SYSTEM_INSTRUCTION = [
   "  by distinct correct sub-parts (e.g., correct method but wrong final answer).",
   "- Keywords must be present and used correctly in context, not just mentioned.",
   "",
-  "For uploaded image answers, read the handwritten content carefully before evaluating.",
-  "If a reference answer image is provided, use it as the authoritative marking guide.",
+  "For UPLOAD answers: Before awarding any marks, state in one sentence exactly what you",
+  "observe in the student's image. If the image is blank, a random/unrelated photo, or",
+  "contains no answer content related to the question, award score = 0 with confidence = 0.9.",
+  "Read handwritten content carefully — spell out each word/number you can read before comparing.",
+  "If a reference answer image is provided, compare the student's image against it section by section.",
   "",
   "Response fields:",
   "- score: Marks awarded (0 to maxScore). Must reflect strict evaluation — not a rounded-up estimate.",
@@ -144,9 +148,12 @@ function resolveStudentImageUrls(req: EvaluationRequest): string[] {
   return [];
 }
 
-async function buildRequestParts(req: EvaluationRequest) {
+async function buildRequestParts(
+  req: EvaluationRequest
+): Promise<{ parts: any[]; hasImages: boolean }> {
   const referenceAnswer = String(req.referenceAnswer || "").trim();
   const hasReferenceText = Boolean(referenceAnswer);
+  const questionImageUrls = (req.questionImageUrls || []).filter(Boolean);
   const referenceImageUrls = resolveReferenceImageUrls(req);
   const studentImageUrls = resolveStudentImageUrls(req);
   const hasStudentImages = req.questionType === "UPLOAD" && studentImageUrls.length > 0;
@@ -156,12 +163,17 @@ async function buildRequestParts(req: EvaluationRequest) {
     "",
     `Question: ${req.questionText}`,
     `Maximum Marks: ${req.maxScore}`,
-    "",
-    `Reference Answer: ${hasReferenceText ? referenceAnswer : "(not provided)"}`,
   ];
 
+  if (questionImageUrls.length > 0) {
+    lines.push(`Question Image: ${questionImageUrls.length} image(s) attached below.`);
+  }
+
+  lines.push("");
+  lines.push(`Reference Answer: ${hasReferenceText ? referenceAnswer : "(not provided)"}`);
+
   if (referenceImageUrls.length > 0) {
-    lines.push(`Reference Answer: ${referenceImageUrls.length} image(s) attached.`);
+    lines.push(`Reference Answer: ${referenceImageUrls.length} image(s) attached below.`);
   }
 
   if (req.referenceKeywords?.length) {
@@ -183,7 +195,7 @@ async function buildRequestParts(req: EvaluationRequest) {
     }
     lines.push(
       hasStudentImages
-        ? `Student Answer: ${studentImageUrls.length} image(s) attached.`
+        ? `Student Answer: ${studentImageUrls.length} image(s) attached below.`
         : "Student Answer Image: (not provided)"
     );
   } else {
@@ -199,6 +211,18 @@ async function buildRequestParts(req: EvaluationRequest) {
   );
 
   const parts: any[] = [lines.join("\n")];
+
+  // Question images first so the model understands the visual context of the question
+  for (let i = 0; i < questionImageUrls.length; i++) {
+    try {
+      const part = await fetchImageInlinePart(questionImageUrls[i], `question ${i + 1}`);
+      if (part) parts.push(part);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(`[evaluate-subjective] Question image ${i + 1} skipped: ${msg}`);
+      parts.push(`Note: Question image ${i + 1} could not be loaded (${msg}).`);
+    }
+  }
 
   for (let i = 0; i < referenceImageUrls.length; i++) {
     try {
@@ -219,10 +243,14 @@ async function buildRequestParts(req: EvaluationRequest) {
     }
   }
 
+  let loadedStudentImages = 0;
   for (let i = 0; i < studentImageUrls.length; i++) {
     try {
       const part = await fetchImageInlinePart(studentImageUrls[i], `student ${i + 1}`);
-      if (part) parts.push(part);
+      if (part) {
+        parts.push(part);
+        loadedStudentImages++;
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.warn(`[evaluate-subjective] Student image ${i + 1} skipped: ${msg}`);
@@ -232,13 +260,19 @@ async function buildRequestParts(req: EvaluationRequest) {
         { name: "Reason", value: msg, inline: true },
         { name: "URL", value: studentImageUrls[i].slice(0, 200) },
       ]);
-      parts.push(
-        `Note: Student image ${i + 1} could not be loaded (${msg}). Evaluate based on available context.`
-      );
     }
   }
 
-  return parts;
+  // If this is an UPLOAD question and every student image failed to load, bail out immediately.
+  // Sending the request with no student content would cause Gemini to award marks on nothing.
+  if (req.questionType === "UPLOAD" && studentImageUrls.length > 0 && loadedStudentImages === 0) {
+    throw new Error("STUDENT_IMAGES_UNAVAILABLE");
+  }
+
+  const hasImages =
+    questionImageUrls.length > 0 || referenceImageUrls.length > 0 || loadedStudentImages > 0;
+
+  return { parts, hasImages };
 }
 
 const GEMINI_MAX_RETRIES = 3;
@@ -255,7 +289,8 @@ function parseServiceAccount() {
 
 async function evaluateWithGemini(
   parts: any[],
-  maxScore: number
+  maxScore: number,
+  hasImages: boolean
 ): Promise<{
   result: EvaluationResponse;
   tokens: number;
@@ -276,12 +311,12 @@ async function evaluateWithGemini(
 
   const generationConfig: GenerationConfig = {
     temperature: 0.3,
-    maxOutputTokens: 1024,
+    maxOutputTokens: hasImages ? 2048 : 1024,
     responseMimeType: "application/json",
     responseSchema: evaluationSchema as any,
-    // Disable thinking — structured rubric in system prompt makes it unnecessary,
-    // and thinking tokens cost $3.50/M vs $0.60/M for output on Gemini 2.5 Flash.
-    thinkingConfig: { thinkingBudget: 0 },
+    // Enable thinking for image-based evaluation — visual comparison requires explicit reasoning.
+    // Disable only for text-only SHORT_ANSWER to keep costs low.
+    thinkingConfig: { thinkingBudget: hasImages ? 1024 : 0 },
   } as any;
 
   const model = vertex.getGenerativeModel({
@@ -415,14 +450,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       for (const evalReq of evaluations) {
         try {
-          const parts = await buildRequestParts(evalReq);
+          const { parts, hasImages } = await buildRequestParts(evalReq);
           const {
             result,
             tokens,
             inputTokens: inTok,
             outputTokens: outTok,
             thinkingTokens: thinkTok,
-          } = await evaluateWithGemini(parts, evalReq.maxScore);
+          } = await evaluateWithGemini(parts, evalReq.maxScore, hasImages);
           batchTokens += tokens;
           batchInputTokens += inTok;
           batchOutputTokens += outTok;
@@ -432,17 +467,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const msg = err instanceof Error ? err.message : String(err);
           console.error(`[evaluate-subjective] Failed for question ${evalReq.questionId}:`, err);
           failed.push(evalReq.questionId);
-          void sendDiscordEmbed("error", "❌ Per-question evaluation failed", [
-            { name: "Question ID", value: evalReq.questionId, inline: true },
-            { name: "Type", value: evalReq.questionType, inline: true },
-            { name: "Max Score", value: String(evalReq.maxScore), inline: true },
-            { name: "Error", value: msg },
-          ]);
+
+          const isImageUnavailable = msg === "STUDENT_IMAGES_UNAVAILABLE";
+          if (!isImageUnavailable) {
+            void sendDiscordEmbed("error", "❌ Per-question evaluation failed", [
+              { name: "Question ID", value: evalReq.questionId, inline: true },
+              { name: "Type", value: evalReq.questionType, inline: true },
+              { name: "Max Score", value: String(evalReq.maxScore), inline: true },
+              { name: "Error", value: msg },
+            ]);
+          }
           results[evalReq.questionId] = {
             score: 0,
             maxScore: evalReq.maxScore,
             confidence: 0,
-            feedback: "Evaluation failed. This answer will be reviewed manually.",
+            feedback: isImageUnavailable
+              ? "Student answer image could not be loaded. Flagged for manual review."
+              : "Evaluation failed. This answer will be reviewed manually.",
             evaluatedAt: Date.now(),
           };
         }
@@ -509,10 +550,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: "FIREBASE_SERVICE_ACCOUNT_JSON is not configured" });
     }
 
-    const parts = await buildRequestParts(evalReq);
+    const { parts, hasImages } = await buildRequestParts(evalReq);
     const { result, tokens, inputTokens, outputTokens, thinkingTokens } = await evaluateWithGemini(
       parts,
-      evalReq.maxScore || 5
+      evalReq.maxScore || 5,
+      hasImages
     );
 
     void reportAiUsage(tokens, req.headers["authorization"]?.replace("Bearer ", ""));

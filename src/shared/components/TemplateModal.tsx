@@ -25,7 +25,6 @@ import { Textarea } from "@shared/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
 import { Switch } from "@shared/ui/switch";
 import { MultiSelect } from "@shared/ui/MultiSelect";
-import { SearchableSingleSelect } from "@shared/ui/searchable-single-select";
 import FloatingInput from "@shared/ui/FloatingInput";
 import SectionCard from "@features/admin/components/SectionCard";
 
@@ -71,7 +70,7 @@ type Section = {
   attemptlimit: number | null;
   durationMinutes?: number | null;
   difficultyLevel?: number;
-  chapter?: string;
+  chapter?: string[];
   topics?: string[];
   subject?: string;
   tags?: string[];
@@ -85,7 +84,7 @@ const BLANK_SECTION = (): Section => ({
   questionsCount: 0,
   attemptlimit: null,
   difficultyLevel: 0.5,
-  chapter: "",
+  chapter: [],
   topics: [],
   subject: "",
   tags: [],
@@ -161,8 +160,8 @@ export default function TemplateModal({
   const [attemptsAllowed, setAttemptsAllowed] = useState("3");
   const [isPublished, setIsPublished] = useState(true);
   const [markingScheme, setMarkingScheme] = useState<MarkingScheme>({
-    correct: isAdmin ? 5 : 4,
-    incorrect: -1,
+    correct: 1,
+    incorrect: 0,
     unanswered: 0,
   });
   const [sections, setSections] = useState<Section[]>([
@@ -170,7 +169,7 @@ export default function TemplateModal({
   ]);
   const [useSections, setUseSections] = useState(false);
   const [questionFormat, setQuestionFormat] = useState("MCQ_SINGLE");
-  const [globalChapter, setGlobalChapter] = useState("");
+  const [globalChapters, setGlobalChapters] = useState<string[]>([]);
   const [globalTopics, setGlobalTopics] = useState<string[]>([]);
   const [globalTags, setGlobalTags] = useState<string[]>([]);
   const [globalAdvancedOpen, setGlobalAdvancedOpen] = useState(false);
@@ -192,8 +191,8 @@ export default function TemplateModal({
       setAttemptsAllowed(templateToEdit.attemptsAllowed?.toString() || "3");
       setIsPublished(templateToEdit.isPublished !== false);
       setMarkingScheme({
-        correct: templateToEdit.markingScheme?.correct ?? 5,
-        incorrect: templateToEdit.markingScheme?.incorrect ?? -1,
+        correct: templateToEdit.markingScheme?.correct ?? 1,
+        incorrect: templateToEdit.markingScheme?.incorrect ?? 0,
         unanswered: templateToEdit.markingScheme?.unanswered ?? 0,
       });
       const loadedSections =
@@ -204,7 +203,7 @@ export default function TemplateModal({
               difficultyLevel: clamp(
                 s.difficultyLevel ?? normalizeLegacy(s.difficulty ?? s.level ?? base)
               ),
-              chapter: s.chapter || "",
+              chapter: Array.isArray(s.chapter) ? s.chapter : s.chapter ? [s.chapter] : [],
               topics: Array.isArray(s.topics) ? s.topics.map(String) : [],
               subject: s.subject || "",
               tags: Array.isArray(s.tags) ? s.tags : [],
@@ -218,11 +217,21 @@ export default function TemplateModal({
           : (templateToEdit.sections?.length ?? 0) > 0;
       setUseSections(hasSections);
       setQuestionFormat(templateToEdit.questionFormat || "MCQ_SINGLE");
-      setGlobalChapter(templateToEdit.chapter || "");
+      setGlobalChapters(
+        Array.isArray(templateToEdit.chapter)
+          ? templateToEdit.chapter
+          : templateToEdit.chapter
+            ? [templateToEdit.chapter]
+            : []
+      );
       setGlobalTopics(Array.isArray(templateToEdit.topics) ? templateToEdit.topics : []);
       setGlobalTags(Array.isArray(templateToEdit.tags) ? templateToEdit.tags : []);
       setGlobalAdvancedOpen(
-        !!(templateToEdit.chapter || templateToEdit.topics?.length || templateToEdit.tags?.length)
+        !!(
+          templateToEdit.chapter?.length ||
+          templateToEdit.topics?.length ||
+          templateToEdit.tags?.length
+        )
       );
     } else if (!isEdit) {
       // Reset for create mode
@@ -235,11 +244,11 @@ export default function TemplateModal({
       setDurationMinutes("60");
       setAttemptsAllowed("3");
       setIsPublished(true);
-      setMarkingScheme({ correct: isAdmin ? 5 : 4, incorrect: -1, unanswered: 0 });
+      setMarkingScheme({ correct: 1, incorrect: 0, unanswered: 0 });
       setSections([{ ...BLANK_SECTION(), id: "sec_1", name: "Section 1" }]);
       setUseSections(false);
       setQuestionFormat("MCQ_SINGLE");
-      setGlobalChapter("");
+      setGlobalChapters([]);
       setGlobalTopics([]);
       setGlobalTags([]);
       setGlobalAdvancedOpen(false);
@@ -269,7 +278,7 @@ export default function TemplateModal({
       attemptLimit?: number | null;
       durationMinutes?: number | null;
       difficultyLevel: number;
-      chapter: string;
+      chapters: string[];
       topics: string[];
       markingScheme: MarkingScheme | null;
       subject: string;
@@ -286,7 +295,7 @@ export default function TemplateModal({
         attemptlimit: payload.attemptLimit ?? null,
         durationMinutes: payload.durationMinutes ?? null,
         difficultyLevel: clamp(payload.difficultyLevel),
-        chapter: payload.chapter || "",
+        chapter: payload.chapters || [],
         topics: payload.topics || [],
         markingScheme: payload.markingScheme,
         subject: payload.subject || "",
@@ -339,7 +348,7 @@ export default function TemplateModal({
               attemptlimit: attemptLimit,
               durationMinutes: s.durationMinutes ? Number(s.durationMinutes) : null,
               difficultyLevel: clamp(s.difficultyLevel),
-              chapter: s.chapter || "",
+              chapter: Array.isArray(s.chapter) ? s.chapter : [],
               topics: Array.isArray(s.topics) ? s.topics : [],
               subject: s.subject || "",
               tags: Array.isArray(s.tags) ? s.tags : [],
@@ -376,7 +385,7 @@ export default function TemplateModal({
         questionsCount: mappedSections.reduce((a, s) => a + s.questionsCount, 0),
         ...(!useSections && {
           questionFormat,
-          chapter: globalChapter || null,
+          chapter: globalChapters,
           topics: globalTopics,
           tags: globalTags,
         }),
@@ -430,6 +439,35 @@ export default function TemplateModal({
       ? allSubjects.filter((s) => s.courseId === courseId)
       : allSubjects
     : accessibleSubjects;
+
+  const globalFilteredTopics = useMemo(() => {
+    if (!qbOptions.rawQuestions.length || !globalChapters.length) return qbOptions.topics;
+    const chapterSet = new Set(globalChapters.map((c) => c.toLowerCase()));
+    const topicSet = new Set<string>();
+    qbOptions.rawQuestions.forEach((q) => {
+      if (q.chapter && chapterSet.has(q.chapter.toLowerCase())) {
+        q.topics.forEach((t) => topicSet.add(t));
+      }
+    });
+    return Array.from(topicSet).sort();
+  }, [qbOptions.rawQuestions, globalChapters, qbOptions.topics]);
+
+  const globalFilteredTags = useMemo(() => {
+    if (!qbOptions.rawQuestions.length || (!globalChapters.length && !globalTopics.length))
+      return qbOptions.tags;
+    const chapterSet = new Set(globalChapters.map((c) => c.toLowerCase()));
+    const topicSet = new Set(globalTopics);
+    const tagSet = new Set<string>();
+    qbOptions.rawQuestions.forEach((q) => {
+      const chapterMatch =
+        !globalChapters.length || (q.chapter && chapterSet.has(q.chapter.toLowerCase()));
+      const topicMatch = !globalTopics.length || q.topics.some((t) => topicSet.has(t));
+      if (chapterMatch && topicMatch) {
+        q.tags.forEach((t) => tagSet.add(t));
+      }
+    });
+    return Array.from(tagSet).sort();
+  }, [qbOptions.rawQuestions, globalChapters, globalTopics, qbOptions.tags]);
 
   // ─── render ──────────────────────────────────────────────────────────────────
 
@@ -637,7 +675,7 @@ export default function TemplateModal({
                       <SelectItem value="MCQ_SINGLE">MCQ (Single Correct)</SelectItem>
                       <SelectItem value="MCQ_MULTI">MCQ (Multiple Correct)</SelectItem>
                       <SelectItem value="MCQ_CASE_STUDY">MCQ (Case Study)</SelectItem>
-                      <SelectItem value="SUBJECTIVE_SHORT">Subjective (Short)</SelectItem>
+                      <SelectItem value="FILL_UP">Fill-ups / One-word</SelectItem>
                       <SelectItem value="SUBJECTIVE_LONG">Subjective (Long)</SelectItem>
                     </SelectContent>
                   </Select>
@@ -663,27 +701,18 @@ export default function TemplateModal({
                         Used by auto-fill and AI fill to narrow the question pool.
                       </p>
                       <div className="space-y-2">
-                        <Label>Chapter (optional)</Label>
-                        {qbOptions.chapters.length > 0 ? (
-                          <SearchableSingleSelect
-                            options={qbOptions.chapters}
-                            value={globalChapter}
-                            onChange={setGlobalChapter}
-                            placeholder="Any chapter"
-                            searchPlaceholder="Search chapters..."
-                          />
-                        ) : (
-                          <Input
-                            value={globalChapter}
-                            onChange={(e) => setGlobalChapter(e.target.value)}
-                            placeholder="e.g. Kinematics"
-                          />
-                        )}
+                        <Label>Chapters (optional)</Label>
+                        <MultiSelect
+                          options={qbOptions.chapters}
+                          selected={globalChapters}
+                          onChange={setGlobalChapters}
+                          placeholder="Any chapter"
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label>Topics (optional)</Label>
                         <MultiSelect
-                          options={qbOptions.topics}
+                          options={globalFilteredTopics}
                           selected={globalTopics}
                           onChange={setGlobalTopics}
                           placeholder="Select topics..."
@@ -692,7 +721,7 @@ export default function TemplateModal({
                       <div className="space-y-2">
                         <Label>Tags (optional)</Label>
                         <MultiSelect
-                          options={qbOptions.tags}
+                          options={globalFilteredTags}
                           selected={globalTags}
                           onChange={setGlobalTags}
                           placeholder="Select tags..."
@@ -722,6 +751,7 @@ export default function TemplateModal({
                   availableChapters={qbOptions.chapters}
                   availableTopics={qbOptions.topics}
                   availableTagOptions={qbOptions.tags}
+                  rawQuestions={qbOptions.rawQuestions}
                   showSubjectPicker={isAdmin && subjectMode === "section_wise"}
                   courseSubjects={
                     isAdmin ? allSubjects.filter((s) => s.courseId === courseId) : undefined

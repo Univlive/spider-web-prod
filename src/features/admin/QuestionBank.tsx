@@ -98,7 +98,7 @@ type QBQuestion = {
   explanationImage?: string;
 
   // Question format
-  format?: "MCQ_SINGLE" | "MCQ_MULTI" | "MCQ_CASE_STUDY" | "SUBJECTIVE_SHORT" | "SUBJECTIVE_LONG";
+  format?: "MCQ_SINGLE" | "MCQ_MULTI" | "MCQ_CASE_STUDY" | "FILL_UP" | "SUBJECTIVE_LONG";
 
   // Subjective evaluation fields
   referenceAnswer?: string;
@@ -550,9 +550,6 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
   const [correctOption, setCorrectOption] = useState<number>(0);
   const [explanation, setExplanation] = useState<string>("");
 
-  const [marks, setMarks] = useState<number>(5);
-  const [negativeMarks, setNegativeMarks] = useState<number>(-1);
-
   // Extended editor fields
   const [qFormat, setQFormat] = useState<NonNullable<QBQuestion["format"]>>("MCQ_SINGLE");
   const [referenceAnswer, setReferenceAnswer] = useState("");
@@ -707,7 +704,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
       return;
     }
 
-    const qRef = query(questionBankCollection, orderBy("updatedAt", "desc"), limit(500));
+    const qRef = query(questionBankCollection, orderBy("updatedAt", "desc"));
     const unsub = onSnapshot(
       qRef,
       (snap) => {
@@ -755,7 +752,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
       return;
     }
     const adminCol = collection(db, "question_bank");
-    const qRef = query(adminCol, orderBy("updatedAt", "desc"), limit(500));
+    const qRef = query(adminCol, orderBy("updatedAt", "desc"));
     const unsub = onSnapshot(qRef, (snap) => {
       setAdminItems(
         snap.docs.map((d) => ({
@@ -885,8 +882,6 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
     setOptions(["", "", "", ""]);
     setCorrectOption(0);
     setExplanation("");
-    setMarks(5);
-    setNegativeMarks(-1);
     setQFormat("MCQ_SINGLE");
     setQSubjectId("");
     setTopicsInput("");
@@ -931,8 +926,6 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
     );
     setCorrectOption(Number.isFinite(x.correctOption) ? x.correctOption : 0);
     setExplanation(x.explanation || "");
-    setMarks(typeof x.marks === "number" ? x.marks : 5);
-    setNegativeMarks(typeof x.negativeMarks === "number" ? x.negativeMarks : -1);
     setQFormat(
       (x.format ? normalizeQuestionType(x.format) : "MCQ_SINGLE") as NonNullable<
         QBQuestion["format"]
@@ -1036,8 +1029,6 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         options: isMcq ? options.map((o) => sanitizeHtml(o)) : [],
         correctOption: qFormat === "MCQ_SINGLE" ? correctOption : (multiCorrects[0] ?? 0),
         explanation: sanitizeHtml(explanation || ""),
-        marks: Number.isFinite(marks) ? marks : isMcq ? 5 : 10,
-        negativeMarks: Number.isFinite(negativeMarks) ? negativeMarks : isMcq ? -1 : 0,
         source: "manual",
         contentFormat: "html",
         updatedAt: serverTimestamp() as any,
@@ -1058,7 +1049,9 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         base.subjectName = matchedSubject.name;
       }
       if (qFormat === "MCQ_MULTI") base.correctOptions = multiCorrects;
-      if (qFormat === "SUBJECTIVE_SHORT" || qFormat === "SUBJECTIVE_LONG") {
+      if (qFormat === "FILL_UP") {
+        base.referenceAnswer = referenceAnswer.trim();
+      } else if (qFormat === "SUBJECTIVE_LONG") {
         base.referenceAnswer = referenceAnswer.trim();
         base.referenceKeywords = referenceKeywords
           .split(",")
@@ -1292,9 +1285,8 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         const course = String(q.subject || "").trim() || "General";
         const topic = String((q as any)["spayee:objective"] || "").trim() || "General";
         const tags = normalizeTags(q.tag || []);
-        // Always normalize to +5 marks and -1 negative marks
-        const marks = 5;
-        const negativeMarks = -1;
+        const marks = 1;
+        const negativeMarks = 0;
 
         const questionHtml = await replaceImagesInHtml(
           String(q.text || ""),
@@ -1423,8 +1415,6 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
       "format",
       "subject",
       "difficulty",
-      "marks",
-      "negative_marks",
       "course",
       "chapter",
       "tags",
@@ -1454,10 +1444,35 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         "MCQ_MULTI",
         "Mathematics",
         "medium",
-        "5",
-        "-1",
         "JEE",
         "algebra",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+      ],
+      [
+        "The process by which plants make food using sunlight is called ___.",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "photosynthesis",
+        "",
+        "Plant Biology",
+        "FILL_UP",
+        "Biology",
+        "easy",
+        "NEET",
+        "",
         "",
         "",
         "",
@@ -1483,8 +1498,6 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         "SUBJECTIVE_LONG",
         "Physics",
         "easy",
-        "10",
-        "0",
         "NEET",
         "",
         "",
@@ -1512,10 +1525,9 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         "MCQ_MULTI",
         "Biology",
         "medium",
-        "5",
-        "-1",
         "NEET",
         "biology",
+        "",
         "grp_1",
         "comprehension",
         "Read the following passage about photosynthesis and answer the questions below.",
@@ -1541,10 +1553,9 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         "MCQ_SINGLE",
         "Biology",
         "easy",
-        "5",
-        "-1",
         "NEET",
         "biology",
+        "",
         "grp_1",
         "comprehension",
         "",
@@ -1689,8 +1700,17 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
         }
 
         const isMcq = fmt === "MCQ_SINGLE" || fmt === "MCQ_MULTI";
+        const isFillUp = fmt === "FILL_UP";
         const correctAnsRaw = (row.correct_ans || "").trim();
+        const solnRaw = (row.soln || "").trim();
+
+        // MCQ requires correct_ans; FILL_UP requires correct_ans as the expected answer
         if (isMcq && !correctAnsRaw) {
+          errors++;
+          done++;
+          continue;
+        }
+        if (isFillUp && !correctAnsRaw) {
           errors++;
           done++;
           continue;
@@ -1716,11 +1736,6 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
           .map((s) => s.trim())
           .filter(Boolean);
 
-        const defaultMarks = isMcq ? 5 : 10;
-        const defaultNeg = isMcq ? -1 : 0;
-        const marksVal = parseFloat(row.marks || "") || defaultMarks;
-        const negMarksVal = parseFloat(row.negative_marks || "") || defaultNeg;
-
         const opts = [row.opt_1 || "", row.opt_2 || "", row.opt_3 || "", row.opt_4 || ""];
         const optImgs = [
           row.opt_1_img || "",
@@ -1739,8 +1754,8 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
           chapterVal,
           topicsArr.join(" "),
           ques,
-          opts.join(" "),
-          row.soln || "",
+          isMcq ? opts.join(" ") : "",
+          solnRaw,
         ]
           .join(" ")
           .toLowerCase()
@@ -1748,14 +1763,9 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
 
         const payload: Partial<QBQuestion> & Record<string, any> = {
           question: ques,
-          options: opts,
-          correctOption: correctAnswers[0] ?? 0,
-          explanation: (row.soln || "").trim(),
           format: fmt,
           contentFormat: "latex",
           difficulty: ensureDifficulty(row.difficulty),
-          marks: marksVal,
-          negativeMarks: negMarksVal,
           course: courseVal || undefined,
           courseId: matchedCourse?.id || undefined,
           chapter: chapterVal || undefined,
@@ -1772,8 +1782,18 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
           updatedAt: Timestamp.now(),
         };
 
+        if (isFillUp) {
+          payload.referenceAnswer = correctAnsRaw;
+          if (solnRaw) payload.explanation = solnRaw;
+        } else {
+          // MCQ and SUBJECTIVE_LONG: save options, correctOption, and explanation
+          payload.options = opts;
+          payload.correctOption = correctAnswers[0] ?? 0;
+          payload.explanation = solnRaw;
+        }
+
         if (row.ques_img?.trim()) payload.questionImage = row.ques_img.trim();
-        if (optImgs.some(Boolean)) payload.optionImages = optImgs;
+        if (isMcq && optImgs.some(Boolean)) payload.optionImages = optImgs;
         if (row.soln_img?.trim()) payload.explanationImage = row.soln_img.trim();
         if (fmt === "MCQ_MULTI" && correctAnswers.length > 1) {
           payload.correctOptions = correctAnswers;
@@ -2091,7 +2111,6 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
                       )}
 
                       <div className="mt-2 text-xs text-muted-foreground">
-                        {q.marks ?? 5} marks • {q.negativeMarks ?? -1} negative •{" "}
                         {q.options?.length ?? 0} options
                       </div>
                     </div>
@@ -2159,7 +2178,7 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
                   <SelectItem value="MCQ_SINGLE">MCQ (Single Correct)</SelectItem>
                   <SelectItem value="MCQ_MULTI">MCQ (Multiple Correct)</SelectItem>
                   <SelectItem value="MCQ_CASE_STUDY">MCQ (Case Study)</SelectItem>
-                  <SelectItem value="SUBJECTIVE_SHORT">Subjective (Short)</SelectItem>
+                  <SelectItem value="FILL_UP">Fill-ups / One-word</SelectItem>
                   <SelectItem value="SUBJECTIVE_LONG">Subjective (Long)</SelectItem>
                 </SelectContent>
               </Select>
@@ -2254,24 +2273,6 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
                 onChange={(e) => setTags(e.target.value)}
                 placeholder="e.g. jee, calculus, 2024"
               />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-2">
-                <Label>Marks</Label>
-                <Input
-                  type="number"
-                  value={marks}
-                  onChange={(e) => setMarks(Number(e.target.value))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Neg. Marks</Label>
-                <Input
-                  type="number"
-                  value={negativeMarks}
-                  onChange={(e) => setNegativeMarks(Number(e.target.value))}
-                />
-              </div>
             </div>
           </div>
 
@@ -2556,8 +2557,26 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
             )}
           </div>
 
-          {/* Subjective evaluation fields */}
-          {(qFormat === "SUBJECTIVE_SHORT" || qFormat === "SUBJECTIVE_LONG") && (
+          {/* Fill-up: expected answer only */}
+          {qFormat === "FILL_UP" && (
+            <>
+              <Separator />
+              <div className="space-y-1">
+                <Label>Expected Answer</Label>
+                <Input
+                  value={referenceAnswer}
+                  onChange={(e) => setReferenceAnswer(e.target.value)}
+                  placeholder="e.g. photosynthesis"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Matched case-insensitively. Keep it one word or a short exact phrase.
+                </p>
+              </div>
+            </>
+          )}
+
+          {/* Subjective long: full AI evaluation fields */}
+          {qFormat === "SUBJECTIVE_LONG" && (
             <>
               <Separator />
               <div className="space-y-3">
@@ -2763,17 +2782,6 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
                 )}
               </div>
             )}
-
-            <div className="space-y-1 text-xs text-muted-foreground">
-              <p className="font-medium">Required columns:</p>
-              <p className="font-mono">ques, format</p>
-              <p className="font-medium">For MCQ also required:</p>
-              <p className="font-mono">opt_1, opt_2, correct_ans</p>
-              <p className="font-medium">Formats:</p>
-              <p className="font-mono">
-                MCQ_SINGLE · MCQ_MULTI · MCQ_CASE_STUDY · SUBJECTIVE_SHORT · SUBJECTIVE_LONG
-              </p>
-            </div>
 
             <div className="flex justify-end gap-2 pt-1">
               <Button variant="outline" onClick={() => setCsvOpen(false)} disabled={csvImporting}>

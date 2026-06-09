@@ -78,7 +78,7 @@ export function HtmlView({ html, className }: { html: string; className?: string
 
       // Render only explicit LaTeX command fragments and keep surrounding prose untouched.
       const bareCommandPattern =
-        /\\(?:frac|dfrac|tfrac)\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|\\sqrt\s*(?:\[[^\]]+\])?\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|\\(?:sum|int|prod|lim|log|ln|sin|cos|tan|cot|sec|csc|alpha|beta|gamma|delta|epsilon|theta|lambda|mu|nu|pi|rho|sigma|tau|phi|omega|xi|psi|zeta|eta|kappa|upsilon|varsigma|Delta|Omega|times|cdot|div|pm|leq|geq|neq|approx|to|infty|partial)(?:\s*_[^\s^{}]+|\s*_\{[^}]+\})?(?:\s*\^[^\s_{}]+|\s*\^\{[^}]+\})?/g;
+        /\\text\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|\\(?:frac|dfrac|tfrac)\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|\\sqrt\s*(?:\[[^\]]+\])?\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|\\(?:sum|int|prod|lim|log|ln|sin|cos|tan|cot|sec|csc|alpha|beta|gamma|delta|epsilon|theta|lambda|mu|nu|pi|rho|sigma|tau|phi|omega|xi|psi|zeta|eta|kappa|upsilon|varsigma|Delta|Omega|times|cdot|div|pm|leq|geq|neq|approx|to|infty|partial)(?:\s*_[^\s^{}]+|\s*_\{[^}]+\})?(?:\s*\^[^\s_{}]+|\s*\^\{[^}]+\})?/g;
 
       return source.replace(bareCommandPattern, (expr: string) =>
         renderLatex(String(expr || "").trim(), false)
@@ -102,7 +102,7 @@ export function HtmlView({ html, className }: { html: string; className?: string
 
     // Support common LaTeX environments like \begin{align}...\end{align}
     output = output.replace(
-      /\\begin\{(equation\*?|align\*?|gather\*?)\}([\s\S]*?)\\end\{\1\}/g,
+      /\\begin\{(equation\*?|align\*?|aligned|gather\*?|array|matrix|pmatrix|bmatrix|vmatrix)\}([\s\S]*?)\\end\{\1\}/g,
       (_, _env: string, expr: string) => renderLatex(String(expr || "").trim(), true)
     );
 

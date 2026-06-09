@@ -105,8 +105,9 @@ function isImageAnswer(answer: string | null | undefined): boolean {
 type AttemptQuestion = {
   id: string;
   sectionId: string;
-  type: "mcq" | "integer" | "short_answer";
+  type: "mcq" | "integer" | "short_answer" | "fill_up";
   stem: string;
+  questionImageUrl?: string; // image that is part of the question itself
   options?: { id: string; text: string }[];
   correctAnswer?: string;
   referenceAnswer?: string;
@@ -196,10 +197,12 @@ const mapQuestion = (id: string, data: any): AttemptQuestion => {
   const positive = safeNumber((data as any).marks ?? data.positiveMarks, 5);
   const negative = Math.abs(safeNumber(data.negativeMarks, 1));
 
-  // Determine question type using canonical normalizer
-  const rawType = normalizeQuestionType(data.questionType);
+  // Determine question type using canonical normalizer; field may be "questionType" or "format"
+  const rawType = normalizeQuestionType(data.questionType ?? data.format);
   let mappedType: AttemptQuestion["type"] = "mcq";
-  if (rawType === "SUBJECTIVE_SHORT" || rawType === "SUBJECTIVE_LONG") {
+  if (rawType === "FILL_UP") {
+    mappedType = "fill_up";
+  } else if (rawType === "SUBJECTIVE_LONG") {
     mappedType = "short_answer";
   } else if (data.type === "integer") {
     mappedType = "integer";
@@ -210,6 +213,7 @@ const mapQuestion = (id: string, data: any): AttemptQuestion => {
     sectionId: data.sectionId || "main",
     type: mappedType,
     stem: data.question || "",
+    questionImageUrl: data.questionImage ? String(data.questionImage) : undefined,
     options:
       mappedType === "mcq" ? opts.map((t, i) => ({ id: String(i), text: String(t) })) : undefined,
     correctAnswer:
@@ -1093,8 +1097,25 @@ export default function StudentCBTAttempt() {
         continue;
       }
 
-      // Subjective types are scored by AI separately — skip here
+      // Subjective long scored by AI separately — skip here
       if (q.type === "short_answer") {
+        continue;
+      }
+
+      // Fill-up: direct case-insensitive exact match
+      if (q.type === "fill_up") {
+        const match =
+          String(ans).toLowerCase().trim() ===
+          String(q.referenceAnswer ?? "")
+            .toLowerCase()
+            .trim();
+        if (match) {
+          score += safeNumber(q.marks.correct, 0);
+          correctCount += 1;
+        } else {
+          score -= Math.abs(safeNumber(q.marks.incorrect, 0));
+          incorrectCount += 1;
+        }
         continue;
       }
 
@@ -1179,6 +1200,7 @@ export default function StudentCBTAttempt() {
               questionId: q.id,
               questionText: q.stem,
               questionType: isUpload ? ("UPLOAD" as const) : ("SHORT_ANSWER" as const),
+              questionImageUrls: q.questionImageUrl ? [q.questionImageUrl] : [],
               referenceAnswer: q.referenceAnswer || "",
               referenceKeywords: q.referenceKeywords || [],
               referenceAnswerImageUrls: q.referenceAnswerFileUrls || [],
@@ -2435,6 +2457,42 @@ export default function StudentCBTAttempt() {
                       outline: "none",
                     }}
                   />
+                </div>
+              )}
+
+              {/* Fill-up type — single text input, exact match */}
+              {currentQuestion.type === "fill_up" && (
+                <div style={{ marginTop: 8 }}>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "#6b7280",
+                      marginBottom: 6,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Your Answer :
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Type your answer..."
+                    value={selectedAnswer || ""}
+                    onChange={(e) => handleSelectOption(e.target.value)}
+                    disabled={!isStarted}
+                    style={{
+                      padding: "8px 12px",
+                      border: "1.5px solid #d1d5db",
+                      borderRadius: 5,
+                      fontSize: 14,
+                      width: 300,
+                      outline: "none",
+                      background: isStarted ? "#fff" : "#f3f4f6",
+                    }}
+                  />
+                  <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>
+                    Match is case-insensitive. Write exactly as required.
+                  </div>
                 </div>
               )}
 

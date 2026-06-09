@@ -4,7 +4,7 @@ export type QuestionType =
   | "MCQ_SINGLE"
   | "MCQ_MULTI"
   | "MCQ_CASE_STUDY"
-  | "SUBJECTIVE_SHORT"
+  | "FILL_UP"
   | "SUBJECTIVE_LONG";
 
 export type AnswerMode = "text" | "upload";
@@ -13,14 +13,14 @@ export const QUESTION_TYPES: QuestionType[] = [
   "MCQ_SINGLE",
   "MCQ_MULTI",
   "MCQ_CASE_STUDY",
-  "SUBJECTIVE_SHORT",
+  "FILL_UP",
   "SUBJECTIVE_LONG",
 ];
 
 export type SubQuestion = {
   id: string;
   question: string;
-  questionType: "MCQ_SINGLE" | "SUBJECTIVE_SHORT" | "SUBJECTIVE_LONG";
+  questionType: "MCQ_SINGLE" | "FILL_UP" | "SUBJECTIVE_LONG";
   options?: string[];
   correctOption?: number;
   referenceAnswer?: string;
@@ -40,7 +40,7 @@ export const QUESTION_TYPE_CONFIG: Record<
     supportsCorrectOption: boolean;
     requiresReferenceAnswer: boolean;
     requiresAiEvaluation: boolean;
-    studentInputType: "radio" | "textarea" | "file" | "case_study";
+    studentInputType: "radio" | "text" | "textarea" | "file" | "case_study";
   }
 > = {
   MCQ_SINGLE: {
@@ -79,17 +79,17 @@ export const QUESTION_TYPE_CONFIG: Record<
     requiresAiEvaluation: false,
     studentInputType: "case_study",
   },
-  SUBJECTIVE_SHORT: {
-    label: "Subjective (Short)",
-    shortLabel: "Short Ans",
-    description: "Students write a short answer or upload a handwritten image",
+  FILL_UP: {
+    label: "Fill-ups / One-word",
+    shortLabel: "Fill-up",
+    description: "Students type a single word or short phrase; matched exactly (case-insensitive)",
     badgeColor: "bg-orange-100 text-orange-700 border-orange-200",
     supportsOptions: false,
     supportsNegativeMarks: true,
     supportsCorrectOption: false,
     requiresReferenceAnswer: true,
-    requiresAiEvaluation: true,
-    studentInputType: "textarea",
+    requiresAiEvaluation: false,
+    studentInputType: "text",
   },
   SUBJECTIVE_LONG: {
     label: "Subjective (Long)",
@@ -120,7 +120,7 @@ export function getQuestionTypeShortLabel(type?: string): string {
 
 export function isSubjectiveType(type?: string): boolean {
   const normalized = normalizeQuestionType(type);
-  return normalized === "SUBJECTIVE_SHORT" || normalized === "SUBJECTIVE_LONG";
+  return normalized === "SUBJECTIVE_LONG";
 }
 
 export function isCaseStudy(type?: string): boolean {
@@ -162,11 +162,11 @@ export function normalizeQuestionType(type?: string | null): QuestionType {
     return "MCQ_CASE_STUDY";
 
   // Subjective long
-  if (upper === "SUBJECTIVE_LONG" || upper === "LONG_ANSWER" || upper === "SUBJECTIVE_LONG")
-    return "SUBJECTIVE_LONG";
+  if (upper === "SUBJECTIVE_LONG" || upper === "LONG_ANSWER") return "SUBJECTIVE_LONG";
 
-  // Subjective short — also absorbs legacy UPLOAD type
+  // Fill-up / one-word — also absorbs legacy SUBJECTIVE_SHORT and UPLOAD types
   if (
+    upper === "FILL_UP" ||
     upper === "SUBJECTIVE_SHORT" ||
     upper === "SHORT_ANSWER" ||
     upper === "SHORT" ||
@@ -175,7 +175,7 @@ export function normalizeQuestionType(type?: string | null): QuestionType {
     upper === "FILE_UPLOAD" ||
     upper === "IMAGE_UPLOAD"
   )
-    return "SUBJECTIVE_SHORT";
+    return "FILL_UP";
 
   return "MCQ_SINGLE";
 }

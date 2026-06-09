@@ -7,7 +7,6 @@ import { CSS } from "@dnd-kit/utilities";
 
 import { Input } from "@shared/ui/input";
 import { Button } from "@shared/ui/button";
-import { Badge } from "@shared/ui/badge";
 import "react-image-crop/dist/ReactCrop.css";
 
 import SortableQuestionListItem from "./SortableQuestionListItem";
@@ -170,7 +169,7 @@ function SortableSectionCard({
       <div
         ref={setNodeRef}
         style={style}
-        className={`rounded-2xl border bg-background ${isDragging ? "opacity-70" : ""}`}
+        className={`rounded-2xl border border-l-4 border-l-primary/50 bg-background ${isDragging ? "opacity-70" : ""}`}
       >
         <div className="flex flex-col gap-3 p-4">
           <div className="flex items-start gap-3">
@@ -194,7 +193,9 @@ function SortableSectionCard({
             <div className="min-w-0 flex-1 space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary"> {section.name} </Badge>
+                  <span className="rounded-lg bg-primary/10 px-3 py-1 text-sm font-bold text-primary">
+                    Section {index + 1} · {section.name}
+                  </span>
                   {!readOnly ? (
                     <>
                       <Button
@@ -257,11 +258,18 @@ function SortableSectionCard({
                 />
               )}
 
-              <p className="text-xs text-muted-foreground">
-                {questionLimit != null
-                  ? `${totalQuestionCount} / ${questionLimit} questions`
-                  : `${totalQuestionCount} question${totalQuestionCount === 1 ? "" : "s"}`}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-muted-foreground">
+                  {questionLimit != null
+                    ? `${totalQuestionCount} / ${questionLimit} questions`
+                    : `${totalQuestionCount} question${totalQuestionCount === 1 ? "" : "s"}`}
+                </p>
+                {section.markingScheme && (
+                  <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                    +{section.markingScheme.correct} / {section.markingScheme.incorrect}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>

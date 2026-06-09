@@ -46,6 +46,7 @@ import EmptyState from "@features/educator/components/EmptyState";
 
 import { uploadToImageKit } from "@shared/lib/imagekitUpload";
 import { buildAutoFillSelection } from "@shared/lib/autoFillEngine";
+import { normalizeQuestionType } from "@shared/lib/questionTypes";
 
 // Component
 import CreateCustomTest from "./CreateCustomTest";
@@ -79,15 +80,6 @@ const MONKEY_KING = import.meta.env.VITE_MONKEY_KING_API_URL || "";
 const ATTEMPTS_OPTIONS = [
   { value: "1", label: "1 Attempt" },
   { value: "2", label: "2 Attempts" },
-  { value: "3", label: "3 Attempts" },
-  { value: "4", label: "4 Attempts" },
-  { value: "5", label: "5 Attempts" },
-  { value: "6", label: "6 Attempts" },
-  { value: "7", label: "7 Attempts" },
-  { value: "8", label: "8 Attempts" },
-  { value: "9", label: "9 Attempts" },
-  { value: "10", label: "10 Attempts" },
-  { value: "0", label: "Unlimited" },
 ];
 
 const SCROLL_ITEM_H = 32;
@@ -280,7 +272,7 @@ export default function TestSeries() {
   // UI
   const [search, setSearch] = useState("");
   const [importingId, setImportingId] = useState<string | null>(null);
-  const [globalAttemptsAllowed, setGlobalAttemptsAllowed] = useState(3);
+  const [globalAttemptsAllowed, setGlobalAttemptsAllowed] = useState(1);
   const [savingGlobalAttempts, setSavingGlobalAttempts] = useState(false);
 
   // Create custom test dialog fields
@@ -398,7 +390,7 @@ export default function TestSeries() {
     const unsubEdu = onSnapshot(doc(db, "educators", uid), (snap) => {
       if (snap.exists()) {
         const data = snap.data();
-        setGlobalAttemptsAllowed(data?.testDefaults?.attemptsAllowed ?? 3);
+        setGlobalAttemptsAllowed(data?.testDefaults?.attemptsAllowed ?? 1);
       }
     });
 
@@ -628,7 +620,7 @@ export default function TestSeries() {
           name: s.name,
           questionsCount: remaining,
           subject: s.subject,
-          chapter: s.chapter || undefined,
+          chapters: Array.isArray(s.chapter) ? s.chapter : s.chapter ? [s.chapter] : undefined,
           topics: s.topics,
           tags: s.tags,
           format: s.format,
@@ -683,6 +675,7 @@ export default function TestSeries() {
             bankQuestionId: id,
             questionOrder: order++,
             addedAt: serverTimestamp(),
+            questionType: normalizeQuestionType(rest.questionType || rest.format || "MCQ_SINGLE"),
           };
           batch.set(qRef, qData);
           usedIds.add(id);
@@ -1829,9 +1822,9 @@ export default function TestSeries() {
                                               Attempts:
                                             </span>
                                             <span className="text-[10px] font-bold">
-                                              {(test.attemptsAllowed ?? 3) === 0
+                                              {(test.attemptsAllowed ?? 1) === 0
                                                 ? "∞"
-                                                : (test.attemptsAllowed ?? 3)}
+                                                : (test.attemptsAllowed ?? 1)}
                                             </span>
                                           </div>
                                         </PopoverTrigger>
@@ -1842,7 +1835,7 @@ export default function TestSeries() {
                                         >
                                           <ScrollPicker
                                             options={ATTEMPTS_OPTIONS}
-                                            value={String(test.attemptsAllowed ?? 3)}
+                                            value={String(test.attemptsAllowed ?? 1)}
                                             onChange={(v) =>
                                               handleUpdateTestAttempts(test.id, Number(v))
                                             }
