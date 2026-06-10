@@ -34,13 +34,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@shared/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@shared/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@shared/ui/table";
 
 const API = import.meta.env.VITE_MONKEY_KING_API_URL;
@@ -375,11 +369,11 @@ export default function QuestionPaperRequests() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center">
           {!isApp && (
             <div
-              className="flex cursor-pointer items-center gap-2 rounded-full p-2 transition-colors hover:bg-primary hover:text-white"
+              className="flex hidden cursor-pointer items-center gap-2 rounded-full p-2 transition-colors hover:bg-primary hover:text-white md:block"
               onClick={() => navigate("/educator/test-series")}
             >
               <ArrowLeft className="h-4 w-4" />
@@ -387,14 +381,20 @@ export default function QuestionPaperRequests() {
           )}
           <div>
             <h1 className="text-2xl font-semibold">Question Paper Requests</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 hidden text-sm text-muted-foreground md:block">
               Upload a paper or specify subject/topics for admin to create one.
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:items-center">
           <MonthlyUsage requests={requests} limit={monthlyLimit} />
-          <Button onClick={() => { resetCreateForm(); setCreateOpen(true); }}>
+          <Button
+            onClick={() => {
+              resetCreateForm();
+              setCreateOpen(true);
+            }}
+            className="w-full sm:w-auto"
+          >
             <FileUp className="mr-2 h-4 w-4" />
             New Request
           </Button>
@@ -444,7 +444,12 @@ export default function QuestionPaperRequests() {
                           {Array.isArray(req.topics) && req.topics.length > 0 && (
                             <div className="flex flex-wrap gap-1">
                               {req.topics.slice(0, 3).map((t) => (
-                                <span key={t} className="rounded bg-muted px-1.5 py-0.5 text-[10px]">{t}</span>
+                                <span
+                                  key={t}
+                                  className="rounded bg-muted px-1.5 py-0.5 text-[10px]"
+                                >
+                                  {t}
+                                </span>
                               ))}
                               {req.topics.length > 3 && (
                                 <span className="text-[10px]">+{req.topics.length - 3} more</span>
@@ -452,20 +457,18 @@ export default function QuestionPaperRequests() {
                             </div>
                           )}
                         </div>
+                      ) : req.file_url ? (
+                        <a
+                          href={req.file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex max-w-[140px] items-center gap-1 truncate text-xs text-primary hover:underline"
+                        >
+                          {req.file_name}
+                          <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                        </a>
                       ) : (
-                        req.file_url ? (
-                          <a
-                            href={req.file_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex max-w-[140px] items-center gap-1 truncate text-xs text-primary hover:underline"
-                          >
-                            {req.file_name}
-                            <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                          </a>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )
+                        <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -528,7 +531,13 @@ export default function QuestionPaperRequests() {
       </Card>
 
       {/* ── Create dialog ── */}
-      <Dialog open={createOpen} onOpenChange={(o) => { if (!o) resetCreateForm(); setCreateOpen(o); }}>
+      <Dialog
+        open={createOpen}
+        onOpenChange={(o) => {
+          if (!o) resetCreateForm();
+          setCreateOpen(o);
+        }}
+      >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>New Question Paper Request</DialogTitle>
@@ -634,7 +643,12 @@ export default function QuestionPaperRequests() {
                       placeholder="Add a topic and press Enter"
                       value={topicInput}
                       onChange={(e) => setTopicInput(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTopic(); } }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addTopic();
+                        }
+                      }}
                     />
                     <Button type="button" variant="outline" size="icon" onClick={addTopic}>
                       <Plus className="h-4 w-4" />
@@ -661,7 +675,13 @@ export default function QuestionPaperRequests() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { resetCreateForm(); setCreateOpen(false); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                resetCreateForm();
+                setCreateOpen(false);
+              }}
+            >
               Cancel
             </Button>
             <Button onClick={handleCreate} disabled={createBusy}>
