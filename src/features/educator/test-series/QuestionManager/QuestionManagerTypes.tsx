@@ -76,6 +76,8 @@ export type QuestionBankQuestion = {
   subject?: string;
   chapter?: string;
   topic?: string;
+  topics?: string[];
+  tags?: string[];
   marks?: number;
   negativeMarks?: number;
   questionType?: string;
