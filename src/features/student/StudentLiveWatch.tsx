@@ -265,17 +265,14 @@ export default function StudentLiveWatch() {
               </Badge>
             )}
           </div>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {liveClass.courseName} · Batch: {liveClass.batchName} · Educator: {educatorName}
-          </p>
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="space-y-6">
         {/* Main Stream Area */}
-        <div className="space-y-6 lg:col-span-2">
+        <div className="w-full">
           {liveClass.watchUrl ? (
-            <div className="relative aspect-video w-full overflow-hidden rounded-2xl border bg-black shadow-md">
+            <div className="relative aspect-video h-[85vh] w-full overflow-hidden rounded-2xl border bg-black shadow-md">
               <iframe
                 src={
                   ytId
@@ -287,6 +284,7 @@ export default function StudentLiveWatch() {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
+              <div className="absolute inset-0 z-10" style={{ pointerEvents: "all" }} />
             </div>
           ) : (
             <div className="flex aspect-video w-full flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/30 p-6 text-center">
@@ -297,42 +295,18 @@ export default function StudentLiveWatch() {
               </p>
             </div>
           )}
-
-          {/* Message Input Box directly below iframe */}
-          {liveClass.status === "live" && (
-            <form
-              onSubmit={handleSendMessage}
-              className="flex gap-2 rounded-2xl border border-border/50 bg-card p-3 shadow-soft"
-            >
-              <Input
-                value={messageText}
-                onChange={(e) => setMessageText(e.target.value)}
-                placeholder="Type a message to the class..."
-                className="h-11 flex-1 rounded-lg border-input bg-card py-5 focus:ring-primary"
-              />
-              <Button
-                type="submit"
-                className="gradient-bg h-11 gap-1.5 rounded-lg px-4 text-white shadow-soft"
-                onClick={handleSendMessage}
-                disabled={sendingMessage}
-              >
-                <Send className="h-4 w-4" /> Send
-              </Button>
-            </form>
-          )}
         </div>
-
-        {/* Schedule Sidebar */}
         {liveClass.status === "live" && (
           <div className="space-y-6">
-            {/* Live Chat Panel on the right of iframe */}
-            <Card className="flex h-[400px] flex-col border-border/50 shadow-soft">
+            <Card className="flex h-[500px] flex-col border-border/50 shadow-soft">
               <CardHeader className="border-b border-border/30 pb-3">
                 <CardTitle className="flex items-center gap-2 text-base font-bold">
                   <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
                   Live Chat
                 </CardTitle>
               </CardHeader>
+
+              {/* Messages */}
               <CardContent className="scrollbar-thin flex-1 space-y-3 overflow-y-auto p-4">
                 {messages.length === 0 ? (
                   <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
@@ -342,7 +316,7 @@ export default function StudentLiveWatch() {
                   messages.map((msg) => (
                     <div key={msg.id} className="flex flex-col text-xs">
                       <div className="mb-0.5 flex items-center gap-1.5 font-bold">
-                        <span className={"text-foreground"}>
+                        <span className="text-foreground">
                           {msg.senderId == firebaseUser?.uid ? "You" : msg.senderName}
                         </span>
                         <span className="ml-auto text-[9px] font-normal text-muted-foreground/60">
@@ -360,6 +334,25 @@ export default function StudentLiveWatch() {
                 )}
                 <div ref={chatEndRef} />
               </CardContent>
+
+              {/* Input pinned at bottom inside the card */}
+              <div className="border-t border-border/30 p-3">
+                <form onSubmit={handleSendMessage} className="flex gap-2">
+                  <Input
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    placeholder="Type a message..."
+                    className="h-10 flex-1 rounded-lg border-input bg-card focus:ring-primary"
+                  />
+                  <Button
+                    type="submit"
+                    className="gradient-bg h-10 gap-1.5 rounded-lg px-4 text-white shadow-soft"
+                    disabled={sendingMessage}
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </form>
+              </div>
             </Card>
           </div>
         )}

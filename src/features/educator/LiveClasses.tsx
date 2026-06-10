@@ -363,9 +363,9 @@ export default function LiveClasses() {
   const disconnectYoutube = async () => {
     setConnectingYt(true);
     try {
-      const response = await fetch(
-        `http://localhost:8000/youtube/disconnect?educatorId=${educatorId}`
-      );
+      const response = await fetch(`http://localhost:8000/youtube/disconnect/${educatorId}`, {
+        method: "DELETE",
+      });
 
       const data = await response.json();
 
@@ -952,7 +952,7 @@ export default function LiveClasses() {
                   setDate("");
                   setTime("");
                 }}
-                className="rounded-full hover:bg-muted"
+                className="rounded-full hover:bg-primary"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
@@ -1184,7 +1184,7 @@ export default function LiveClasses() {
                           </div>
                           <Button
                             variant="outline"
-                            className="border-green-200 bg-green-50/30 text-green-900 hover:bg-green-100"
+                            className="border-red-200 bg-red-50/30 text-red-900 hover:bg-red-100 hover:text-red-900"
                             onClick={disconnectYoutube}
                             disabled={connectingYt}
                           >
