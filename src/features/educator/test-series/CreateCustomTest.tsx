@@ -202,16 +202,37 @@ const CreateCustomTest = ({
   const allowedSubjectIds = accessibleSubjects.map((s) => s.id);
   const qbOptions = useQBOptions(allowedSubjectIds);
 
-  // Cascading filter options: narrow topics/tags based on what's selected
-  const filteredTopicOptions = useMemo(() => {
-    if (formGlobalChapters.length === 0) return qbOptions.topics;
-    const chapSet = new Set(formGlobalChapters);
+  // Cascading filter options: each filter narrows based on the other two selections
+  const filteredChapterOptions = useMemo(() => {
+    if (!formGlobalTopics.length && !formGlobalTags.length) return qbOptions.chapters;
+    const topicSet = new Set(formGlobalTopics);
+    const tagSet = new Set(formGlobalTags);
     return [...new Set(
       qbOptions.rawQuestions
-        .filter((q) => chapSet.has(q.chapter))
+        .filter((q) => {
+          const tm = !topicSet.size || q.topics.some((t) => topicSet.has(t));
+          const gm = !tagSet.size || q.tags.some((t) => tagSet.has(t));
+          return tm && gm;
+        })
+        .map((q) => q.chapter)
+        .filter(Boolean)
+    )].sort();
+  }, [formGlobalTopics, formGlobalTags, qbOptions.rawQuestions, qbOptions.chapters]);
+
+  const filteredTopicOptions = useMemo(() => {
+    if (!formGlobalChapters.length && !formGlobalTags.length) return qbOptions.topics;
+    const chapSet = new Set(formGlobalChapters);
+    const tagSet = new Set(formGlobalTags);
+    return [...new Set(
+      qbOptions.rawQuestions
+        .filter((q) => {
+          const cm = !chapSet.size || chapSet.has(q.chapter);
+          const gm = !tagSet.size || q.tags.some((t) => tagSet.has(t));
+          return cm && gm;
+        })
         .flatMap((q) => q.topics)
     )].sort();
-  }, [formGlobalChapters, qbOptions.rawQuestions, qbOptions.topics]);
+  }, [formGlobalChapters, formGlobalTags, qbOptions.rawQuestions, qbOptions.topics]);
 
   const filteredTagOptions = useMemo(() => {
     const chapSet = new Set(formGlobalChapters);
@@ -227,6 +248,53 @@ const CreateCustomTest = ({
         .flatMap((q) => q.tags)
     )].sort();
   }, [formGlobalChapters, formGlobalTopics, qbOptions.rawQuestions, qbOptions.tags]);
+
+  // Cascading filter options for the "Add Section" dialog
+  const newSectionFilteredChapters = useMemo(() => {
+    if (!newSectionTopics.length && !newSectionTags.length) return qbOptions.chapters;
+    const topicSet = new Set(newSectionTopics);
+    const tagSet = new Set(newSectionTags);
+    return [...new Set(
+      qbOptions.rawQuestions
+        .filter((q) => {
+          const tm = !topicSet.size || q.topics.some((t) => topicSet.has(t));
+          const gm = !tagSet.size || q.tags.some((t) => tagSet.has(t));
+          return tm && gm;
+        })
+        .map((q) => q.chapter)
+        .filter(Boolean)
+    )].sort();
+  }, [newSectionTopics, newSectionTags, qbOptions.rawQuestions, qbOptions.chapters]);
+
+  const newSectionFilteredTopics = useMemo(() => {
+    if (!newSectionChapters.length && !newSectionTags.length) return qbOptions.topics;
+    const chapSet = new Set(newSectionChapters);
+    const tagSet = new Set(newSectionTags);
+    return [...new Set(
+      qbOptions.rawQuestions
+        .filter((q) => {
+          const cm = !chapSet.size || chapSet.has(q.chapter);
+          const gm = !tagSet.size || q.tags.some((t) => tagSet.has(t));
+          return cm && gm;
+        })
+        .flatMap((q) => q.topics)
+    )].sort();
+  }, [newSectionChapters, newSectionTags, qbOptions.rawQuestions, qbOptions.topics]);
+
+  const newSectionFilteredTags = useMemo(() => {
+    if (!newSectionChapters.length && !newSectionTopics.length) return qbOptions.tags;
+    const chapSet = new Set(newSectionChapters);
+    const topicSet = new Set(newSectionTopics);
+    return [...new Set(
+      qbOptions.rawQuestions
+        .filter((q) => {
+          const cm = !chapSet.size || chapSet.has(q.chapter);
+          const tm = !topicSet.size || q.topics.some((t) => topicSet.has(t));
+          return cm && tm;
+        })
+        .flatMap((q) => q.tags)
+    )].sort();
+  }, [newSectionChapters, newSectionTopics, qbOptions.rawQuestions, qbOptions.tags]);
 
   // Reset form & template selection when dialog opens
   useEffect(() => {
@@ -844,14 +912,9 @@ const CreateCustomTest = ({
                     <div className="space-y-2">
                       <Label>Chapters (optional)</Label>
                       <MultiSelect
-                        options={qbOptions.chapters}
+                        options={filteredChapterOptions}
                         selected={formGlobalChapters}
-                        onChange={(val) => {
-                          setFormGlobalChapters(val);
-                          // clear topics/tags that no longer exist under new chapter selection
-                          setFormGlobalTopics([]);
-                          setFormGlobalTags([]);
-                        }}
+                        onChange={setFormGlobalChapters}
                         placeholder="Any chapter..."
                       />
                     </div>
@@ -860,10 +923,7 @@ const CreateCustomTest = ({
                       <MultiSelect
                         options={filteredTopicOptions}
                         selected={formGlobalTopics}
-                        onChange={(val) => {
-                          setFormGlobalTopics(val);
-                          setFormGlobalTags([]);
-                        }}
+                        onChange={setFormGlobalTopics}
                         placeholder="Select topics..."
                       />
                     </div>
@@ -1113,7 +1173,7 @@ const CreateCustomTest = ({
                     <div className="space-y-2">
                       <Label>Chapters (optional)</Label>
                       <MultiSelect
-                        options={qbOptions.chapters}
+                        options={newSectionFilteredChapters}
                         selected={newSectionChapters}
                         onChange={setNewSectionChapters}
                         placeholder="Any chapter..."
@@ -1122,7 +1182,7 @@ const CreateCustomTest = ({
                     <div className="space-y-2">
                       <Label>Topics (optional)</Label>
                       <MultiSelect
-                        options={qbOptions.topics}
+                        options={newSectionFilteredTopics}
                         selected={newSectionTopics}
                         onChange={setNewSectionTopics}
                         placeholder="Select topics..."
@@ -1131,7 +1191,7 @@ const CreateCustomTest = ({
                     <div className="space-y-2">
                       <Label>Tags (optional)</Label>
                       <MultiSelect
-                        options={qbOptions.tags}
+                        options={newSectionFilteredTags}
                         selected={newSectionTags}
                         onChange={setNewSectionTags}
                         placeholder="Select tags..."

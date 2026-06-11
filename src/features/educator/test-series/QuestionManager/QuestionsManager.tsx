@@ -1557,6 +1557,11 @@ const QuestionsManager = ({
         name: targetSection?.name || "Section",
         questionsCount: totalQuestions,
         ...(targetSection?.format ? { format: targetSection.format } : {}),
+        ...(targetSection?.subject ? { subject: targetSection.subject } : {}),
+        ...(targetSection?.chapters?.length ? { chapters: targetSection.chapters } : {}),
+        ...(targetSection?.topics?.length ? { topics: targetSection.topics } : {}),
+        ...(targetSection?.tags?.length ? { tags: targetSection.tags } : {}),
+        ...(targetSection?.difficultyLevel != null ? { difficultyLevel: targetSection.difficultyLevel } : {}),
       };
 
       const { chosen, coverage } = buildAutoFillSelection(
