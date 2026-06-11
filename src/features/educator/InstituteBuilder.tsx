@@ -5806,6 +5806,7 @@ export default function InstituteBuilder() {
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showResetDefaultModal, setShowResetDefaultModal] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [mobilePanel, setMobilePanel] = useState<"canvas" | "sections" | "editor">("canvas");
   const [useGradient, setUseGradient] = useState(false);
@@ -6027,6 +6028,13 @@ export default function InstituteBuilder() {
     setSelectedId(null);
     setShowResetModal(false);
     toast.success("Canvas reset successfully.");
+  }
+
+  function handleResetToDefault() {
+    setSections(DEFAULT_SECTIONS.map((s) => ({ ...s, id: newId() })));
+    setSelectedId(null);
+    setShowResetDefaultModal(false);
+    toast.success("Reset to default layout.");
   }
 
   const selectedSection = sections.find((s) => s.id === selectedId) || null;
@@ -6305,6 +6313,21 @@ export default function InstituteBuilder() {
             </>
           )}
           <button
+            onClick={() => setShowResetDefaultModal(true)}
+            style={{
+              background: "#fff",
+              color: "#6366f1",
+              border: "1px solid rgba(99,102,241,0.3)",
+              borderRadius: 8,
+              padding: isMobileViewport ? "5px 6px" : "7px 12px",
+              fontSize: isMobileViewport ? 10 : 12,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Reset to Default
+          </button>
+          <button
             onClick={() => setShowResetModal(true)}
             disabled={sections.length === 0}
             style={{
@@ -6501,6 +6524,73 @@ export default function InstituteBuilder() {
             ) : null;
           })()}
       </DragOverlay>
+      {showResetDefaultModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            padding: 16,
+          }}
+          onClick={() => setShowResetDefaultModal(false)}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 420,
+              background: "#fff",
+              borderRadius: 14,
+              boxShadow: "0 24px 60px rgba(0,0,0,0.25)",
+              padding: 20,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 16, fontWeight: 800, color: "#111827", marginBottom: 8 }}>
+              Reset to default layout?
+            </div>
+            <div style={{ fontSize: 13, color: "#4b5563", lineHeight: 1.6, marginBottom: 18 }}>
+              This will replace your current canvas with the default sections shown to new educators.
+              Your current layout will be lost.
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <button
+                onClick={() => setShowResetDefaultModal(false)}
+                style={{
+                  border: "1px solid rgba(0,0,0,0.12)",
+                  background: "#fff",
+                  color: "#111827",
+                  borderRadius: 8,
+                  padding: "8px 12px",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleResetToDefault}
+                style={{
+                  border: "none",
+                  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                  color: "#fff",
+                  borderRadius: 8,
+                  padding: "8px 12px",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                Yes, Reset to Default
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {showResetModal && (
         <div
           style={{

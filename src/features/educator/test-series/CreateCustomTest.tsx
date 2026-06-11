@@ -446,7 +446,7 @@ const CreateCustomTest = ({
           attemptlimit: attemptLimit,
           durationMinutes: s.durationMinutes ? Number(s.durationMinutes) : null,
           difficultyLevel: clampDifficulty(s.difficultyLevel),
-          chapter: s.chapter || "",
+          chapters: Array.isArray(s.chapters) ? s.chapters : [],
           topics: Array.isArray(s.topics) ? s.topics : [],
           subject: s.subject || "",
           tags: Array.isArray(s.tags) ? s.tags : [],
