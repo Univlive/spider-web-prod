@@ -18,6 +18,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const seatDoc = await db.doc(`educators/${educatorId}/billingSeats/${studentId}`).get();
     const batchId = seatDoc.data()?.batchId as string | undefined;
+    const branchId = seatDoc.data()?.branchId as string | undefined;
+    const courseId = seatDoc.data()?.courseId as string | undefined;
 
     const batch = db.batch();
 
@@ -32,18 +34,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       { merge: true }
     );
 
-    batch.update(db.doc(`educators/${educatorId}/students/${studentId}`), {
-      batchId: admin.firestore.FieldValue.delete(),
-    });
+    batch.set(
+      db.doc(`educators/${educatorId}/students/${studentId}`),
+      { batchId: admin.firestore.FieldValue.delete() },
+      { merge: true }
+    );
 
-    batch.update(db.doc(`users/${studentId}`), {
-      batchId: admin.firestore.FieldValue.delete(),
-    });
+    batch.set(
+      db.doc(`users/${studentId}`),
+      { batchId: admin.firestore.FieldValue.delete() },
+      { merge: true }
+    );
 
-    if (batchId) {
-      batch.update(db.doc(`educators/${educatorId}/batches/${batchId}`), {
-        usedSeats: admin.firestore.FieldValue.increment(-1),
-      });
+    if (batchId && branchId && courseId) {
+      const batchDocRef = db.doc(
+        `educators/${educatorId}/branches/${branchId}/courses/${courseId}/batches/${batchId}`
+      );
+      const batchDocSnap = await batchDocRef.get();
+      if (batchDocSnap.exists) {
+        batch.update(batchDocRef, {
+          usedSeats: admin.firestore.FieldValue.increment(-1),
+        });
+      }
     }
 
     await batch.commit();

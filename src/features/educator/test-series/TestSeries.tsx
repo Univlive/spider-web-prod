@@ -722,9 +722,9 @@ export default function TestSeries() {
             tags: constraint?.tags ?? [],
             section_name: c.sectionName,
             current_question_count: order,
-            positive_marks: Number((constraint?.markingScheme || test.markingScheme)?.correct ?? 4),
+            positive_marks: Number((constraint?.markingScheme || test.markingScheme)?.correct ?? 1),
             negative_marks: Number(
-              (constraint?.markingScheme || test.markingScheme)?.incorrect ?? -1
+              (constraint?.markingScheme || test.markingScheme)?.incorrect ?? 0
             ),
             course_id: test.courseId ?? "",
             course_name: test.courseName ?? "",

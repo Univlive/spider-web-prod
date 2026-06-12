@@ -251,13 +251,13 @@ export default function StudentTestDetails() {
 
         const markingScheme = data?.markingScheme
           ? {
-              correct: safeNum(data.markingScheme.correct, 5),
-              incorrect: safeNum(data.markingScheme.incorrect, -1),
+              correct: safeNum(data.markingScheme.correct, 1),
+              incorrect: safeNum(data.markingScheme.incorrect, 0),
               unanswered: safeNum(data.markingScheme.unanswered, 0),
             }
           : {
-              correct: safeNum(data?.positiveMarks, 5),
-              incorrect: safeNum(data?.negativeMarks, -1),
+              correct: safeNum(data?.positiveMarks, 1),
+              incorrect: safeNum(data?.negativeMarks, 0),
               unanswered: 0,
             };
 

@@ -155,8 +155,8 @@ export default function ManageQuestionsPage() {
             tags: Array.isArray(data?.tags) ? data.tags.map(String) : [],
             markingScheme: data?.markingScheme
               ? {
-                  correct: Number(data.markingScheme.correct ?? 4),
-                  incorrect: Number(data.markingScheme.incorrect ?? -1),
+                  correct: Number(data.markingScheme.correct ?? 1),
+                  incorrect: Number(data.markingScheme.incorrect ?? 0),
                   unanswered: Number(data.markingScheme.unanswered ?? 0),
                 }
               : undefined,
