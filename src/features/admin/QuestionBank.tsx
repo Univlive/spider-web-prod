@@ -589,6 +589,8 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
   );
   const csvInputRef = useRef<HTMLInputElement>(null);
 
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
   // ── Passage / group inline editor state ──────────────────────────────────
   const [qCourseId, setQCourseId] = useState("");
   const [isGrouped, setIsGrouped] = useState(false);
@@ -1154,10 +1156,8 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
   };
 
   const handleDelete = async (id: string) => {
-    const ok = confirm("Delete this question from the question bank?");
-    if (!ok) return;
-
     setBusy(true);
+    setDeleteConfirmId(null);
     try {
       const ref = questionBankDoc(id);
       if (!ref) throw new Error("Missing educator identity");
@@ -2129,8 +2129,8 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
                           <Button
                             variant="outline"
                             size="icon"
-                            className="text-destructive"
-                            onClick={() => handleDelete(q.id)}
+                            className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                            onClick={() => setDeleteConfirmId(q.id)}
                             disabled={busy}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -2859,6 +2859,41 @@ export default function QuestionBank({ scope = "admin", educatorUid }: QuestionB
                 </p>
               </div>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={!!deleteConfirmId}
+        onOpenChange={(v) => { if (!v) setDeleteConfirmId(null); }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Delete Question
+            </DialogTitle>
+            <DialogDescription>
+              This will permanently remove the question from the question bank. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirmId(null)}
+              disabled={busy}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => deleteConfirmId && handleDelete(deleteConfirmId)}
+              disabled={busy}
+            >
+              {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Delete
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
