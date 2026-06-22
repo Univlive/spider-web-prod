@@ -202,61 +202,53 @@ export default function BatchesListing() {
   useEffect(() => {
     if (!educatorId || branches.length === 0) {
       setCourses([]);
-      return;
-    }
-    const unsubs = branches.map((branch) =>
-      onSnapshot(
-        collection(db, "educators", educatorId, "branches", branch.id, "courses"),
-        (snap) => {
-          const branchCourses = snap.docs.map((d) => {
-            const data = d.data() as any;
-            const subjectIds: string[] = Array.isArray(data.subjectIds)
-              ? data.subjectIds
-              : data.subjectId
-                ? [data.subjectId]
-                : [];
-            return { id: d.id, branchId: branch.id, name: data.name, subjectIds };
-          });
-          setCourses((prev) => [...prev.filter((c) => c.branchId !== branch.id), ...branchCourses]);
-        }
-      )
-    );
-    return () => unsubs.forEach((u) => u());
-  }, [branches, educatorId]);
-
-  useEffect(() => {
-    if (!educatorId || courses.length === 0) {
       setBatches([]);
       return;
     }
-    const unsubs = courses.map((course) =>
-      onSnapshot(
-        collection(
-          db,
-          "educators",
-          educatorId,
-          "branches",
-          course.branchId,
-          "courses",
-          course.id,
-          "batches"
-        ),
-        (snap) => {
-          const courseBatches = snap.docs.map((d) => ({
-            id: d.id,
-            branchId: course.branchId,
-            courseId: course.id,
-            ...(d.data() as Omit<Batch, "id" | "branchId" | "courseId">),
-          }));
-          setBatches((prev) => [
-            ...prev.filter((b) => !(b.courseId === course.id && b.branchId === course.branchId)),
-            ...courseBatches,
-          ]);
+    let cancelled = false;
+
+    const loadCoursesAndBatches = async () => {
+      const allCourses: Course[] = [];
+      const allBatches: Batch[] = [];
+
+      for (const branch of branches) {
+        const cSnap = await getDocs(
+          collection(db, "educators", educatorId, "branches", branch.id, "courses")
+        );
+        for (const c of cSnap.docs) {
+          const data = c.data() as any;
+          const subjectIds: string[] = Array.isArray(data.subjectIds)
+            ? data.subjectIds
+            : data.subjectId
+              ? [data.subjectId]
+              : [];
+          allCourses.push({ id: c.id, branchId: branch.id, name: data.name, subjectIds });
+
+          const bSnap = await getDocs(
+            collection(db, "educators", educatorId, "branches", branch.id, "courses", c.id, "batches")
+          );
+          bSnap.docs.forEach((b) =>
+            allBatches.push({
+              id: b.id,
+              branchId: branch.id,
+              courseId: c.id,
+              ...(b.data() as Omit<Batch, "id" | "branchId" | "courseId">),
+            })
+          );
         }
-      )
-    );
-    return () => unsubs.forEach((u) => u());
-  }, [courses, educatorId]);
+      }
+
+      if (!cancelled) {
+        setCourses(allCourses);
+        setBatches(allBatches);
+      }
+    };
+
+    loadCoursesAndBatches();
+    return () => {
+      cancelled = true;
+    };
+  }, [branches, educatorId]);
 
   useEffect(() => {
     if (pools.length === 1 && !wPlanId) setWPlanId(pools[0].planId);

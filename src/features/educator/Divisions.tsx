@@ -110,24 +110,31 @@ export default function Divisions() {
       setCourses([]);
       return;
     }
-    const unsubs = branches.map((branch) =>
-      onSnapshot(
-        collection(db, "educators", educatorId, "branches", branch.id, "courses"),
-        (snap) => {
-          const branchCourses = snap.docs.map((d) => {
-            const data = d.data() as any;
-            const subjectIds: string[] = Array.isArray(data.subjectIds)
-              ? data.subjectIds
-              : data.subjectId
-                ? [data.subjectId]
-                : [];
-            return { id: d.id, branchId: branch.id, name: data.name, subjectIds };
-          });
-          setCourses((prev) => [...prev.filter((c) => c.branchId !== branch.id), ...branchCourses]);
-        }
-      )
-    );
-    return () => unsubs.forEach((u) => u());
+    let cancelled = false;
+
+    const loadCourses = async () => {
+      const allCourses: typeof courses = [];
+      for (const branch of branches) {
+        const snap = await getDocs(
+          collection(db, "educators", educatorId, "branches", branch.id, "courses")
+        );
+        snap.docs.forEach((d) => {
+          const data = d.data() as any;
+          const subjectIds: string[] = Array.isArray(data.subjectIds)
+            ? data.subjectIds
+            : data.subjectId
+              ? [data.subjectId]
+              : [];
+          allCourses.push({ id: d.id, branchId: branch.id, name: data.name, subjectIds });
+        });
+      }
+      if (!cancelled) setCourses(allCourses);
+    };
+
+    loadCourses();
+    return () => {
+      cancelled = true;
+    };
   }, [branches, educatorId]);
 
   const allowedSubjects = subjects.filter(

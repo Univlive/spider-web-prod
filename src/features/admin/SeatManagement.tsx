@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   addDoc,
   collection,
   doc,
+  getDoc,
   getDocs,
   onSnapshot,
   orderBy,
@@ -219,6 +220,8 @@ export default function SeatManagement() {
   const [activeSeats, setActiveSeats] = useState<BillingSeat[]>([]);
   const [loadingSeats, setLoadingSeats] = useState(false);
   const [tx, setTx] = useState<TxRow[]>([]);
+  // Cache student name/email per targetId to avoid re-fetching on every billingSeats snapshot
+  const studentCacheRef = useRef<Record<string, Record<string, { name: string; email: string }>>>({});
 
   const [busy, setBusy] = useState(false);
 
@@ -377,6 +380,10 @@ export default function SeatManagement() {
       setEducator(snap.exists() ? (snap.data() as EducatorDoc) : null);
     });
 
+    // Clear student cache when switching educators
+    studentCacheRef.current[targetId] = studentCacheRef.current[targetId] || {};
+    const cache = studentCacheRef.current[targetId];
+
     const un2 = onSnapshot(
       query(collection(db, "educators", targetId, "billingSeats"), where("status", "==", "active")),
       async (snap) => {
@@ -385,21 +392,19 @@ export default function SeatManagement() {
         const rows: BillingSeat[] = await Promise.all(
           snap.docs.map(async (d) => {
             const data = d.data() as any;
-            const learnerSnap = await getDocs(
-              query(
-                collection(db, "educators", targetId, "students"),
-                where("__name__", "==", d.id)
-              )
-            ).catch(() => null);
-            const learner = learnerSnap?.docs[0]?.data() as any;
+            if (!cache[d.id]) {
+              const learnerDoc = await getDoc(doc(db, "educators", targetId, "students", d.id)).catch(() => null);
+              const learner = learnerDoc?.data() as any;
+              cache[d.id] = { name: learner?.name || "Unknown", email: learner?.email || "" };
+            }
             return {
               id: d.id,
               status: data.status,
               assignedAt: data.assignedAt,
               batchId: data.batchId,
               courseId: data.courseId,
-              studentName: learner?.name || "Unknown",
-              studentEmail: learner?.email || "",
+              studentName: cache[d.id].name,
+              studentEmail: cache[d.id].email,
             };
           })
         );

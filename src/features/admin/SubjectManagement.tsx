@@ -3,7 +3,7 @@ import {
   addDoc,
   collection,
   doc,
-  onSnapshot,
+  getDocs,
   orderBy,
   query,
   serverTimestamp,
@@ -37,27 +37,19 @@ export default function SubjectManagement() {
   const [activeCourseId, setActiveCourseId] = useState("");
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    let coursesReady = false,
-      subjectsReady = false;
-    const check = () => {
-      if (coursesReady && subjectsReady) setLoading(false);
-    };
+  const loadData = async () => {
+    setLoading(true);
+    const [courseSnap, subjectSnap] = await Promise.all([
+      getDocs(query(collection(db, "courses"), orderBy("name"))),
+      getDocs(query(collection(db, "subjects"), orderBy("name"))),
+    ]);
+    setCourses(courseSnap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Course, "id">) })));
+    setSubjects(subjectSnap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Subject, "id">) })));
+    setLoading(false);
+  };
 
-    const un1 = onSnapshot(query(collection(db, "courses"), orderBy("name")), (snap) => {
-      setCourses(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Course, "id">) })));
-      coursesReady = true;
-      check();
-    });
-    const un2 = onSnapshot(query(collection(db, "subjects"), orderBy("name")), (snap) => {
-      setSubjects(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Subject, "id">) })));
-      subjectsReady = true;
-      check();
-    });
-    return () => {
-      un1();
-      un2();
-    };
+  useEffect(() => {
+    loadData();
   }, []);
 
   function openCreateCourse() {
@@ -125,6 +117,7 @@ export default function SubjectManagement() {
       }
       toast.success("Saved");
       setOpen(false);
+      loadData();
     } catch {
       toast.error("Save failed");
     } finally {
@@ -134,10 +127,12 @@ export default function SubjectManagement() {
 
   async function toggleCourse(c: Course) {
     await updateDoc(doc(db, "courses", c.id), { isActive: !c.isActive });
+    loadData();
   }
 
   async function toggleSubject(s: Subject) {
     await updateDoc(doc(db, "subjects", s.id), { isActive: !s.isActive });
+    loadData();
   }
 
   const subjectsByCourse = subjects.reduce<Record<string, Subject[]>>((acc, s) => {

@@ -16,7 +16,6 @@ import {
   getDoc,
   getDocs,
   limit,
-  onSnapshot,
   orderBy,
   query,
   where,
@@ -722,15 +721,17 @@ export default function Analytics() {
     loadAnalytics();
   }, [loadAnalytics, periodDays]);
 
-  // Fetch all branches, courses, and batches (Same as Dashboard.tsx)
+  // Fetch all branches, courses, and batches once on mount (hierarchy rarely changes mid-session)
   useEffect(() => {
     if (!educatorId) return;
-    const unsub = onSnapshot(collection(db, "educators", educatorId, "branches"), async (snap) => {
-      const branchesData = snap.docs.map((d) => ({
+    let cancelled = false;
+
+    const loadHierarchy = async () => {
+      const branchSnap = await getDocs(collection(db, "educators", educatorId, "branches"));
+      const branchesData = branchSnap.docs.map((d) => ({
         id: d.id,
         name: d.data().name || "Unknown Branch",
       }));
-      setAllBranches(branchesData);
 
       const coursesData: CourseDoc[] = [];
       const batchesData: BatchDoc[] = [];
@@ -754,10 +755,18 @@ export default function Analytics() {
           }
         }
       }
-      setAllCourses(coursesData);
-      setAllBatches(batchesData);
-    });
-    return () => unsub();
+
+      if (!cancelled) {
+        setAllBranches(branchesData);
+        setAllCourses(coursesData);
+        setAllBatches(batchesData);
+      }
+    };
+
+    loadHierarchy();
+    return () => {
+      cancelled = true;
+    };
   }, [educatorId]);
 
   // Automated filter defaults
