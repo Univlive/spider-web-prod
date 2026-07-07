@@ -166,6 +166,19 @@ Multi-tenant SaaS platform for coaching institutes. Built with React + TypeScrip
 - **DB table**: `question_upload_requests` (renamed from `question_paper_requests` in migration 008)
 - Both `/api/question-upload/*` (canonical) and `/api/question-paper/*` (compat alias) are active
 
+## Exam Grading (offline paper exams, AI-graded)
+
+- **Backend**: `grade-engine` (separate FastAPI service, own Postgres — not monkey-king), called **directly** by this app (not proxied). Env: `VITE_GRADE_ENGINE_API_URL`. Same Firebase project as monkey-king, so the same ID token works on both.
+- **Educator routes**: `/educator/exam-grading` (list/create exams), `/educator/exam-grading/:examId` (questions + question paper/answer key upload + per-student answer sheets), `/educator/exam-grading/:examId/review/:sheetId` (per-question review/override — adapted from `SubjectiveAttemptGrader.tsx`'s two-column student-answer/reference pattern)
+  - **Components**: `src/features/educator/examGrading/{ExamGradingList,ExamGradingDetail,ExamGradingReview}.tsx`, API client `src/features/educator/examGrading/api.ts`
+  - Question paper / answer key / student answer sheet uploads all accept multiple page images OR a single PDF via `src/shared/components/MultiFileDropzone.tsx` — two capture paths side by side: "Choose Files" (gallery/file picker, replaces selection) and "Take Photo" (`capture="environment"` input, opens the device camera directly on mobile, one photo per tap, appends so a teacher can shoot a multi-page sheet page by page without leaving the app)
+  - "Add Student" picks from monkey-king's roster (`GET monkey-king /api/org/students`, optional branch/course/batch filters) to set `student_uid`, or falls back to a free-text name if the roster call fails
+- **Student routes**: `/student/exam-results` (list), `/student/exam-results/:sheetId` (detail — read-only version of the review card layout)
+  - **Components**: `src/features/student/examResults/{StudentExamResultsList,StudentExamResultDetail}.tsx`, API client `src/features/student/examResults/api.ts`
+- Grading data shape (from grade-engine): each graded question has `question_text` (nullable, shown as a line under the question heading on both the review and result-detail cards), `marks_awarded`/`max_marks`, `annotated_image_url` (cropped answer image with wrong-content highlighted), and `annotation_json.steps[]` (per-step title/marks/note) — the step-by-step breakdown panel. Gradings arrive pre-sorted by the paper's actual question order (grade-engine joins on `exam_questions.sort_order` server-side) — do not re-sort by `question_no` client-side, it's free text and sorts lexicographically wrong (1, 10, 11, 2...).
+- The answer-image container (`ExamGradingReview.tsx`/`StudentExamResultDetail.tsx`) is `max-h-[720px] overflow-y-auto` with the `<img>` at plain `w-full` (no height cap/`object-contain`) — questions whose answer spans multiple sheet pages get vertically stitched by grade-engine into one tall, narrow image (`image_manager.build_answer_image`), and a height-capped `object-contain` box used to squash those down to near-illegible size; the scrollable container lets them render at full width instead.
+- Answer sheet `status` now includes `pending` (queued, not yet claimed by grade-engine's grading poller) between `uploaded` and `processing` — grade-engine's `/start` no longer runs the pipeline synchronously in-thread, it queues a DB row a poller picks up within a few seconds. `STATUS_CLASS` maps it to an amber badge in both `ExamGradingDetail.tsx` and `StudentExamResultsList.tsx`; the "Review" link condition and `handleStartGrading`'s optimistic update were updated to include it.
+
 ## Content Management
 
 - **Firestore**: `admin_library/{contentId}` — admin-uploaded books/notes scoped by subject
@@ -178,6 +191,7 @@ Multi-tenant SaaS platform for coaching institutes. Built with React + TypeScrip
 ## Environment Variables
 
 - `VITE_FIREBASE_*` — Firebase client config
+- `VITE_GRADE_ENGINE_API_URL` — grade-engine (exam paper grading) backend URL, called directly from the client (see Exam Grading section)
 - Vercel functions use `FIREBASE_SERVICE_ACCOUNT_JSON` (base64 or raw JSON), `DISCORD_WEBHOOK_URL`, `VITE_MONKEY_KING_API_URL` (for report-usage calls), `VERTEX_LOCATION` (default `us-central1`); `GEMINI_API_KEY` no longer used — replaced by Vertex AI via service account
 - `RAZORPAY_WEBHOOK_SECRET` — still needed for legacy Razorpay webhook handler
 - `ADMIN_MAX_FILE_SIZE_MB` — max upload size for admin content (default 100)

@@ -29,6 +29,9 @@ import {
   SubjectiveReviewQueue,
   SubjectiveAttemptGrader,
   ProctoringReview,
+  ExamGradingList,
+  ExamGradingDetail,
+  ExamGradingReview,
 } from "@features/educator";
 import QuestionPaperRequests from "@features/educator/QuestionPaperRequests";
 
@@ -72,6 +75,9 @@ export function getEducatorRoutes() {
       <Route path="review-submissions" element={<SubjectiveReviewQueue />} />
       <Route path="review-submissions/:attemptId" element={<SubjectiveAttemptGrader />} />
       <Route path="proctoring/:attemptId" element={<ProctoringReview />} />
+      <Route path="exam-grading" element={<ExamGradingList />} />
+      <Route path="exam-grading/:examId" element={<ExamGradingDetail />} />
+      <Route path="exam-grading/:examId/review/:sheetId" element={<ExamGradingReview />} />
     </Route>
   );
 }

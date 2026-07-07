@@ -15,6 +15,9 @@ import StudentResults from "@features/student/StudentResults";
 import StudentSettings from "@features/student/StudentSettings";
 import StudentTestDetails from "@features/student/StudentTestDetails";
 import StudentTests from "@features/student/StudentTests";
+import StudentExamResultsList from "@features/student/examResults/StudentExamResultsList";
+import StudentExamResultDetail from "@features/student/examResults/StudentExamResultDetail";
+import StudentAllResults from "@features/student/StudentAllResults";
 
 export function getStudentRoutes() {
   return (
@@ -34,6 +37,9 @@ export function getStudentRoutes() {
         <Route path="content" element={<StudentContent />} />
         <Route path="chatbot" element={<StudentChatbot />} />
         <Route path="reports" element={<StudentReports />} />
+        <Route path="my-results" element={<StudentAllResults />} />
+        <Route path="exam-results" element={<StudentExamResultsList />} />
+        <Route path="exam-results/:sheetId" element={<StudentExamResultDetail />} />
       </Route>
     </Route>
   );

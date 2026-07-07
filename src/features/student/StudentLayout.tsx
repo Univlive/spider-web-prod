@@ -5,7 +5,7 @@ import { useTheme } from "next-themes";
 import {
   LayoutDashboard,
   FileText,
-  History,
+  ClipboardList,
   Trophy,
   LifeBuoy,
   Settings,
@@ -255,7 +255,7 @@ export default function StudentLayout() {
     () => [
       { icon: LayoutDashboard, label: "Dashboard", href: "/student/dashboard" },
       { icon: FileText, label: "Tests", href: "/student/tests" },
-      { icon: History, label: "My Attempts", href: "/student/attempts" },
+      { icon: ClipboardList, label: "My Results", href: "/student/my-results" },
       { icon: BookOpen, label: "Content", href: "/student/content" },
       { icon: Bot, label: "AI Tutor", href: "/student/chatbot" },
       { icon: BarChart2, label: "Reports", href: "/student/reports" },
@@ -266,10 +266,12 @@ export default function StudentLayout() {
 
   const isActive = (href: string) => {
     if (href === "/student/tests") return location.pathname.startsWith("/student/tests");
-    if (href === "/student/attempts") {
+    if (href === "/student/my-results") {
       return (
+        location.pathname.startsWith("/student/my-results") ||
+        location.pathname.startsWith("/student/results/") ||
         location.pathname.startsWith("/student/attempts") ||
-        location.pathname.startsWith("/student/results")
+        location.pathname.startsWith("/student/exam-results")
       );
     }
     return location.pathname === href;

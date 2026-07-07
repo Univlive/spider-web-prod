@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { collection, getDocs, query, where, orderBy, Timestamp } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  Timestamp,
+  doc,
+  getDoc,
+  updateDoc,
+} from "firebase/firestore";
 import { db } from "@shared/lib/firebase";
 import { useAuth } from "@app/providers/AuthProvider";
 import { Card, CardContent } from "@shared/ui/card";
@@ -10,6 +20,8 @@ import { Badge } from "@shared/ui/badge";
 import { Input } from "@shared/ui/input";
 import { Label } from "@shared/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@shared/ui/dialog";
+import { Switch } from "@shared/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
 import {
   Check,
   Copy,
@@ -21,6 +33,7 @@ import {
   Briefcase,
   Settings,
   Search,
+  SlidersHorizontal,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -86,6 +99,15 @@ export default function AdminEducators() {
   const [roles, setRoles] = useState<Map<string, string>>(new Map());
 
   const [search, setSearch] = useState("");
+
+  // Exam config dialog
+  const [examConfigOpen, setExamConfigOpen] = useState(false);
+  const [examConfigEducator, setExamConfigEducator] = useState<Educator | null>(null);
+  const [ecLoading, setEcLoading] = useState(false);
+  const [ecSaving, setEcSaving] = useState(false);
+  const [ecObjectiveEnabled, setEcObjectiveEnabled] = useState(true);
+  const [ecSubjectiveEnabled, setEcSubjectiveEnabled] = useState(false);
+  const [ecGradingMode, setEcGradingMode] = useState<"instant" | "batch">("instant");
 
   const filteredEducators = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -184,6 +206,42 @@ export default function AdminEducators() {
       toast.error("Failed to load employees");
     } finally {
       setLoadingEmployees(false);
+    }
+  }
+
+  async function openExamConfig(edu: Educator) {
+    setExamConfigEducator(edu);
+    setExamConfigOpen(true);
+    setEcLoading(true);
+    try {
+      const snap = await getDoc(doc(db, "educators", edu.uid));
+      const cfg = snap.data()?.examConfig;
+      setEcObjectiveEnabled(cfg?.objective?.enabled ?? true);
+      setEcSubjectiveEnabled(cfg?.subjective?.enabled ?? false);
+      setEcGradingMode(cfg?.subjective?.gradingMode ?? "instant");
+    } catch {
+      toast.error("Failed to load exam config");
+    } finally {
+      setEcLoading(false);
+    }
+  }
+
+  async function saveExamConfig() {
+    if (!examConfigEducator) return;
+    setEcSaving(true);
+    try {
+      await updateDoc(doc(db, "educators", examConfigEducator.uid), {
+        examConfig: {
+          objective: { enabled: ecObjectiveEnabled },
+          subjective: { enabled: ecSubjectiveEnabled, gradingMode: ecGradingMode },
+        },
+      });
+      toast.success("Exam config saved");
+      setExamConfigOpen(false);
+    } catch {
+      toast.error("Failed to save exam config");
+    } finally {
+      setEcSaving(false);
     }
   }
 
@@ -390,6 +448,9 @@ export default function AdminEducators() {
                         >
                           <Settings className="mr-1 h-3 w-3" /> Config
                         </Button>
+                        <Button variant="ghost" size="sm" onClick={() => openExamConfig(edu)}>
+                          <SlidersHorizontal className="mr-1 h-3 w-3" /> Exams
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -592,6 +653,91 @@ export default function AdminEducators() {
                 </Button>
                 <Button onClick={createEducator} disabled={creating || !cName || !cEmail || !cSlug}>
                   {creating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Create Account
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Exam Config Dialog */}
+      <Dialog open={examConfigOpen} onOpenChange={setExamConfigOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <SlidersHorizontal className="h-5 w-5" />
+              Exam Config — {examConfigEducator?.displayName}
+            </DialogTitle>
+          </DialogHeader>
+
+          {ecLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="space-y-5 py-2">
+              {/* Objective exams */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Objective Exams</p>
+                  <p className="text-xs text-muted-foreground">Online MCQ / CBT tests</p>
+                </div>
+                <Switch checked={ecObjectiveEnabled} onCheckedChange={setEcObjectiveEnabled} />
+              </div>
+
+              {/* Subjective exams */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Subjective Exams</p>
+                  <p className="text-xs text-muted-foreground">AI-graded offline paper exams</p>
+                </div>
+                <Switch checked={ecSubjectiveEnabled} onCheckedChange={setEcSubjectiveEnabled} />
+              </div>
+
+              {/* Grading mode — only when subjective is on */}
+              {ecSubjectiveEnabled && (
+                <div className="space-y-1.5 rounded-lg border border-border bg-muted/30 p-3">
+                  <Label className="text-xs font-medium">AI Grading Mode</Label>
+                  <Select
+                    value={ecGradingMode}
+                    onValueChange={(v) => setEcGradingMode(v as "instant" | "batch")}
+                  >
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="instant">
+                        <div>
+                          <span className="font-medium">Instant</span>
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            Live Gemini calls · results in seconds
+                          </span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="batch">
+                        <div>
+                          <span className="font-medium">Batch</span>
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            ~50% cheaper · results in minutes
+                          </span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setExamConfigOpen(false)}
+                  disabled={ecSaving}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={saveExamConfig} disabled={ecSaving}>
+                  {ecSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save
                 </Button>
               </div>
             </div>

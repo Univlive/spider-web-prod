@@ -23,3 +23,6 @@ export { default as ReportedQuestions } from "./ReportedQuestions";
 export { default as SubjectiveReviewQueue } from "./SubjectiveReviewQueue";
 export { default as SubjectiveAttemptGrader } from "./SubjectiveAttemptGrader";
 export { default as ProctoringReview } from "./ProctoringReview";
+export { default as ExamGradingList } from "./examGrading/ExamGradingList";
+export { default as ExamGradingDetail } from "./examGrading/ExamGradingDetail";
+export { default as ExamGradingReview } from "./examGrading/ExamGradingReview";

@@ -24,6 +24,7 @@ import {
   Palette,
   AlertTriangle,
   ClipboardCheck,
+  FileCheck2,
 } from "lucide-react";
 import { Button } from "@shared/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@shared/ui/avatar";
@@ -68,6 +69,7 @@ function EducatorLayoutInner() {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [pendingReviewCount, setPendingReviewCount] = useState(0);
   const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [examConfig, setExamConfig] = useState<any>(null);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -98,6 +100,7 @@ function EducatorLayoutInner() {
 
         setLogoUrl(resolvedLogo);
         setInstituteName(resolvedName);
+        setExamConfig(data.examConfig ?? null);
 
         // Also set favicon dynamically!
         if (resolvedLogo) {
@@ -169,6 +172,9 @@ function EducatorLayoutInner() {
     // Don't build sidebar while employee permissions are still loading
     if (isEmployee && empLoading) return [];
 
+    const objectiveEnabled = examConfig?.objective?.enabled ?? true;
+    const subjectiveEnabled = examConfig?.subjective?.enabled ?? false;
+
     const items: SidebarItem[] = [
       { icon: LayoutDashboard, label: "Dashboard", href: "/educator/dashboard" },
     ];
@@ -216,15 +222,16 @@ function EducatorLayoutInner() {
     }
 
     const showTests =
-      !isEmployee ||
-      hasPermission(PERMISSIONS.TESTS_VIEW) ||
-      hasPermission(PERMISSIONS.TESTS_CREATE) ||
-      hasPermission(PERMISSIONS.QB_VIEW) ||
-      hasPermission(PERMISSIONS.DPPS_MANAGE);
+      objectiveEnabled &&
+      (!isEmployee ||
+        hasPermission(PERMISSIONS.TESTS_VIEW) ||
+        hasPermission(PERMISSIONS.TESTS_CREATE) ||
+        hasPermission(PERMISSIONS.QB_VIEW) ||
+        hasPermission(PERMISSIONS.DPPS_MANAGE));
     if (showTests) {
       items.push({
         icon: FileText,
-        label: "Test Series",
+        label: "Objective Exams",
         href: "/educator/test-series",
         children: testChildren.length > 0 ? testChildren : undefined,
       });
@@ -234,8 +241,12 @@ function EducatorLayoutInner() {
       items.push({ icon: BookOpen, label: "Content", href: "/educator/content" });
     }
 
+    if (subjectiveEnabled && (!isEmployee || hasPermission(PERMISSIONS.TESTS_VIEW))) {
+      items.push({ icon: FileCheck2, label: "Subjective Exams", href: "/educator/exam-grading" });
+    }
+
     return items;
-  }, [isEmployee, empLoading, hasPermission, pendingReviewCount]);
+  }, [isEmployee, empLoading, hasPermission, pendingReviewCount, examConfig]);
 
   const isActive = (href: string) => {
     if (href === "/educator/dashboard")
@@ -414,9 +425,7 @@ function EducatorLayoutInner() {
                         title={sidebarCollapsed ? item.label : undefined}
                       >
                         <span className="relative flex-shrink-0">
-                          <item.icon
-                            className={cn("h-5 w-5", parentHighlighted && "text-white")}
-                          />
+                          <item.icon className={cn("h-5 w-5", parentHighlighted && "text-white")} />
                           {sidebarCollapsed && childBadgeTotal > 0 && (
                             <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-amber-500" />
                           )}
