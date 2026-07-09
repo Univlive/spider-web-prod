@@ -1,7 +1,7 @@
 // grade-engine student-facing API — same pattern as
 // features/educator/examGrading/api.ts, scoped to the student's own results.
 
-const GRADE_ENGINE_API = import.meta.env.VITE_GRADE_ENGINE_API_URL;
+const GRADE_ENGINE_API = import.meta.env.VITE_GRADE_ENGINE_API_URL?.replace(/\/+$/, "");
 
 export type Step = { title: string; marks_awarded: number; max_marks: number; note: string };
 export type Highlight = { box_2d: [number, number, number, number]; note: string };

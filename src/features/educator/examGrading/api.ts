@@ -4,8 +4,8 @@
 // QuestionPaperRequests.tsx) — grade-engine verifies the same Firebase
 // project's tokens directly, no proxy through monkey-king needed.
 
-const GRADE_ENGINE_API = import.meta.env.VITE_GRADE_ENGINE_API_URL;
-const MONKEY_KING_API = import.meta.env.VITE_MONKEY_KING_API_URL;
+const GRADE_ENGINE_API = import.meta.env.VITE_GRADE_ENGINE_API_URL?.replace(/\/+$/, "");
+const MONKEY_KING_API = import.meta.env.VITE_MONKEY_KING_API_URL?.replace(/\/+$/, "");
 
 export type Exam = {
   id: string;
@@ -153,6 +153,12 @@ export const uploadAnswerKey = (token: string | undefined, examId: string, files
     method: "POST",
     body: filesFormData(files),
   }) as Promise<PageImage[]>;
+
+export const listQuestionPaperPages = (token: string | undefined, examId: string) =>
+  gradeEngineFetch(token, `/api/upload/exams/${examId}/question-paper`) as Promise<PageImage[]>;
+
+export const listAnswerKeyPages = (token: string | undefined, examId: string) =>
+  gradeEngineFetch(token, `/api/upload/exams/${examId}/answer-key`) as Promise<PageImage[]>;
 
 export const createAnswerSheet = (
   token: string | undefined,

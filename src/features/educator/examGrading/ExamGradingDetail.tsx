@@ -19,7 +19,9 @@ import MultiFileDropzone from "@shared/components/MultiFileDropzone";
 import {
   createAnswerSheet,
   getExam,
+  listAnswerKeyPages,
   listAnswerSheets,
+  listQuestionPaperPages,
   listQuestions,
   listRosterStudents,
   setQuestions,
@@ -29,6 +31,7 @@ import {
   uploadQuestionPaper,
   type Exam,
   type ExamQuestion,
+  type PageImage,
   type QuestionInput,
   type RosterStudent,
 } from "./api";
@@ -64,6 +67,8 @@ export default function ExamGradingDetail() {
   >([]);
   const [loading, setLoading] = useState(true);
 
+  const [qpPages, setQpPages] = useState<PageImage[]>([]);
+  const [akPages, setAkPages] = useState<PageImage[]>([]);
   const [qpBusy, setQpBusy] = useState(false);
   const [akBusy, setAkBusy] = useState(false);
 
@@ -89,15 +94,19 @@ export default function ExamGradingDetail() {
     setLoading(true);
     try {
       const token = await firebaseUser.getIdToken();
-      const [examData, questionData, summary, eduSnap] = await Promise.all([
+      const [examData, questionData, summary, eduSnap, qpData, akData] = await Promise.all([
         getExam(token, examId),
         listQuestions(token, examId),
         listAnswerSheets(token, examId),
         getDoc(doc(db, "educators", firebaseUser.uid)),
+        listQuestionPaperPages(token, examId),
+        listAnswerKeyPages(token, examId),
       ]);
       setExam(examData);
       setQuestionsState(questionData);
       setStudents(summary.students);
+      setQpPages(qpData);
+      setAkPages(akData);
       const mode = eduSnap.data()?.examConfig?.subjective?.gradingMode;
       if (mode === "instant" || mode === "batch") setGradingMode(mode);
     } catch (e: any) {
@@ -149,6 +158,7 @@ export default function ExamGradingDetail() {
     try {
       const token = await firebaseUser?.getIdToken();
       const pages = await uploadQuestionPaper(token, examId, files);
+      setQpPages((prev) => [...prev, ...pages]);
       toast.success(`Question paper uploaded (${pages.length} page${pages.length > 1 ? "s" : ""})`);
     } catch (e: any) {
       toast.error(e.message);
@@ -163,6 +173,7 @@ export default function ExamGradingDetail() {
     try {
       const token = await firebaseUser?.getIdToken();
       const pages = await uploadAnswerKey(token, examId, files);
+      setAkPages((prev) => [...prev, ...pages]);
       toast.success(`Answer key uploaded (${pages.length} page${pages.length > 1 ? "s" : ""})`);
     } catch (e: any) {
       toast.error(e.message);
@@ -297,20 +308,58 @@ export default function ExamGradingDetail() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Question Paper</CardTitle>
+            <CardTitle className="text-base">
+              Question Paper
+              {qpPages.length > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {qpPages.length} page{qpPages.length > 1 ? "s" : ""}
+                </Badge>
+              )}
+            </CardTitle>
             <CardDescription>Multiple page images, or a single PDF.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
+            {qpPages.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {qpPages.map((p) => (
+                  <img
+                    key={p.id}
+                    src={p.imagekit_url}
+                    alt={`Question paper page ${p.page_number}`}
+                    className="h-20 w-16 shrink-0 rounded border border-border object-cover"
+                  />
+                ))}
+              </div>
+            )}
             <MultiFileDropzone onUpload={handleUploadQp} busy={qpBusy} />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Answer Key</CardTitle>
+            <CardTitle className="text-base">
+              Answer Key
+              {akPages.length > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {akPages.length} page{akPages.length > 1 ? "s" : ""}
+                </Badge>
+              )}
+            </CardTitle>
             <CardDescription>Used as reference context during grading.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
+            {akPages.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {akPages.map((p) => (
+                  <img
+                    key={p.id}
+                    src={p.imagekit_url}
+                    alt={`Answer key page ${p.page_number}`}
+                    className="h-20 w-16 shrink-0 rounded border border-border object-cover"
+                  />
+                ))}
+              </div>
+            )}
             <MultiFileDropzone onUpload={handleUploadAnswerKey} busy={akBusy} />
           </CardContent>
         </Card>
