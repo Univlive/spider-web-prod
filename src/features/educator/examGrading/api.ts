@@ -134,6 +134,17 @@ export const setQuestions = (
     ExamQuestion[]
   >;
 
+// Reads the exam's already-uploaded question paper photos with Gemini and
+// persists question_no/max_marks/marking_scheme — same full-replace
+// semantics and response shape as setQuestions, just derived from the
+// photos instead of typed in. Throws (via gradeEngineFetch) with a
+// user-facing message when no question paper has been uploaded yet, or the
+// extraction found nothing usable.
+export const extractQuestionsFromPaper = (token: string | undefined, examId: string) =>
+  gradeEngineFetch(token, `/api/exams/${examId}/question-paper/extract`, {
+    method: "POST",
+  }) as Promise<ExamQuestion[]>;
+
 // ── uploads (multiple images OR a single PDF) ───────────────────────────────
 
 function filesFormData(files: File[]): FormData {

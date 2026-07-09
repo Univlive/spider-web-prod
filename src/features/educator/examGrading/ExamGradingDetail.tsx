@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, Play, Plus, Trash2, UserPlus } from "lucide-react";
+import { ArrowLeft, Loader2, Play, Plus, Sparkles, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@shared/ui/card";
@@ -12,12 +12,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@shared/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
 import { Skeleton } from "@shared/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@shared/ui/tooltip";
 import { useAuth } from "@app/providers/AuthProvider";
 import { db } from "@shared/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import MultiFileDropzone from "@shared/components/MultiFileDropzone";
 import {
   createAnswerSheet,
+  extractQuestionsFromPaper,
   getExam,
   listAnswerKeyPages,
   listAnswerSheets,
@@ -76,6 +78,7 @@ export default function ExamGradingDetail() {
   const [questionsOpen, setQuestionsOpen] = useState(false);
   const [draftQuestions, setDraftQuestions] = useState<QuestionInput[]>([]);
   const [savingQuestions, setSavingQuestions] = useState(false);
+  const [extractingQuestions, setExtractingQuestions] = useState(false);
 
   const [addStudentOpen, setAddStudentOpen] = useState(false);
   const [roster, setRoster] = useState<RosterStudent[]>([]);
@@ -150,6 +153,23 @@ export default function ExamGradingDetail() {
       toast.error(e.message);
     } finally {
       setSavingQuestions(false);
+    }
+  }
+
+  async function handleExtractQuestions() {
+    if (!examId) return;
+    setExtractingQuestions(true);
+    try {
+      const token = await firebaseUser?.getIdToken();
+      const extracted = await extractQuestionsFromPaper(token, examId);
+      setQuestionsState(extracted);
+      toast.success(
+        `Extracted ${extracted.length} question${extracted.length > 1 ? "s" : ""} from the question paper — review marks & marking scheme before grading.`
+      );
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setExtractingQuestions(false);
     }
   }
 
@@ -278,9 +298,38 @@ export default function ExamGradingDetail() {
               Marking scheme per question — grading is based on this.
             </CardDescription>
           </div>
-          <Button size="sm" variant="outline" onClick={openQuestionsDialog}>
-            {questions.length > 0 ? "Edit" : "Add Questions"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                {/* span wrapper: a disabled <button> swallows pointer
+                    events so Radix's Tooltip never sees the hover — the
+                    trigger needs a non-disabled element to attach to. */}
+                <span tabIndex={qpPages.length === 0 ? 0 : undefined}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleExtractQuestions}
+                    disabled={qpPages.length === 0 || extractingQuestions}
+                  >
+                    {extractingQuestions ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-2 h-4 w-4" />
+                    )}
+                    Extract from Photos
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {qpPages.length === 0 && (
+                <TooltipContent>
+                  Upload the question paper first to extract questions from it.
+                </TooltipContent>
+              )}
+            </Tooltip>
+            <Button size="sm" variant="outline" onClick={openQuestionsDialog}>
+              {questions.length > 0 ? "Edit" : "Add Questions"}
+            </Button>
+          </div>
         </CardHeader>
         {questions.length > 0 && (
           <CardContent>
@@ -435,14 +484,27 @@ export default function ExamGradingDetail() {
                     </TableCell>
                     <TableCell className="text-right">
                       {s.status === "uploaded" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleStartGrading(s.sheet_id)}
-                        >
-                          <Play className="mr-1.5 h-3.5 w-3.5" />
-                          Start Grading
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span tabIndex={questions.length === 0 ? 0 : undefined}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleStartGrading(s.sheet_id)}
+                                disabled={questions.length === 0}
+                              >
+                                <Play className="mr-1.5 h-3.5 w-3.5" />
+                                Start Grading
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          {questions.length === 0 && (
+                            <TooltipContent>
+                              Add questions first — type them in, or extract them from the question
+                              paper photos above.
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
                       )}
                       {(s.status === "graded" ||
                         s.status === "processing" ||
