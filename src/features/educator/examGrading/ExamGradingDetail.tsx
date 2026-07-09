@@ -508,13 +508,32 @@ export default function ExamGradingDetail() {
                       )}
                       {(s.status === "graded" ||
                         s.status === "processing" ||
-                        s.status === "pending") && (
-                        <Button size="sm" variant="outline" asChild>
-                          <Link to={`/educator/exam-grading/${examId}/review/${s.sheet_id}`}>
-                            Review
-                          </Link>
-                        </Button>
-                      )}
+                        s.status === "pending") &&
+                        (s.status === "pending" ? (
+                          // Pending = queued, not yet claimed by the grading poller — Pass 1
+                          // hasn't even run, so the review page is guaranteed to have zero
+                          // graded questions to show. Disable instead of opening a blank page;
+                          // "processing" stays clickable since Pass 2 writes each question's
+                          // grade as it completes, so a partial view is genuinely useful there.
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span tabIndex={0}>
+                                <Button size="sm" variant="outline" disabled>
+                                  Review
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Grading is queued — nothing to review yet
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <Button size="sm" variant="outline" asChild>
+                            <Link to={`/educator/exam-grading/${examId}/review/${s.sheet_id}`}>
+                              Review
+                            </Link>
+                          </Button>
+                        ))}
                     </TableCell>
                   </TableRow>
                 ))}
