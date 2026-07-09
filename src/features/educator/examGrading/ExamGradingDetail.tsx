@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, Play, Plus, Sparkles, Trash2, UserPlus } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronDown,
+  Loader2,
+  Play,
+  Plus,
+  Sparkles,
+  Trash2,
+  UserPlus,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@shared/ui/card";
@@ -13,6 +22,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/ui/select";
 import { Skeleton } from "@shared/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@shared/ui/tooltip";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@shared/ui/collapsible";
 import { useAuth } from "@app/providers/AuthProvider";
 import { db } from "@shared/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -76,6 +86,7 @@ export default function ExamGradingDetail() {
   const [akBusy, setAkBusy] = useState(false);
 
   const [questionsOpen, setQuestionsOpen] = useState(false);
+  const [questionsListExpanded, setQuestionsListExpanded] = useState(true);
   const [draftQuestions, setDraftQuestions] = useState<QuestionInput[]>([]);
   const [savingQuestions, setSavingQuestions] = useState(false);
   const [extractingQuestions, setExtractingQuestions] = useState(false);
@@ -291,68 +302,83 @@ export default function ExamGradingDetail() {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <div>
-            <CardTitle className="text-base">Questions</CardTitle>
-            <CardDescription>
-              Marking scheme per question — grading is based on this.
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                {/* span wrapper: a disabled <button> swallows pointer
-                    events so Radix's Tooltip never sees the hover — the
-                    trigger needs a non-disabled element to attach to. */}
-                <span tabIndex={qpPages.length === 0 ? 0 : undefined}>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleExtractQuestions}
-                    disabled={qpPages.length === 0 || extractingQuestions}
-                  >
-                    {extractingQuestions ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Sparkles className="mr-2 h-4 w-4" />
-                    )}
-                    Extract from Photos
+        <Collapsible open={questionsListExpanded} onOpenChange={setQuestionsListExpanded}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle className="text-base">Questions</CardTitle>
+              <CardDescription>
+                Marking scheme per question — grading is based on this.
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  {/* span wrapper: a disabled <button> swallows pointer
+                      events so Radix's Tooltip never sees the hover — the
+                      trigger needs a non-disabled element to attach to. */}
+                  <span tabIndex={qpPages.length === 0 ? 0 : undefined}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleExtractQuestions}
+                      disabled={qpPages.length === 0 || extractingQuestions}
+                    >
+                      {extractingQuestions ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="mr-2 h-4 w-4" />
+                      )}
+                      Extract from Photos
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {qpPages.length === 0 && (
+                  <TooltipContent>
+                    Upload the question paper first to extract questions from it.
+                  </TooltipContent>
+                )}
+              </Tooltip>
+              <Button size="sm" variant="outline" onClick={openQuestionsDialog}>
+                {questions.length > 0 ? "Edit" : "Add Questions"}
+              </Button>
+              {questions.length > 0 && (
+                <CollapsibleTrigger asChild>
+                  <Button size="sm" variant="ghost" className="px-2">
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform ${questionsListExpanded ? "rotate-180" : ""}`}
+                    />
                   </Button>
-                </span>
-              </TooltipTrigger>
-              {qpPages.length === 0 && (
-                <TooltipContent>
-                  Upload the question paper first to extract questions from it.
-                </TooltipContent>
+                </CollapsibleTrigger>
               )}
-            </Tooltip>
-            <Button size="sm" variant="outline" onClick={openQuestionsDialog}>
-              {questions.length > 0 ? "Edit" : "Add Questions"}
-            </Button>
-          </div>
-        </CardHeader>
-        {questions.length > 0 && (
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-16">No.</TableHead>
-                  <TableHead>Question</TableHead>
-                  <TableHead className="w-24 text-right">Marks</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {questions.map((q) => (
-                  <TableRow key={q.id}>
-                    <TableCell>{q.question_no}</TableCell>
-                    <TableCell className="max-w-md truncate">{q.question_text || "—"}</TableCell>
-                    <TableCell className="text-right">{q.max_marks}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        )}
+            </div>
+          </CardHeader>
+          {questions.length > 0 && (
+            <CollapsibleContent>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-16">No.</TableHead>
+                      <TableHead>Question</TableHead>
+                      <TableHead className="w-24 text-right">Marks</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {questions.map((q) => (
+                      <TableRow key={q.id}>
+                        <TableCell>{q.question_no}</TableCell>
+                        <TableCell className="max-w-md truncate">
+                          {q.question_text || "—"}
+                        </TableCell>
+                        <TableCell className="text-right">{q.max_marks}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </CollapsibleContent>
+          )}
+        </Collapsible>
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
