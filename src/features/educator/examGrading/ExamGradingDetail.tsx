@@ -69,6 +69,7 @@ export default function ExamGradingDetail() {
 
   const [qpPages, setQpPages] = useState<PageImage[]>([]);
   const [akPages, setAkPages] = useState<PageImage[]>([]);
+  const [previewImage, setPreviewImage] = useState<{ url: string; alt: string } | null>(null);
   const [qpBusy, setQpBusy] = useState(false);
   const [akBusy, setAkBusy] = useState(false);
 
@@ -322,12 +323,23 @@ export default function ExamGradingDetail() {
             {qpPages.length > 0 && (
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {qpPages.map((p) => (
-                  <img
+                  <button
                     key={p.id}
-                    src={p.imagekit_url}
-                    alt={`Question paper page ${p.page_number}`}
-                    className="h-20 w-16 shrink-0 rounded border border-border object-cover"
-                  />
+                    type="button"
+                    onClick={() =>
+                      setPreviewImage({
+                        url: p.imagekit_url,
+                        alt: `Question paper page ${p.page_number}`,
+                      })
+                    }
+                    className="shrink-0 cursor-zoom-in"
+                  >
+                    <img
+                      src={p.imagekit_url}
+                      alt={`Question paper page ${p.page_number}`}
+                      className="h-20 w-16 rounded border border-border object-cover transition-opacity hover:opacity-80"
+                    />
+                  </button>
                 ))}
               </div>
             )}
@@ -351,12 +363,23 @@ export default function ExamGradingDetail() {
             {akPages.length > 0 && (
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {akPages.map((p) => (
-                  <img
+                  <button
                     key={p.id}
-                    src={p.imagekit_url}
-                    alt={`Answer key page ${p.page_number}`}
-                    className="h-20 w-16 shrink-0 rounded border border-border object-cover"
-                  />
+                    type="button"
+                    onClick={() =>
+                      setPreviewImage({
+                        url: p.imagekit_url,
+                        alt: `Answer key page ${p.page_number}`,
+                      })
+                    }
+                    className="shrink-0 cursor-zoom-in"
+                  >
+                    <img
+                      src={p.imagekit_url}
+                      alt={`Answer key page ${p.page_number}`}
+                      className="h-20 w-16 rounded border border-border object-cover transition-opacity hover:opacity-80"
+                    />
+                  </button>
                 ))}
               </div>
             )}
@@ -609,6 +632,18 @@ export default function ExamGradingDetail() {
               Add & Upload
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
+        <DialogContent className="max-w-3xl">
+          {previewImage && (
+            <img
+              src={previewImage.url}
+              alt={previewImage.alt}
+              className="max-h-[80vh] w-full rounded object-contain"
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
