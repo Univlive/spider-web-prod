@@ -232,9 +232,21 @@ async function renderPageToImage(
 
   const viewport = page.getViewport({ scale });
 
+  if (
+    !Number.isFinite(viewport.width) ||
+    !Number.isFinite(viewport.height) ||
+    viewport.width < 1 ||
+    viewport.height < 1
+  ) {
+    throw new Error(
+      `Page ${pageNumber} looks damaged or blank in this PDF and couldn't be read. ` +
+        "Try re-exporting or re-scanning that page and upload again."
+    );
+  }
+
   const canvas = document.createElement("canvas");
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
+  canvas.width = Math.round(viewport.width);
+  canvas.height = Math.round(viewport.height);
 
   const ctx = canvas.getContext("2d")!;
   await page.render({ canvasContext: ctx, viewport }).promise;

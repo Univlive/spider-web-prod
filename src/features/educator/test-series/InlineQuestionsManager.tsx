@@ -2077,7 +2077,14 @@ const QuestionsManager = ({
         )
       );
       setImportProgressUpdates([]);
-      toast.success("AI import preview is ready");
+      const failedCount = result.meta?.diagnostics?.length ? result.meta.diagnostics.length : 0;
+      if (failedCount) {
+        toast.warning(
+          `AI import preview is ready, but ${failedCount} page${failedCount !== 1 ? "s" : ""} couldn't be read and ${failedCount !== 1 ? "were" : "was"} skipped. Check those pages and re-upload if needed.`
+        );
+      } else {
+        toast.success("AI import preview is ready");
+      }
     } catch (error) {
       console.error(error);
       const errorMsg = error instanceof Error ? error.message : "Failed to import PDF with AI";

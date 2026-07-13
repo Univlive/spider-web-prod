@@ -606,7 +606,11 @@ async function processWithGemini(
 
     const saRaw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
     let sa: any;
-    try { sa = JSON.parse(saRaw); } catch { sa = JSON.parse(Buffer.from(saRaw, "base64").toString("utf8")); }
+    try {
+      sa = JSON.parse(saRaw);
+    } catch {
+      sa = JSON.parse(Buffer.from(saRaw, "base64").toString("utf8"));
+    }
 
     const vertex = new VertexAI({
       project: sa.project_id,
@@ -696,7 +700,9 @@ async function processWithGemini(
 
     // Re-throw with context
     if (errorMsg.includes("INVALID_ARGUMENT")) {
-      throw new Error("Invalid PDF image sent to AI service. Please try a clearer image.");
+      throw new Error(
+        "This page couldn't be processed by AI. Please try a clearer scan or re-upload the PDF."
+      );
     }
     throw err;
   }
@@ -1167,6 +1173,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return streamError(
         res,
         new Error(`Image too large (${(imageBuffer.length / 1024 / 1024).toFixed(1)} MB)`)
+      );
+    }
+
+    // Reject decodable-but-degenerate images (e.g. a 0-size canvas export from a
+    // malformed PDF page) before spending a Gemini call on them.
+    try {
+      const sharp = await getSharp();
+      const metadata = await sharp(imageBuffer).metadata();
+      if (!metadata.width || !metadata.height || metadata.width < 10 || metadata.height < 10) {
+        console.error(
+          `[import-test-questions] Degenerate image for page ${pageNumber}: ${metadata.width ?? 0}x${metadata.height ?? 0}px`
+        );
+        return streamError(
+          res,
+          new Error(
+            `We couldn't read page ${pageNumber || ""} of this PDF — it may be blank or damaged. Please check that page and try uploading again.`
+          )
+        );
+      }
+    } catch (imgErr) {
+      console.error(`[import-test-questions] Image decode failed:`, imgErr);
+      return streamError(
+        res,
+        new Error(
+          `We couldn't read page ${pageNumber || ""} of this PDF. Please try re-uploading it, or export that page again if the issue continues.`
+        )
       );
     }
 

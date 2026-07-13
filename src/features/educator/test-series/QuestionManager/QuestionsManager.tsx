@@ -413,7 +413,6 @@ const QuestionsManager = ({
     };
   }, [questionBankOpen, autoFillOpen, educatorUid, managedSections]);
 
-
   const filteredQuestions = useMemo(() => {
     const q = searchQ.trim().toLowerCase();
     if (!q) return questions;
@@ -701,7 +700,6 @@ const QuestionsManager = ({
     if (raw === "easy" || raw === "medium" || raw === "hard") return raw as Difficulty;
     return "medium";
   }
-
 
   function mapQuestionBankDoc(docSnap: any): QuestionBankQuestion {
     const data = docSnap.data ? docSnap.data() : docSnap;
@@ -1355,7 +1353,7 @@ const QuestionsManager = ({
         id: section.id,
         name: section.name,
         topics: Array.isArray(section.topics) ? section.topics : [],
-        subjects: section.subject ? [section.subject] : (testSubject ? [testSubject] : []),
+        subjects: section.subject ? [section.subject] : testSubject ? [testSubject] : [],
         chapters: Array.isArray(section.chapters) ? section.chapters : [],
         tags: Array.isArray(section.tags) ? section.tags : [],
         questionCount: remaining !== null ? remaining : 20,
@@ -1516,7 +1514,9 @@ const QuestionsManager = ({
         ...(targetSection?.chapters?.length ? { chapters: targetSection.chapters } : {}),
         ...(targetSection?.topics?.length ? { topics: targetSection.topics } : {}),
         ...(targetSection?.tags?.length ? { tags: targetSection.tags } : {}),
-        ...(targetSection?.difficultyLevel != null ? { difficultyLevel: targetSection.difficultyLevel } : {}),
+        ...(targetSection?.difficultyLevel != null
+          ? { difficultyLevel: targetSection.difficultyLevel }
+          : {}),
       };
 
       const { chosen, coverage } = buildAutoFillSelection(
@@ -1698,15 +1698,17 @@ const QuestionsManager = ({
       const token = await auth.currentUser!.getIdToken();
 
       // Compute per-section capacity so we never overfill
-      const sectionsWithCapacity = sections.map((section) => {
-        const sectionMeta = managedSections.find((s) => s.id === section.id);
-        const currentInSection = getSectionQuestionCount(section.id, questions);
-        const cap =
-          sectionMeta?.questionsCount != null
-            ? Math.max(0, sectionMeta.questionsCount - currentInSection)
-            : section.questionCount;
-        return { ...section, question_count: Math.max(0, Math.min(section.questionCount, cap)) };
-      }).filter((s) => s.question_count > 0);
+      const sectionsWithCapacity = sections
+        .map((section) => {
+          const sectionMeta = managedSections.find((s) => s.id === section.id);
+          const currentInSection = getSectionQuestionCount(section.id, questions);
+          const cap =
+            sectionMeta?.questionsCount != null
+              ? Math.max(0, sectionMeta.questionsCount - currentInSection)
+              : section.questionCount;
+          return { ...section, question_count: Math.max(0, Math.min(section.questionCount, cap)) };
+        })
+        .filter((s) => s.question_count > 0);
 
       if (!sectionsWithCapacity.length) {
         toast.info("All sections are already at their question limit.");
@@ -1740,7 +1742,7 @@ const QuestionsManager = ({
         throw new Error(err);
       }
 
-      const data = await res.json() as {
+      const data = (await res.json()) as {
         sections: Array<{
           id: string;
           name: string;
@@ -1785,10 +1787,16 @@ const QuestionsManager = ({
             source: "auto_import",
             bankQuestionId: question.id,
             questionOrder,
-            questionType: normalizeQuestionType(question.questionType || section.format || "MCQ_SINGLE"),
+            questionType: normalizeQuestionType(
+              question.questionType || section.format || "MCQ_SINGLE"
+            ),
             ...(question.referenceAnswer ? { referenceAnswer: question.referenceAnswer } : {}),
-            ...(question.referenceKeywords?.length ? { referenceKeywords: question.referenceKeywords } : {}),
-            ...(question.evaluationInstructions ? { evaluationInstructions: question.evaluationInstructions } : {}),
+            ...(question.referenceKeywords?.length
+              ? { referenceKeywords: question.referenceKeywords }
+              : {}),
+            ...(question.evaluationInstructions
+              ? { evaluationInstructions: question.evaluationInstructions }
+              : {}),
             ...(question.answerInputType === "numeric" ? { answerInputType: "numeric" } : {}),
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
@@ -2463,7 +2471,14 @@ const QuestionsManager = ({
         )
       );
       setImportProgressUpdates([]);
-      toast.success("AI import preview is ready");
+      const failedCount = result.meta?.diagnostics?.length ? result.meta.diagnostics.length : 0;
+      if (failedCount) {
+        toast.warning(
+          `AI import preview is ready, but ${failedCount} page${failedCount !== 1 ? "s" : ""} couldn't be read and ${failedCount !== 1 ? "were" : "was"} skipped. Check those pages and re-upload if needed.`
+        );
+      } else {
+        toast.success("AI import preview is ready");
+      }
     } catch (error) {
       console.error(error);
       const errorMsg = error instanceof Error ? error.message : "Failed to import PDF with AI";
@@ -3194,11 +3209,6 @@ const QuestionsManager = ({
                     </p>
                   </div>
                 </label>
-                {false && (
-                  <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                    <Loader2 className="h-3 w-3 animate-spin" /> Loading admin question bank...
-                  </div>
-                )}
               </div>
 
               {/* Summary */}
@@ -3220,7 +3230,9 @@ const QuestionsManager = ({
                     Educator bank: <strong>{questionBankRows.length}</strong> available
                   </span>
                   {autoImportIncludeAdmin && (
-                    <span className="text-muted-foreground text-xs">Admin bank: loaded server-side</span>
+                    <span className="text-xs text-muted-foreground">
+                      Admin bank: loaded server-side
+                    </span>
                   )}
                 </div>
               </div>
