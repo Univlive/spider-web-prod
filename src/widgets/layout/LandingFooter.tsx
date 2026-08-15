@@ -1,150 +1,218 @@
-import { Mail, Phone } from "lucide-react";
+import type { ReactNode } from "react";
+import { Mail, Phone, MapPin, Linkedin, Instagram } from "lucide-react";
 
-const PRIMARY = "#6C47FF";
-const FOOTER_LINKS = ["Features", "How It Works", "Testimonials", "Contact"];
-const POLICY_LINKS = [
-  { label: "Terms & Conditions", href: "/terms" },
+const PRIMARY = "#0066FF";
+const DARK = "#050F26";
+
+const FEATURE_LINKS = [
+  "Bulk Scanning",
+  "AI Evaluation",
+  "Result Portal",
+  "Multi-Channel Publishing",
+];
+const LEGAL_LINKS = [
   { label: "Privacy Policy", href: "/privacy" },
-  { label: "Refunds & Cancellations", href: "/refunds" },
-  { label: "Contact Us", href: "/contact" },
+  { label: "Terms of Service", href: "/terms" },
+  { label: "Data Security", href: "/privacy" },
 ];
 
-export default function LandingFooter() {
+export default function LandingFooter({ topContent }: { topContent?: ReactNode }) {
   return (
     <footer
       id="contact"
-      style={{ background: "#0a0917", padding: "48px 24px 32px", borderTop: "1px solid #1a1830" }}
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        background: DARK,
+        padding: "80px 24px 32px",
+      }}
     >
-      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+        {topContent}
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 24,
-            marginBottom: 36,
+            display: "grid",
+            gridTemplateColumns: "1.4fr 1fr 1fr 1.3fr",
+            gap: 32,
+            marginBottom: 40,
           }}
+          className="footer-grid"
         >
           <div>
-            <span
+            <img
+              src="/logo.png"
+              alt="PrepareKaro Logo"
               style={{
-                fontFamily: "'DM Sans', sans-serif",
-                fontWeight: 700,
-                fontSize: 22,
-                color: "#fff",
-                letterSpacing: "-0.5px",
+                height: 40,
+                width: "auto",
+                background: "#fff",
+                borderRadius: 8,
+                padding: "4px 8px",
+                marginBottom: 16,
               }}
-            >
-              preparekaro<span style={{ color: PRIMARY }}>.</span>in
-            </span>
-            <p style={{ fontSize: 13, color: "#5a5970", marginTop: 8, maxWidth: 300 }}>
-              Tayaari Exam Ki
+            />
+            <p style={{ fontSize: 13.5, color: "#8b93ab", lineHeight: 1.7, maxWidth: 280 }}>
+              AI-powered exam automation and evaluation for institutions — from scanned copy to
+              published result.
             </p>
+            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+              {[Linkedin, XLogo, Instagram].map((Icon, i) => (
+                <a
+                  key={i}
+                  href="#"
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 8,
+                    background: "#101a33",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#8b93ab",
+                    transition: "color 0.2s, background 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = "#fff";
+                    e.currentTarget.style.background = PRIMARY;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = "#8b93ab";
+                    e.currentTarget.style.background = "#101a33";
+                  }}
+                >
+                  <Icon size={15} />
+                </a>
+              ))}
+            </div>
           </div>
-          <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
-            {FOOTER_LINKS.map((l) => (
-              <a
-                key={l}
-                href={`/#${l.toLowerCase().replace(/\s+/g, "-")}`}
-                style={{
-                  fontSize: 14,
-                  color: "#5a5970",
-                  textDecoration: "none",
-                  transition: "color 0.2s",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#5a5970")}
-              >
-                {l}
-              </a>
-            ))}
-          </div>
-        </div>
 
-        <div style={{ display: "flex", gap: 28, flexWrap: "wrap", marginBottom: 32 }}>
-          <a
-            href="mailto:info.univlive@gmail.com"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              fontSize: 14,
-              color: "#9b9aae",
-              textDecoration: "none",
-              transition: "color 0.2s",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#9b9aae")}
-          >
-            <Mail size={15} color={PRIMARY} />
-            info.univlive@gmail.com
-          </a>
-          <a
-            href="tel:+919625394589"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              fontSize: 14,
-              color: "#9b9aae",
-              textDecoration: "none",
-              transition: "color 0.2s",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#9b9aae")}
-          >
-            <Phone size={15} color={PRIMARY} />
-            +91 96253 94589
-          </a>
-        </div>
-
-        <div
-          style={{
-            borderTop: "1px solid #1a1830",
-            paddingTop: 20,
-            marginBottom: 20,
-            display: "flex",
-            gap: 24,
-            flexWrap: "wrap",
-          }}
-        >
-          {POLICY_LINKS.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
+          <div>
+            <div
               style={{
-                fontSize: 12,
-                color: "#5a5970",
-                textDecoration: "none",
-                transition: "color 0.2s",
+                fontSize: 14,
+                fontWeight: 700,
+                color: "#fff",
+                marginBottom: 16,
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#5a5970")}
             >
-              {l.label}
-            </a>
-          ))}
+              Features
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+              {FEATURE_LINKS.map((l) => (
+                <a
+                  key={l}
+                  href="/#features"
+                  style={{
+                    fontSize: 13.5,
+                    color: "#8b93ab",
+                    textDecoration: "none",
+                    transition: "color 0.2s",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "#8b93ab")}
+                >
+                  {l}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 700,
+                color: "#fff",
+                marginBottom: 16,
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+              }}
+            >
+              Legal &amp; Office
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+              {LEGAL_LINKS.map((l) => (
+                <a
+                  key={l.label}
+                  href={l.href}
+                  style={{
+                    fontSize: 13.5,
+                    color: "#8b93ab",
+                    textDecoration: "none",
+                    transition: "color 0.2s",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "#8b93ab")}
+                >
+                  {l.label}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <MapPin size={16} color={PRIMARY} style={{ marginTop: 2, flexShrink: 0 }} />
+              <div>
+                <div style={{ fontSize: 12, color: "#8b93ab", marginBottom: 2 }}>Address</div>
+                <div style={{ fontSize: 13.5, color: "#d5d9e6", lineHeight: 1.5 }}>
+                  396, Sheikh Sarai Phase II, South Delhi, Delhi -110017
+                </div>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <Phone size={16} color={PRIMARY} style={{ marginTop: 2, flexShrink: 0 }} />
+              <div>
+                <div style={{ fontSize: 12, color: "#8b93ab", marginBottom: 2 }}>Contact</div>
+                <a
+                  href="tel:+919625394589"
+                  style={{ fontSize: 13.5, color: "#d5d9e6", textDecoration: "none" }}
+                >
+                  +91 96253 94589 / +91 83199 37769
+                </a>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <Mail size={16} color={PRIMARY} style={{ marginTop: 2, flexShrink: 0 }} />
+              <div>
+                <div style={{ fontSize: 12, color: "#8b93ab", marginBottom: 2 }}>Mail us</div>
+                <a
+                  href="mailto:info.univlive@gmail.com"
+                  style={{ fontSize: 13.5, color: "#d5d9e6", textDecoration: "none" }}
+                >
+                  info.univlive@gmail.com
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div
           style={{
-            borderTop: "1px solid #1a1830",
+            borderTop: "1px solid #101a33",
             paddingTop: 20,
             display: "flex",
             justifyContent: "space-between",
             flexWrap: "wrap",
-            gap: 16,
+            gap: 12,
           }}
         >
-          <span style={{ fontSize: 12, color: "#3d3c4a" }}>
-            © {new Date().getFullYear()} Preparekaro.in. All rights reserved.
+          <span style={{ fontSize: 12.5, color: "#5c6785" }}>
+            © 2026 UnivTechnologies. All rights reserved.
           </span>
-          <span style={{ fontSize: 12, color: "#3d3c4a" }}>
-            Made for India's coaching institutes 🇮🇳
+          <span style={{ fontSize: 12.5, color: "#5c6785" }}>
+            Built for institutions, by preparekaro.in
           </span>
         </div>
       </div>
     </footer>
+  );
+}
+
+function XLogo({ size = 15 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
   );
 }

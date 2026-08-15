@@ -1,9 +1,16 @@
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ArrowRight } from "lucide-react";
 import "../../pages/landing.css";
 
-const PRIMARY = "#6C47FF";
-const NAV_LINKS = ["Features", "How It Works", "Testimonials", "Contact"];
+const PRIMARY = "#0066FF";
+const NAVY = "#08183A";
+const NAV_LINKS = [
+  { label: "Home", href: "/" },
+  { label: "Features", href: "/#features" },
+  { label: "Process", href: "/#process" },
+  { label: "AI in Action", href: "/#ai-showcase" },
+  { label: "Contact", href: "/contact" },
+];
 
 export default function LandingNavbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -25,14 +32,14 @@ export default function LandingNavbar() {
         zIndex: 100,
         background: scrolled ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.85)",
         backdropFilter: "blur(12px)",
-        borderBottom: scrolled ? "1px solid rgba(108,71,255,0.08)" : "1px solid transparent",
+        borderBottom: scrolled ? `1px solid ${NAVY}0d` : "1px solid transparent",
         transition: "all 0.3s ease",
-        boxShadow: scrolled ? "0 2px 24px rgba(108,71,255,0.07)" : "none",
+        boxShadow: scrolled ? `0 2px 24px ${NAVY}10` : "none",
       }}
     >
       <div
         style={{
-          maxWidth: 1200,
+          maxWidth: 1280,
           margin: "0 auto",
           padding: "0 24px 0 8px",
           height: 68,
@@ -51,41 +58,44 @@ export default function LandingNavbar() {
         <div className="desktop-nav" style={{ display: "flex", alignItems: "center", gap: 36 }}>
           {NAV_LINKS.map((l) => (
             <a
-              key={l}
-              href={`/#${l.toLowerCase().replace(/\s+/g, "-")}`}
+              key={l.label}
+              href={l.href}
               style={{
-                fontFamily: "'Plus Jakarta Sans','Inter', sans-serif",
+                fontFamily: "'Inter', sans-serif",
                 fontSize: 14,
-                fontWeight: 500,
-                color: "#3d3c47",
+                fontWeight: 600,
+                color: `${NAVY}b3`,
                 textDecoration: "none",
                 letterSpacing: "0.01em",
                 transition: "color 0.2s",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = PRIMARY)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#3d3c47")}
+              onMouseEnter={(e) => (e.currentTarget.style.color = NAVY)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = `${NAVY}b3`)}
             >
-              {l}
+              {l.label}
             </a>
           ))}
           <a
-            href="/#interest-widget"
+            href="/#interest-form"
             style={{
-              padding: "9px 22px",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "10px 22px",
               background: PRIMARY,
               color: "#fff",
-              borderRadius: 100,
-              fontFamily: "'Plus Jakarta Sans','DM Sans',sans-serif",
-              fontWeight: 600,
+              borderRadius: 8,
+              fontFamily: "'Inter', sans-serif",
+              fontWeight: 700,
               fontSize: 14,
               textDecoration: "none",
               transition: "opacity 0.2s",
               boxShadow: `0 4px 16px ${PRIMARY}40`,
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
           >
-            Book a Demo
+            Book a Demo <ArrowRight size={15} />
           </a>
         </div>
 
@@ -98,7 +108,7 @@ export default function LandingNavbar() {
             border: "none",
             cursor: "pointer",
             padding: 4,
-            color: "#0f0e17",
+            color: NAVY,
           }}
         >
           {mobileOpen ? <X size={24} /> : <Menu size={24} />}
@@ -107,9 +117,10 @@ export default function LandingNavbar() {
 
       {mobileOpen && (
         <div
+          className="mobile-menu-panel"
           style={{
             background: "#fff",
-            borderTop: "1px solid #f0eeff",
+            borderTop: `1px solid ${NAVY}0d`,
             padding: "16px 24px 24px",
             display: "flex",
             flexDirection: "column",
@@ -119,23 +130,23 @@ export default function LandingNavbar() {
           <img src="/logo-compact.png" alt="Preparekaro.in" style={{ height: 40, width: 40 }} />
           {NAV_LINKS.map((l) => (
             <a
-              key={l}
-              href={`/#${l.toLowerCase().replace(/\s+/g, "-")}`}
+              key={l.label}
+              href={l.href}
               onClick={() => setMobileOpen(false)}
-              style={{ fontSize: 16, fontWeight: 500, color: "#3d3c47", textDecoration: "none" }}
+              style={{ fontSize: 16, fontWeight: 600, color: NAVY, textDecoration: "none" }}
             >
-              {l}
+              {l.label}
             </a>
           ))}
           <a
-            href="/#interest-widget"
+            href="/#interest-form"
             onClick={() => setMobileOpen(false)}
             style={{
               padding: "12px 22px",
               background: PRIMARY,
               color: "#fff",
-              borderRadius: 100,
-              fontWeight: 600,
+              borderRadius: 8,
+              fontWeight: 700,
               fontSize: 15,
               textDecoration: "none",
               textAlign: "center",

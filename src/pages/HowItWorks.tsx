@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import LandingLayout from "@widgets/layout/LandingLayout";
 import SEO from "@shared/components/SEO";
-import { UserPlus, Palette, Wand2, Clock, Rocket, Settings, ArrowRight } from "lucide-react";
+import { FileText, ScanLine, Brain, Eye, Send, ArrowRight } from "lucide-react";
 import { Button } from "@shared/ui/button";
 import { Link } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
@@ -10,45 +10,38 @@ type Step = { icon: LucideIcon; title: string; description: string; duration: st
 
 const steps: Step[] = [
   {
-    icon: UserPlus,
-    title: "Create Your Account",
+    icon: FileText,
+    title: "Upload Question Paper & Answer Key",
     description:
-      "Sign up in under 2 minutes with your basic details. Choose your role as an educator or institution.",
-    duration: "2 min",
-  },
-  {
-    icon: Settings,
-    title: "Complete Onboarding",
-    description:
-      "Fill in your coaching details, upload your logo, add courses, and set up your batches.",
-    duration: "15 min",
-  },
-  {
-    icon: Palette,
-    title: "Choose Your Theme",
-    description:
-      "Select from beautifully designed templates. Customize colors to match your brand identity.",
+      "Upload the question paper and marking scheme, or let AI extract the questions straight from photos of the paper.",
     duration: "5 min",
   },
   {
-    icon: Wand2,
-    title: "AI Website Generation",
+    icon: ScanLine,
+    title: "Scan & Upload Answer Sheets",
     description:
-      "Our AI analyzes your inputs and generates a fully functional, SEO-optimized website.",
-    duration: "~6 hours",
+      "Snap photos or upload PDFs of handwritten answer sheets in bulk — page by page, straight from your phone.",
+    duration: "Per batch",
   },
   {
-    icon: Clock,
-    title: "Review & Customize",
+    icon: Brain,
+    title: "AI Grades Every Answer",
     description:
-      "Preview your generated website. Make final tweaks to content, images, and layout.",
-    duration: "30 min",
+      "AI evaluates each response against your rubric — objective and subjective — with a step-by-step marks breakdown.",
+    duration: "Automatic",
   },
   {
-    icon: Rocket,
-    title: "Go Live!",
+    icon: Eye,
+    title: "Teachers Review & Moderate",
     description:
-      "Publish your website on your branded subdomain. Start enrolling students immediately.",
+      "Spot-check the AI's grading, override any question, add feedback, and approve each sheet before it's final.",
+    duration: "~10 days",
+  },
+  {
+    icon: Send,
+    title: "Results Publish Instantly",
+    description:
+      "Once approved, students see their graded, annotated answer sheet with step-by-step feedback in their portal.",
     duration: "Instant",
   },
 ];
@@ -57,8 +50,8 @@ export default function HowItWorks() {
   return (
     <LandingLayout>
       <SEO
-        title="How It Works — Launch Any Test Series in Minutes | PrepareKaro"
-        description="See how PrepareKaro works: set up your coaching portal, create test series for JEE, NEET, CUET, CBSE and more, and track student performance — all in minutes with AI."
+        title="How It Works — AI-Powered Exam Evaluation | PrepareKaro"
+        description="See how PrepareKaro grades exams: upload the question paper, scan handwritten answer sheets, let AI grade every answer, moderate, and publish results — all in about 10 days."
         canonical="https://preparekaro.in/how-it-works"
       />
       <div className="pb-20">
@@ -73,13 +66,13 @@ export default function HowItWorks() {
               How It Works
             </span>
             <h1 className="mb-6 font-display text-4xl font-bold sm:text-5xl lg:text-6xl">
-              From Zero to <span className="gradient-text">Live Website</span>
+              From Scan to <span className="gradient-text">Graded Result</span>
               <br />
-              in Just 6 Hours
+              in About 10 Days
             </h1>
             <p className="mx-auto max-w-2xl text-xl text-muted-foreground">
-              A simple, guided process to transform your coaching institute with AI-powered
-              technology.
+              A simple, guided process to digitize and AI-grade your institute's answer sheets —
+              objective and subjective alike.
             </p>
           </motion.div>
         </section>
@@ -126,8 +119,8 @@ export default function HowItWorks() {
           >
             <h2 className="mb-6 font-display text-3xl font-bold">Ready to Get Started?</h2>
             <Button variant="hero" size="xl" asChild className="group">
-              <Link to="/signup">
-                Create Your Website Now
+              <Link to="/#interest-widget">
+                Book a Demo
                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>

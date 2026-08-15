@@ -1,44 +1,44 @@
 import LandingLayout from "@widgets/layout/LandingLayout";
 import SEO from "@shared/components/SEO";
 import { motion } from "framer-motion";
-import { FileText, Users, Brain, Headphones, Gift, CheckCircle } from "lucide-react";
+import { ScanLine, Brain, ListChecks, Eye, Clock, ShieldCheck } from "lucide-react";
 
 const features = [
   {
-    icon: FileText,
-    title: "10 Full-Length CUET Mock Tests",
+    icon: ScanLine,
+    title: "Bulk Answer Sheet Scanning",
     description:
-      "Curated by top academic teams with case-based, fill-in-the-blanks, statement-based, match-the-following, and assertion-reasoning questions for Commerce & Humanities.",
-  },
-  {
-    icon: Users,
-    title: "Teacher-First Platform",
-    description:
-      "View detailed student performance reports, manage batches, and track progress with an intuitive dashboard designed for educators.",
+      "Snap photos or upload PDFs of handwritten answer sheets in bulk — page by page or all at once, no scanner required.",
   },
   {
     icon: Brain,
-    title: "AI-Powered Advanced Analytics",
+    title: "AI-Powered Grading",
     description:
-      "Question-wise accuracy, time taken per question/section, and clear identification of strengths and weak areas for every student.",
+      "AI evaluates every answer against your question paper and marking scheme — objective and subjective questions alike.",
   },
   {
-    icon: Headphones,
-    title: "Dedicated Support Team",
+    icon: ListChecks,
+    title: "Step-by-Step Feedback",
     description:
-      "Our support team is available throughout the day to help you with any queries or technical assistance you may need.",
+      "Every graded answer gets a marks breakdown by step, so students see exactly where marks were gained or lost.",
   },
   {
-    icon: Gift,
-    title: "100% Free Platform — Pay Only Per Student",
+    icon: Eye,
+    title: "Teacher Moderation",
     description:
-      "No setup fees, no upfront cost — you pay only when students enroll. Start risk-free today.",
+      "Review and override any AI-graded question before results go out — final say always stays with your faculty.",
   },
   {
-    icon: CheckCircle,
-    title: "Real CBT Exam Experience",
+    icon: Clock,
+    title: "Rapid Turnaround",
     description:
-      "Provide students with an authentic computer-based test experience that mirrors the actual CUET exam environment.",
+      "Get graded, moderated results back to students in about 10 days instead of the usual weeks of manual checking.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Digitized & Secure",
+    description:
+      "Answer sheets are digitized and stored securely — no more lost papers, misplaced marks, or re-checking disputes.",
   },
 ];
 
@@ -46,8 +46,8 @@ const Features = () => {
   return (
     <LandingLayout>
       <SEO
-        title="Features — AI-Powered Test Series & Coaching Management | PrepareKaro"
-        description="Explore PrepareKaro features: AI question import, objective & subjective tests, student analytics, AI chatbot tutor, rankings, and support for JEE, NEET, CUET, CBSE and all exams."
+        title="Features — AI-Powered Exam Evaluation | PrepareKaro"
+        description="Explore PrepareKaro features: bulk answer sheet scanning, AI grading for objective & subjective answers, step-by-step feedback, teacher moderation, and rapid result turnaround."
         canonical="https://preparekaro.in/features"
       />
       <section className="section-padding section-1">
@@ -60,7 +60,7 @@ const Features = () => {
           >
             <h1 className="mb-6 text-4xl font-bold sm:text-5xl lg:text-6xl">Features</h1>
             <p className="text-lg text-muted-foreground">
-              Everything you need to launch and manage your own CUET CBT test platform.
+              Everything you need to digitize, AI-grade, and publish exam results faster.
             </p>
           </motion.div>
 

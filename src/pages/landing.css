@@ -16,6 +16,144 @@
   flex-shrink: 0;
 }
 
+/* ─── Scroll reveal ─────────────────────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ─── Pulsing live-status dot ───────────────────────────────────────────── */
+.pulse-dot {
+  position: relative;
+}
+.pulse-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: inherit;
+  animation: pulseDotRing 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes pulseDotRing {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  75%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* ─── Floating background blobs ─────────────────────────────────────────── */
+.float-slow {
+  animation: floatY 9s ease-in-out infinite;
+}
+.float-slower {
+  animation: floatY 13s ease-in-out infinite reverse;
+}
+@keyframes floatY {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-22px) scale(1.04);
+  }
+}
+
+/* ─── Hover-lift cards ───────────────────────────────────────────────────── */
+.hover-lift-card {
+  transition:
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+.hover-lift-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 44px -16px rgba(8, 24, 58, 0.18);
+}
+
+/* ─── Scanning line over answer-sheet visuals ───────────────────────────── */
+.scan-line-wrap {
+  position: relative;
+  overflow: hidden;
+}
+.scan-line-wrap::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  top: -3px;
+  background: linear-gradient(90deg, transparent, #0066ff, transparent);
+  box-shadow: 0 0 14px 3px rgba(0, 102, 255, 0.55);
+  animation: scanSweep 3.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes scanSweep {
+  0% {
+    top: -3px;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scan-line-wrap::after,
+  .pulse-dot::after,
+  .float-slow,
+  .float-slower {
+    animation: none;
+  }
+}
+
+/* ─── Mobile menu open animation ────────────────────────────────────────── */
+.mobile-menu-panel {
+  animation: mobileMenuIn 0.22s ease-out;
+  transform-origin: top center;
+}
+@keyframes mobileMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Back-to-top button ────────────────────────────────────────────────── */
+.scroll-top-btn {
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
 @media (max-width: 900px) {
   .hero-grid {
     grid-template-columns: 1fr !important;
@@ -33,6 +171,20 @@
   }
   .mobile-menu-btn {
     display: flex !important;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .cta-grid {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+  }
+  .demo-grid,
+  .evaluation-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .process-track {
+    grid-template-columns: 1fr !important;
   }
 }
 
@@ -63,5 +215,11 @@
   }
   .testimonial-card {
     padding: 28px 22px !important;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
   }
 }
