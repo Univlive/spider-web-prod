@@ -23,6 +23,9 @@ import {
   Phone,
   FileText,
   ArrowUp,
+  Play,
+  Volume2,
+  Maximize2,
   type LucideIcon,
 } from "lucide-react";
 import SEO from "@shared/components/SEO";
@@ -40,6 +43,7 @@ const GREEN_BG = "rgba(34,197,94,0.2)";
 const RED_TEXT = "#F87171";
 const RED_BG = "rgba(239,68,68,0.2)";
 const AMBER_TEXT = "#FBBF24";
+const YOUTUBE_VIDEO_ID = "QpPB4zU6Vuk";
 const WHATSAPP_NUMBER = "919625394589";
 const CONTACT_EMAIL = "info.univlive@gmail.com";
 const CONTACT_PHONE = "+91 96253 94589";
@@ -999,21 +1003,30 @@ function AIEvaluationSection() {
 // ─── MANUAL VS AI COMPARISON ──────────────────────────────────────────────────
 const COMPARISON_ROWS: { label: string; manual: string; ai: string }[] = [
   { label: "Time per answer sheet", manual: "15–20 minutes", ai: "Seconds" },
-  { label: "Full batch turnaround", manual: "2–3 weeks", ai: "Up to 72 hours, guaranteed" },
   {
-    label: "Consistency across evaluators",
-    manual: "Varies by grader & fatigue",
-    ai: "Same rubric, every paper",
+    label: "Delayed Result",
+    manual: "2–3 weeks before results reach students",
+    ai: "Published within 72 hours, guaranteed",
   },
   {
-    label: "Faculty hours required",
-    manual: "Hundreds of hours",
-    ai: "Only flagged cases need review",
+    label: "Inconsistent Marking",
+    manual: "Scores vary by evaluator mood, bias & fatigue",
+    ai: "Same rubric applied to every paper, every time",
   },
   {
-    label: "Result compilation",
-    manual: "Manual spreadsheet entry",
-    ai: "Auto-published to student portal",
+    label: "More Pressure on Teachers",
+    manual: "Buried under grading deadlines every exam cycle",
+    ai: "AI does the first pass — teachers only review flagged cases",
+  },
+  {
+    label: "Heavy Manual Workload",
+    manual: "Hundreds of hours spent checking copies by hand",
+    ai: "Bulk scanning + automated grading at scale",
+  },
+  {
+    label: "Lack of Digitization",
+    manual: "Paper trails, spreadsheets & physical record-keeping",
+    ai: "Fully digital pipeline — scan to portal, nothing on paper",
   },
 ];
 
@@ -1150,6 +1163,278 @@ function ComparisonSection() {
               </div>
             </div>
           ))}
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+// ─── VIDEO TUTORIAL ───────────────────────────────────────────────────────────
+function VideoTutorialSection() {
+  const [playing, setPlaying] = useState(false);
+
+  return (
+    <section
+      id="tutorial"
+      style={{
+        position: "relative",
+        padding: "96px 24px",
+        background: NAVY,
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 0,
+          backgroundImage: `radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px)`,
+          backgroundSize: "28px 28px",
+          maskImage: "radial-gradient(circle at 50% 40%, rgba(0,0,0,0.7) 0%, transparent 70%)",
+          WebkitMaskImage:
+            "radial-gradient(circle at 50% 40%, rgba(0,0,0,0.7) 0%, transparent 70%)",
+        }}
+      />
+      <div
+        className="float-slow"
+        style={{
+          position: "absolute",
+          top: -140,
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: 640,
+          height: 640,
+          background: `${ACCENT_500}22`,
+          borderRadius: "50%",
+          filter: "blur(60px)",
+          zIndex: 0,
+        }}
+      />
+
+      <div style={{ position: "relative", maxWidth: 980, margin: "0 auto" }}>
+        <Reveal style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <SectionBadge label="Platform Walkthrough" dark />
+          </div>
+          <h2
+            style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontWeight: 800,
+              fontSize: "clamp(26px,3.5vw,40px)",
+              color: "#fff",
+              letterSpacing: "-0.5px",
+              lineHeight: 1.25,
+              marginTop: 16,
+              marginBottom: 0,
+            }}
+          >
+            See PrepareKaro <span style={{ color: "#7FAEFF" }}>in Action</span>
+          </h2>
+          <p
+            style={{
+              fontSize: 16,
+              color: "rgba(255,255,255,0.55)",
+              marginTop: 16,
+              lineHeight: 1.7,
+            }}
+          >
+            A full walkthrough of scanning, AI evaluation, moderation, and result publishing —
+            straight from the platform.
+          </p>
+        </Reveal>
+
+        <Reveal delay={150} style={{ marginTop: 48 }}>
+          <div
+            className="hover-lift-card"
+            style={{
+              position: "relative",
+              borderRadius: 24,
+              overflow: "hidden",
+              aspectRatio: "16 / 9",
+              background: "#000",
+              border: "1px solid rgba(255,255,255,0.12)",
+              boxShadow: "0 30px 80px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)",
+            }}
+          >
+            {playing ? (
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0`}
+                title="PrepareKaro Platform Tutorial"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  border: "none",
+                }}
+              />
+            ) : (
+              <button
+                onClick={() => setPlaying(true)}
+                aria-label="Play platform tutorial video"
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  padding: 0,
+                  border: "none",
+                  cursor: "pointer",
+                  background: "none",
+                }}
+              >
+                <img
+                  src={`https://img.youtube.com/vi/${YOUTUBE_VIDEO_ID}/maxresdefault.jpg`}
+                  alt="PrepareKaro platform tutorial video thumbnail"
+                  loading="lazy"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background:
+                      "linear-gradient(180deg, rgba(8,24,58,0.15) 0%, rgba(8,24,58,0.55) 100%)",
+                  }}
+                />
+                {/* fake browser-chrome top bar for polish */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    padding: "14px 18px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      background: "rgba(8,24,58,0.7)",
+                      backdropFilter: "blur(6px)",
+                      color: "#fff",
+                      fontSize: 11.5,
+                      fontWeight: 700,
+                      padding: "6px 12px",
+                      borderRadius: 100,
+                    }}
+                  >
+                    <span
+                      className="pulse-dot"
+                      style={{ width: 6, height: 6, borderRadius: "50%", background: "#F87171" }}
+                    />
+                    Product Tour
+                  </span>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      background: "rgba(8,24,58,0.7)",
+                      backdropFilter: "blur(6px)",
+                      color: "rgba(255,255,255,0.8)",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      padding: "6px 10px",
+                      borderRadius: 100,
+                    }}
+                  >
+                    <Volume2 size={11} /> HD <Maximize2 size={11} />
+                  </span>
+                </div>
+
+                {/* play button */}
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <span className="play-ring" style={{ position: "relative" }}>
+                    <span
+                      className="play-ring-pulse"
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        borderRadius: "50%",
+                        background: "rgba(255,255,255,0.25)",
+                      }}
+                    />
+                    <span
+                      style={{
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 84,
+                        height: 84,
+                        borderRadius: "50%",
+                        background: "#fff",
+                        boxShadow: "0 12px 40px -8px rgba(0,0,0,0.5)",
+                      }}
+                    >
+                      <Play size={30} fill={NAVY} color={NAVY} style={{ marginLeft: 4 }} />
+                    </span>
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 20,
+                    left: 24,
+                    right: 24,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: 8,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      fontWeight: 700,
+                      fontSize: 15,
+                      color: "#fff",
+                      textShadow: "0 2px 12px rgba(0,0,0,0.5)",
+                    }}
+                  >
+                    PrepareKaro — Full Platform Tutorial
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: "rgba(255,255,255,0.85)",
+                      background: "rgba(8,24,58,0.7)",
+                      backdropFilter: "blur(6px)",
+                      padding: "5px 10px",
+                      borderRadius: 100,
+                    }}
+                  >
+                    ▶ Watch on YouTube
+                  </span>
+                </div>
+              </button>
+            )}
+          </div>
         </Reveal>
       </div>
     </section>
@@ -1982,6 +2267,7 @@ export default function Index() {
       <AIEvaluationSection />
       <ComparisonSection />
       <ProcessSection />
+      <VideoTutorialSection />
       <FAQSection />
       <CTASection />
       <LandingFooter
